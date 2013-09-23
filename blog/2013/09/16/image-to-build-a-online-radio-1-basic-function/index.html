@@ -1,0 +1,166 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>如何做一个基于hls的网络收音机（一）实现基本功能 - Lelouchcr's Blog</title>
+	<meta name="author" content="caorong">
+
+	
+	<meta name="description" content="一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。 首先，为什么要用hls做网络收音机？ 其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，就直接把他们给整合了。那用hls有什么好处呢？ 可以回放，点播 &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="Lelouchcr's Blog" type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">Lelouchcr's Blog</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:caorong.github.io">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:caorong.github.io">
+	</form>
+</nav>
+
+</header>
+	
+		
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">如何做一个基于hls的网络收音机（一）实现基本功能</h2>
+	<div class="entry-content"><p>一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。</p>
+
+<h4>首先，为什么要用hls做网络收音机？</h4>
+
+<p>其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，就直接把他们给整合了。那用hls有什么好处呢？</p>
+
+<ol>
+<li>可以回放，点播</li>
+<li>可以承受高并发</li>
+<li>不需要特殊服务器，成本低</li>
+</ol>
+
+
+<p>其实，光第一点就非常吸引人了。妥妥的把收音机变成了磁带机。。。</p>
+
+<h4>如何做一个自己的hls子文件（.m3u8 + .ts）？</h4>
+
+<p>其实网上有很多opensource项目都帮你实现了子功能。
+这里直接用<a href="http://ffmpeg.org/">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter">3u8segment</a></p>
+
+<figure class='code'><figcaption><span>demo.sh </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt<span class="o">=</span>.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | <span class="se">\</span>
+</span><span class='line'> m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。</p>
+
+<blockquote><p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p></blockquote>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-16T20:31:00+08:00" pubdate data-updated="true">Sep 16<span>th</span>, 2013</time></div>
+	<div class="tags">
+
+</div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		<a class="addthis_button_tweet"></a>
+		
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2013
+
+    caorong
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+
+
+</body>
+</html>

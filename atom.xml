@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Lelouchcr's Blog]]></title>
+  <link href="http://caorong.github.io/atom.xml" rel="self"/>
+  <link href="http://caorong.github.io/"/>
+  <updated>2013-09-23T21:39:16+08:00</updated>
+  <id>http://caorong.github.io/</id>
+  <author>
+    <name><![CDATA[caorong]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[吐槽 NTR 小镇]]></title>
+    <link href="http://caorong.github.io/blog/2013/09/23/ntr-little-town/"/>
+    <updated>2013-09-23T20:40:00+08:00</updated>
+    <id>http://caorong.github.io/blog/2013/09/23/ntr-little-town</id>
+    <content type="html"><![CDATA[<p><strong>引子</strong>
+近来貌似NTR小镇很火，我也手贱竟然在中秋假期最后一天晚上睡觉时起了个头，国庆前一周9天晚上再也没睡好过。狗血+虐心的情节让我不得不放下同样看了个开头的蜀山剑侠，一心一意看NTR剧情。</p>
+
+<p>我没看过动画，光看漫画，我觉得这部作品真是近来良心作。基本不卖肉，虐心情节，男主角也很争气，多个女主对其示好时，没有脚踩n条船（n>=2）。男女主角离离散散，让我看得彻夜难眠，令人大呼，尼玛，竟然分手了！吐槽曰，这不也充分印证了三国演义中的一句话，分久必合，合久必分。</p>
+
+<p>七海
+男主一开始的单恋对象。我的评价是，短发中最好看的，女主中最失败的。明明是男主3年多的单恋对象，敌不过女主1年的主角光环。不过庆幸的是，她没有因为失败而走极端。</p>
+
+<p>风间
+他的人生，再漫画中的情节就像他骑摩托一样，能别开太快行吗？！我还想看男女主和风间和他青梅竹马的4人斗争的说！！竟然手术后，说什么手术很成功，但是人没保住。怎么之前不再加句，要孩子还是要大人。怀疑是不是作者洞歪脑筋想去国产电视剧发展？作者你明明让男主说出是朋友的话，就必须坦诚相待这么帅气的话。但作者你却有意让风间走这么快，是不是有点再骗自己啊？！</p>
+
+<p>明日香
+待续。。
+（漫画我只看到一半，之后会在一起我仅仅是猜测，good ending的话必定是在一起）</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[如何做一个基于hls的网络收音机（二）架构YY]]></title>
+    <link href="http://caorong.github.io/blog/2013/09/16/image-to-build-a-online-radio-2-architecture-image/"/>
+    <updated>2013-09-16T22:38:00+08:00</updated>
+    <id>http://caorong.github.io/blog/2013/09/16/image-to-build-a-online-radio-2-architecture-image</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[如何做一个基于hls的网络收音机（一）实现基本功能]]></title>
+    <link href="http://caorong.github.io/blog/2013/09/16/image-to-build-a-online-radio-1-basic-function/"/>
+    <updated>2013-09-16T20:31:00+08:00</updated>
+    <id>http://caorong.github.io/blog/2013/09/16/image-to-build-a-online-radio-1-basic-function</id>
+    <content type="html"><![CDATA[<p>一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。</p>
+
+<h4>首先，为什么要用hls做网络收音机？</h4>
+
+<p>其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，就直接把他们给整合了。那用hls有什么好处呢？</p>
+
+<ol>
+<li>可以回放，点播</li>
+<li>可以承受高并发</li>
+<li>不需要特殊服务器，成本低</li>
+</ol>
+
+
+<p>其实，光第一点就非常吸引人了。妥妥的把收音机变成了磁带机。。。</p>
+
+<h4>如何做一个自己的hls子文件（.m3u8 + .ts）？</h4>
+
+<p>其实网上有很多opensource项目都帮你实现了子功能。
+这里直接用<a href="http://ffmpeg.org/">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter">3u8segment</a></p>
+
+<figure class='code'><figcaption><span>demo.sh </span></figcaption>
+ <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt<span class="o">=</span>.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | <span class="se">\</span>
+</span><span class='line'> m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。</p>
+
+<blockquote><p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p></blockquote>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[毕业后2个月的工作总结]]></title>
+    <link href="http://caorong.github.io/blog/2013/09/14/conclusion-about-last-two-month/"/>
+    <updated>2013-09-14T00:07:00+08:00</updated>
+    <id>http://caorong.github.io/blog/2013/09/14/conclusion-about-last-two-month</id>
+    <content type="html"><![CDATA[<pre><code>不知不觉已经毕业工作了2个月了，大学5人黑的日子好久没再次重现。
+总之，上班很辛苦啊。
+</code></pre>
+
+<h3>现在的工作</h3>
+
+<pre><code>现在在公司里做java后台开发，主要是写爬虫，作为公司webapp的内容源。虽然之前用python写过爬虫，不过那仅仅是单线程的，过程式的代码。目边干边学,让我收获颇丰。
+</code></pre>
+
+<h3>干过的事情</h3>
+
+<ul>
+<li>增加现有的爬虫的功能。这就不说了</li>
+<li>学着用Selenium，并写了个chrome 插件，用于截取想要的ajax请求。用于获取iqiyi.com的视频的真实地址。因为他的视频下载链接有有效期。</li>
+<li>写了个demo用于爬hls的站点。 qingting.fm</li>
+<li>写了个基于hls的直播流的demo，主要用到m3u8-segment, ffmpeg, nginx, tomcat.</li>
+</ul>
+
+
+<h3>后面的安排 （这。。算是长期安排吧）</h3>
+
+<ul>
+<li>学习ruby on rails</li>
+<li>准备写一个可以让android用得podcast站点</li>
+<li>写blog</li>
+</ul>
+
+
+<h3>最近的业余生活</h3>
+
+<ul>
+<li>听teahour.fm</li>
+<li>玩高级偷菜游戏coc</li>
+<li>看小说，路遥的《平凡的世界》</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
