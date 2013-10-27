@@ -4,7 +4,7 @@
   <title><![CDATA[Lelouchcr's Blog]]></title>
   <link href="http://caorong.github.io/atom.xml" rel="self"/>
   <link href="http://caorong.github.io/"/>
-  <updated>2013-10-27T16:19:45+08:00</updated>
+  <updated>2013-10-27T19:54:00+08:00</updated>
   <id>http://caorong.github.io/</id>
   <author>
     <name><![CDATA[caorong]]></name>
@@ -261,23 +261,26 @@
 
 <h6>BlockingQueue 线程queue，我目前用得java6目前提供的6中实现</h6>
 
-<p>ArrayBlockingQueue
-一个固定大小的<a href="http://ifeve.com/blocking-queues/">阻塞队列</a>，放满后不可再放入,可以定义取数据是否按照fifo的顺序还是随机顺序,超过定义的size后会throw java.lang.IllegalStateException 的异常。</p>
+<pre><code>ArrayBlockingQueue
+一个固定大小的
+[阻塞队列](http://ifeve.com/blocking-queues/)，放满后不可再放入,可以定义取数据是否按照fifo的顺序还是随机顺序,超过定义的size后会throw java.lang.IllegalStateException 的异常。
 
-<p>DelayedWorkQueue
-这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，专用queue。不再本篇的讨论范围之内。</p>
 
-<p>DelayQueue
-这是无界阻塞队列，队列中的对象需要继承Delayed接口，满足延迟条件才可以使用。</p>
+DelayedWorkQueue    
+这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，专用queue。不再本篇的讨论范围之内。
 
-<p>LinkedBlockingQueue
-顾名思义，用链表实现的阻塞队列，效率比较高。最大大小为Ineger.MAXVALUE</p>
+DelayQueue  
+这是无界阻塞队列，队列中的对象需要继承Delayed接口，满足延迟条件才可以使用。
 
-<p>PriorityBlockingQueue
-同样也是个无界阻塞队列对象需要继承Comparable接口，使对象可以进行优先级比较。</p>
+LinkedBlockingQueue 
+顾名思义，用链表实现的阻塞队列，效率比较高。最大大小为Ineger.MAXVALUE
 
-<p>SynchronousQueue
-一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。webmagic的ThreadPool的queue就用了此queue</p>
+PriorityBlockingQueue   
+同样也是个无界阻塞队列对象需要继承Comparable接口，使对象可以进行优先级比较。
+
+SynchronousQueue    
+一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。webmagic的ThreadPool的queue就用了此queue
+</code></pre>
 
 <h6>ThreadFactory 执行程序创建新线程时使用的工厂。（可选）</h6>
 
