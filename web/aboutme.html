@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />	
+	<title>Elliott's  Home</title>
+	<meta name="author" content="lelouchcr" />
+	<meta name="description" content="lelouchcr Personal Website." />
+	<meta name="keywords"  content="lelouchcr,lelouchsai,caorong" />
+	<meta name="Resource-type" content="Document" />
+
+	
+	<link rel="stylesheet" type="text/css" href="css/jquery.fullPage.css" />
+	<link rel="stylesheet" type="text/css" href="css/site.css" />
+
+	<!--[if IE]>
+		<script type="text/javascript">
+			 var console = { log: function() {} };
+		</script>
+	<![endif]-->
+		
+	<script src="js/jquery.min.js"></script>
+	<script src="js/jquery-ui.min.js"></script>	
+	
+	<script type="text/javascript" src="js/jquery.fullPage.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			var pepe = $.fn.fullpage({
+				slidesColor: ['#1bbc9b', '#4BBFC3', '#7BAABE', 'whitesmoke', '#ccddff'],
+				anchors: ['firstPage', 'secondPage', '3rdPage', '4thPage', '5thPage'],
+				menu: '#menu'
+			});
+			
+		});
+	</script>
+
+</head>
+<body>
+
+
+
+<ul id="menu">
+	<li data-menuanchor="firstPage"><a href="#firstPage">Home</a></li>
+	<li data-menuanchor="secondPage"><a href="#secondPage">JOB</a></li>
+	<li data-menuanchor="3rdPage"><a href="#3rdPage">LIFE</a></li>
+	<li data-menuanchor="4thPage"><a href="#4thPage">BLOG</a></li>
+	<!--<li data-menuanchor="5thPage"><a href="#5thPage">SHARE</a></li>-->
+</ul>
+
+<div class="section " id="section0" style="color:#FFF;background-image:url('image/aleng1.png');filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod='scale');-moz-background-size:100% 100%;background-size:100% 100%;">
+	<h1 style="color:#FFF">CaoRong's Home</h1>
+	<p>Do U Know Who am I?</p>
+	<p>Let me Show U , Look Down...</p>
+</div>
+<div class="section" id="section1">
+    <div class="slide">
+		<div class="intro">
+			<h1>I am A Great Coder！Yes，Great Coder！</h1>
+			<p>I can Use More than Three Program Language to Develope a Product...</p>
+			<p>You Can't Believe that? Click the Right Triangle Button.I Will Show u!</p>
+			<img src="imgs/slider.png" alt="slider" />
+		</div>
+		
+	</div>
+    <div class="slide">
+		<div class="intro">
+			<img src="image/github1.png" alt="github project" style="width:450px"/>
+			<h1>Some of My Java Project on <a href="https://github.com/caorong?tab=repositories">GitHub</a>.</h1>
+		</div>              
+	</div>
+    <div class="slide">
+		<div class="intro">
+			<img src="image/crawler.png" alt="crawler" style="height:550px;"/>
+			<h2>Cralwer system</h2>
+			<p>I Developed it on My Own</p>
+		</div>
+	</div>
+    <div class="slide">
+    	<div class="intro">
+			<img src="image/weiborelation.png" alt="weiboRelation" style="height:550px;"/>
+			<h2>I Develop it for fun ~</h2>
+			<p>The data is from sina weibo <a href="http://sandbox.runjs.cn/show/gwgetpwu"> go and play it on runjs</a> </p>
+		</div>
+	</div>
+</div>
+<div class="section" id="section2">
+	<div class="intro">
+		<h1>I Enjoy My Life...</h1>
+		<p>I Like Playing Badminton , Films , Eating ...</p>
+		<p>I Like go forum to learning and playing , like  <a href="http://www.v2ex.com/member/Lelouchcr">v2ex</a> , 
+		<a href="http://ruby-china.org/">ruby-china</a> , 
+		<a href="http://www.zhihu.com/people/strangebanman">zhihu</a></p>
+		<p>I also like to read book reviews and film reviews on <a href="http://www.douban.com/people/sssssaber/">douban</a>
+		and listen to music on <a href="http://www.pandora.com/">pandora</a> </p>
+	</div>
+</div>
+<div class="section" id="section3">
+	<div class="intro">
+		<h1>BLOG</h1>
+		<p>It's My Personal Blog , I Build it and Host it On GitHub
+			<br />
+			Sometimes I will Writing Some Diaries on It.
+		</p>
+	</div>
+	<a href="http://caorong.github.io/"> <img src="image/blog1.png" alt="blog" style="width:600px"/> </a>
+</div>
+
+</body>
+</html>
