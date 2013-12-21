@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>如何做一个基于hls的网络收音机（一）实现基本功能</title>
+    <meta name="description" content="-desc-">
+    <meta name="author" content="lelouchcr">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+<link href="/assets/themes/twitter/css/pygments.css" rel="stylesheet" type="text/css" media="all">
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">lelouchcr's Blog</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>如何做一个基于hls的网络收音机（一）实现基本功能 <small>yy一个qingting.fm</small></h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>16 September 2013</span>
+    </div>
+    <div class="content">
+      <p>一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。</p>
+
+<h2 id="hlsmsmmsrtmp">首先，用hls相比以前ms的mms或者开源的rtmp流做网络收音机有什么好处？</h2>
+
+<p>其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，可以直接用他们的流播放呀，为啥要费服务器资源再去搭建个基于hls的电台呢？</p>
+
+<ol>
+<li>可以承受高并发 <strong>（主要原因）</strong></li>
+
+<li>不需要特殊服务器，成本低</li>
+
+<li>可以回放，点播 <strong>（顺便实现）</strong></li>
+</ol>
+
+<p>而对于当今的互联网来说，上网的人越来越多，如果用以前的保持长链接的red5server来建集群承受并发实在是成本太高。</p>
+
+<h2 id="hlsm3u8__ts">如何做一个自己的hls子文件（.m3u8 + .ts）？</h2>
+
+<p>其实网上有很多opensource项目都帮你实现了子功能。 这里直接用<a href="http://ffmpeg.org/">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter">3u8segment</a></p>
+
+<p><code>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt=.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | \</code> <code>m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/
+</code></p>
+
+<p>然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。</p>
+
+<h4 id="final">final</h4>
+
+<p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p>
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#web-ref">
+    		web <span>1</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#YY-ref">YY <span>1</span></a></li>
+     
+    	<li><a href="/tags.html#hls-ref">hls <span>1</span></a></li>
+     
+    	<li><a href="/tags.html#web-ref">web <span>1</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/%E5%B7%A5%E4%BD%9C/2013/09/14/conclusion-about-last-two-month" title="毕业后2个月的工作总结">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/anime/2013/09/23/ntr-little-town" title="吐槽下 NTR 小镇">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_developer = 1;
+    var disqus_shortname = 'caorong'; // required: replace example with your forum shortname
+    
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 lelouchcr
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
+

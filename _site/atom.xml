@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ 
+ <title>lelouchcr's Blog</title>
+ <link href="http://caorong.github.io/" rel="self"/>
+ <link href="http://caorong.github.io"/>
+ <updated>2013-12-21T19:52:57+08:00</updated>
+ <id>http://caorong.github.io</id>
+ <author>
+   <name>lelouchcr</name>
+   <email>lelouchcr@gmail.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>在mac上编译安装quack3</title>
+   <link href="http://caorong.github.io/game/2013/12/21/compile-and-play-quack3-on-mac"/>
+   <updated>2013-12-21T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/game/2013/12/21/compile-and-play-quack3-on-mac</id>
+   <content type="html">&lt;p&gt;这是github上id的&lt;a href=&quot;https://github.com/id-Software/Quake-III-Arena&quot;&gt;官方源码&lt;/a&gt;,可以在win上用vc， linux上gcc等编译，但在mac上用xcode会提示说此项目太古老。。。&lt;/p&gt;
+
+&lt;p&gt;于是便找到了这个&lt;a href=&quot;https://github.com/ioquake/ioq3&quot;&gt;非官方源码&lt;/a&gt; 这个非官方组织在q3的基础上继续维护q3。&lt;/p&gt;
+
+&lt;p&gt;安装方法：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;我是64位的系统，于是console下直接 &lt;code&gt;./make-macosx.sh x86_64&lt;/code&gt;&lt;/li&gt;
+
+&lt;li&gt;此时编译完后在build/releasexx/ 文件夹下直接运行会提示错误。因为仅仅编译了引擎，而没有资源文件-pak0.pk3。下载后将他放在ioquake3.app里面的ioquake3.app/MacOs/baseq3 directory.&lt;a href=&quot;http://pan.baidu.com/s/1dDqrMtb&quot;&gt;资源文件地址&lt;/a&gt;&lt;/li&gt;
+
+&lt;li&gt;下载资源文件&lt;a href=&quot;http://ioquake3.org/extras/patch-data/&quot;&gt;更新包&lt;/a&gt;同样合并到oquake3.app/MacOs/下。&lt;/li&gt;
+
+&lt;li&gt;play it with fun～&lt;/li&gt;
+&lt;/ol&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>使用spring @Transactional时遇到的问题</title>
+   <link href="http://caorong.github.io/java/2013/10/27/some-problem-when-use-Transaction-in-spring"/>
+   <updated>2013-10-27T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/java/2013/10/27/some-problem-when-use-Transaction-in-spring</id>
+   <content type="html">&lt;p&gt;这周在抄袭ruby代码时遇到了个奇怪的问题。&lt;/p&gt;
+
+&lt;p&gt;原代码&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;class&lt;/span&gt; &lt;span class=&#39;nc&#39;&gt;XXService&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;implements&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;IXXService&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;nd&#39;&gt;@Transactional&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kt&#39;&gt;void&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;Dojob&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;xxx&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;input&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// operate database&lt;/span&gt;
+		&lt;span class=&#39;o&#39;&gt;..&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// send queue&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;sendqueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;后面发现由于send queue时，收queue方也会对数据库操作，并发比较厉害时会发生不一致问题。so 将send queue的部分与 operate database 部分分开&lt;/p&gt;
+
+&lt;p&gt;新代码&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;class&lt;/span&gt; &lt;span class=&#39;nc&#39;&gt;XXService&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;implements&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;IXXService&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+	
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kt&#39;&gt;void&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;Dojob&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;xxx&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;input&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;k&#39;&gt;this&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;operatedb&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;();&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// send queue&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;sendqueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+	
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;nd&#39;&gt;@Transactional&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kt&#39;&gt;void&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;operatedb&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;xxx&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;input&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// operate database&lt;/span&gt;
+		&lt;span class=&#39;o&#39;&gt;..&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// send queue&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;sendqueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4 id=&quot;&quot;&gt;看起来还是挺合理的代码额，然后单步调试时发现事务并没有起作用，可是改之前事务明明是器作用的呀？&lt;/h4&gt;
+
+&lt;p&gt;参考springsource reference，可并没有找到什么。。。&lt;/p&gt;
+
+&lt;p&gt;然后，考虑到java的编码范式，将Transaction的方法单独提出到一个新的service里。然后XXService里利用spring的autowire引入，&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;class&lt;/span&gt; &lt;span class=&#39;nc&#39;&gt;XXService&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;implements&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;IXXService&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+	
+	&lt;span class=&#39;nd&#39;&gt;@Autowired&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;private&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;XXDBService&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;dbservice&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;;&lt;/span&gt;
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kt&#39;&gt;void&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;Dojob&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;xxx&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;input&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;dbservice&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;operatedb&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;();&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// send queue&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;sendqueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+
+&lt;span class=&#39;nd&#39;&gt;@Service&lt;/span&gt;
+&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;class&lt;/span&gt; &lt;span class=&#39;nc&#39;&gt;XXDBService&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;implements&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;IXXDBService&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+	
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;nd&#39;&gt;@Transactional&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kt&#39;&gt;void&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;operatedb&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;xxx&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;input&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// operate database&lt;/span&gt;
+		&lt;span class=&#39;o&#39;&gt;..&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// send queue&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;sendqueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;结果。。it works!!!&lt;/p&gt;
+
+&lt;p&gt;但是为什么呢？说到这个其实与spring aop的实现有密不可分的联系。&lt;/p&gt;
+
+&lt;p&gt;那么spring aop是如何实现的呢？&lt;/p&gt;
+
+&lt;p&gt;这里暂不考虑第三方的aop库，仅用java官方提供的动态代理的方法。&lt;/p&gt;
+
+&lt;p&gt;首先需要了解下spring是如何创建一个dynamic对象的&lt;/p&gt;
+
+&lt;p&gt;同样抛开解析xml等等不谈。&lt;/p&gt;
+
+&lt;p&gt;他的本质其实就是java的动态代理：&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;class&lt;/span&gt; &lt;span class=&#39;nc&#39;&gt;DoTransaction&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;implements&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;InvocationHandler&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+	&lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;obj&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;kc&#39;&gt;null&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;;&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;DoTransaction&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;_obj&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;){&lt;/span&gt;
+		&lt;span class=&#39;k&#39;&gt;this&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;obj&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;_obj&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;;&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+	&lt;span class=&#39;nd&#39;&gt;@Override&lt;/span&gt;
+	&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;invoke&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;proxy&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;Method&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;method&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;[]&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;args&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt;&lt;span class=&#39;kd&#39;&gt;throws&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;Throwable&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// 开启jdbc事务 (yy的，请勿较真)&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;jdbc&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;transaction&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;start&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;//执行自己的service里面的业务&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;Object&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;result&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;method&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;invoke&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;k&#39;&gt;this&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;obj&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;args&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+		&lt;span class=&#39;c1&#39;&gt;// 提交事务 (yy的，请勿较真)&lt;/span&gt;
+		&lt;span class=&#39;n&#39;&gt;jdbc&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;commit&lt;/span&gt;
+		&lt;span class=&#39;k&#39;&gt;return&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;result&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;;&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;所以，当我在一个方法前加了@Transactional。 于是，spring先在create 此 dynamic对象的时候将会实用DoTransaction创建一个proxy&amp;amp;xxx对象，此对象即带了事务该做的事情。&lt;/p&gt;
+
+&lt;p&gt;最后，再回到原命题，为神马this.operatedb()不起作用了呢？&lt;/p&gt;
+
+&lt;p&gt;那请问此this是神马？&lt;/p&gt;
+
+&lt;p&gt;this吗？&lt;/p&gt;
+
+&lt;p&gt;额。&lt;/p&gt;
+
+&lt;p&gt;this，我debug看看此this是什么。&lt;/p&gt;
+
+&lt;p&gt;这个object名字里没带$proxy字段，这个this并没有被代理过，一个干干净净的object，so，在此类里面此@Transaction形同虚设了！！！&lt;/p&gt;
+
+&lt;p&gt;so why？&lt;/p&gt;
+
+&lt;p&gt;其实this自己已经是一个对象了，他做得事情其实就是goto到this.xx的函数里面，除非。。。&lt;/p&gt;
+
+&lt;p&gt;代码层面的aop？&lt;/p&gt;
+
+&lt;p&gt;好吧，java本质还是静态语言，至少我现在还没有发现能这么干。&lt;/p&gt;
+
+&lt;p&gt;so，还是把@Transaction的方法提到一个service里，以一个对象的形式引用吧。以便spring帮我们aop。&lt;/p&gt;
+
+&lt;p&gt;finally，嗯，奇怪的问题原来不过如此啊。。&lt;/p&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>java原生线程池-threadPoolExecutor</title>
+   <link href="http://caorong.github.io/java/2013/10/20/learning-javas-threadPoolExecutor"/>
+   <updated>2013-10-20T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/java/2013/10/20/learning-javas-threadPoolExecutor</id>
+   <content type="html">&lt;p&gt;最近再看&lt;a href=&quot;https://github.com/code4craft/webmagic&quot;&gt;webmagic&lt;/a&gt;的源码，发现他的底层线程池也用了java collections自带的ThreadPoolExecutor。之前一直是抱着拿来主义的态度，但其实还是有有必要仔细研究一番的。&lt;/p&gt;
+
+&lt;p&gt;ThreadPoolExecutor 是一个可定制性非常强的线程池。&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;  
+&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;ThreadPoolExecutor&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;kt&#39;&gt;int&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;corePoolSize&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;kt&#39;&gt;int&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;maximumPoolSize&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;kt&#39;&gt;long&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;keepAliveTime&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;n&#39;&gt;TimeUnit&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;unit&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;n&#39;&gt;BlockingQueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;Runnable&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;workQueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;n&#39;&gt;ThreadFactory&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;threadFactory&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+                              &lt;span class=&#39;n&#39;&gt;RejectedExecutionHandler&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;handler&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;从参数可看出，可以定制&lt;/p&gt;
+
+&lt;h6 id=&quot;poolsize_poolsize&quot;&gt;poolsize, 持久存在poolsize&lt;/h6&gt;
+
+&lt;h6 id=&quot;maxpoolsize_poolsize&quot;&gt;maxPoolSize 最大可存在poolsize&lt;/h6&gt;
+
+&lt;h6 id=&quot;keepalivetimeunit2&quot;&gt;keepAliveTime,unit(这2个是闲置线程延迟销毁的时间，及时间单位)&lt;/h6&gt;
+
+&lt;h6 id=&quot;blockingqueue_queuejava66&quot;&gt;BlockingQueue 线程queue，我目前用得java6目前提供的6中实现&lt;/h6&gt;
+
+&lt;pre&gt;&lt;code&gt;ArrayBlockingQueue
+一个固定大小的
+[阻塞队列](http://ifeve.com/blocking-queues/)，放满后不可再放入,可以定义取数据是否按照fifo的顺序还是随机顺序,超过定义的size后会throw java.lang.IllegalStateException 的异常。
+
+
+DelayedWorkQueue	
+这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，专用queue。不再本篇的讨论范围之内。
+
+DelayQueue	
+这是无界阻塞队列，队列中的对象需要继承Delayed接口，满足延迟条件才可以使用。
+
+LinkedBlockingQueue	
+顾名思义，用链表实现的阻塞队列，效率比较高。最大大小为Ineger.MAXVALUE
+
+PriorityBlockingQueue	
+同样也是个无界阻塞队列对象需要继承Comparable接口，使对象可以进行优先级比较。
+
+SynchronousQueue	
+一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。webmagic的ThreadPool的queue就用了此queue&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h6 id=&quot;threadfactory_&quot;&gt;ThreadFactory 执行程序创建新线程时使用的工厂。（可选）&lt;/h6&gt;
+
+&lt;p&gt;Executors也提供了默认的ThreadFactory方法：Executors.defaultThreadFactory() 当然也可以使用apache common lang3的BasicThreadFactory他在Executors.defaultThreadFactory的基础上做了层简单的封装&lt;/p&gt;
+
+&lt;h6 id=&quot;handler_&quot;&gt;handler 超出线程范围和队列容量而使执行被阻塞时所使用的处理程序（可选）&lt;/h6&gt;
+
+&lt;p&gt;ThreadPoolExecutor已经默认提供了4种handler 分别是 ThreadPoolExecutor.CallerRunsPolicy() 将溢出task交给执行此ThreadPoolExecutor线程执行，一般是主线程。 ThreadPoolExecutor.AbortPolicy() 顾名思义，将任务抛弃,会抛出一个RejectedExecutionException 错误。 ThreadPoolExecutor.DiscardOldestPolicy() 抛弃旧任务 ThreadPoolExecutor.DiscardPolicy() 同AbortPolicy，但不会抛错&lt;/p&gt;
+
+&lt;p&gt;webmagic创建的线程池的代码&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;java&#39;&gt;  
+&lt;span class=&#39;kd&#39;&gt;public&lt;/span&gt; &lt;span class=&#39;kd&#39;&gt;static&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;ExecutorService&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;newFixedThreadPool&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;kt&#39;&gt;int&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;threadSize&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+		&lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;threadSize&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;1&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;{&lt;/span&gt;
+			&lt;span class=&#39;k&#39;&gt;throw&lt;/span&gt; &lt;span class=&#39;k&#39;&gt;new&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;IllegalArgumentException&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;quot;ThreadSize must be greater than 1!&amp;quot;&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;);&lt;/span&gt;
+		&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+		&lt;span class=&#39;k&#39;&gt;return&lt;/span&gt; &lt;span class=&#39;k&#39;&gt;new&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;ThreadPoolExecutor&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;threadSize&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;-&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;1&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;threadSize&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;-&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;1&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;0L&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;TimeUnit&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;MILLISECONDS&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;
+				&lt;span class=&#39;k&#39;&gt;new&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;SynchronousQueue&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;Runnable&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;&amp;gt;(),&lt;/span&gt; &lt;span class=&#39;k&#39;&gt;new&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;ThreadPoolExecutor&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;na&#39;&gt;CallerRunsPolicy&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;());&lt;/span&gt;
+	&lt;span class=&#39;o&#39;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;使用作为通道的SynchronousQueue，当所需线程超过规定的线程后，将超过线程池size的当前任务交给主线程执行。（CallerRunsPolicy） 因为webmagic的主循环为一个Thread，里面起一个ThreadPool，所以超出size的task将有Thread执行，不会影响main函数，（其实main也就起了个Thread）&lt;/p&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>python2x UnicodeEncodeError</title>
+   <link href="http://caorong.github.io/python/2013/10/03/python2x-unicodeencodeerror"/>
+   <updated>2013-10-03T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/python/2013/10/03/python2x-unicodeencodeerror</id>
+   <content type="html">&lt;p&gt;当用python处理中文时经常会遇到这个问题，baidu google也能搜到铺天盖地的解决方法，其中搜出来最多的是如下方法。&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt;  
+&lt;span class=&#39;kn&#39;&gt;import&lt;/span&gt; &lt;span class=&#39;nn&#39;&gt;sys&lt;/span&gt;
+&lt;span class=&#39;nb&#39;&gt;reload&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;sys&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+&lt;span class=&#39;n&#39;&gt;sys&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;setdefaultencoding&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;那为什么如此这般就行了？&lt;/p&gt;
+
+&lt;p&gt;先搞一个概念，一般写python时，创建文件后，开头总喜欢加一句&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt; 
+&lt;span class=&#39;c&#39;&gt;#coding:utf8&lt;/span&gt;
+&lt;span class=&#39;k&#39;&gt;print&lt;/span&gt; &lt;span class=&#39;s&#39;&gt;&amp;#39;豆奶&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;这个表示该文件，__注意__，表示当前文件，比如xx.py这段代码用是以utf-8编码的。这和上面的setdefaultencoding是两码事！如果不加这一行，(python２x的文件编码默认也是ascii)但是代码中有中文出现的话，比如“豆奶”，则也会报同样的异常，原因是，“豆奶”这２个字符在ascii码里找不到，即无法encode成ascii字符。&lt;/p&gt;
+
+&lt;p&gt;而比如我现在用request爬一个web页面，当我把页面相关信息写入文件或者存入数据库时会发生标题所发生的错误。又是什么原因？&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt; 
+&lt;span class=&#39;c&#39;&gt;# coding:utf8&lt;/span&gt;
+&lt;span class=&#39;kn&#39;&gt;import&lt;/span&gt; &lt;span class=&#39;nn&#39;&gt;requests&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;nn&#39;&gt;sys&lt;/span&gt;
+
+&lt;span class=&#39;k&#39;&gt;def&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;writefile&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;name&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;):&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;nb&#39;&gt;open&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;name&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;write&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;flush&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;()&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;close&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;()&lt;/span&gt;
+
+&lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;__name__&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;==&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;:&lt;/span&gt;
+	&lt;span class=&#39;n&#39;&gt;url&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;s&#39;&gt;&amp;#39;http://www.xxx.com&amp;#39;&lt;/span&gt;
+	&lt;span class=&#39;n&#39;&gt;response&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;requests&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;get&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;url&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+	&lt;span class=&#39;n&#39;&gt;response&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;=&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;utf-8&amp;#39;&lt;/span&gt;
+	&lt;span class=&#39;k&#39;&gt;print&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;response&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;text&lt;/span&gt;    	
+	&lt;span class=&#39;k&#39;&gt;print&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;response&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt;   
+	&lt;span class=&#39;k&#39;&gt;print&lt;/span&gt; &lt;span class=&#39;nb&#39;&gt;type&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;response&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;text&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;        &lt;span class=&#39;c&#39;&gt;# &amp;lt;type &amp;#39;unicode&amp;#39;&amp;gt;&lt;/span&gt;
+	&lt;span class=&#39;n&#39;&gt;writefile&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;test.txt&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;response&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;text&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;c&#39;&gt;#UnicodeEncodeError&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;先说一下解决异常的方法。 就我所只有２种方法: 1. google出来最多的，在代码开头加上&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt; 
+&lt;span class=&#39;kn&#39;&gt;import&lt;/span&gt; &lt;span class=&#39;nn&#39;&gt;sys&lt;/span&gt;
+&lt;span class=&#39;nb&#39;&gt;reload&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;sys&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+&lt;span class=&#39;n&#39;&gt;sys&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;setdefaultencoding&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;ol&gt;
+&lt;li&gt;在__仅接受编码过的string__的操作，比如存数据库，写文件。所以在进行这个操作的时候手动编码。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt; 
+&lt;span class=&#39;k&#39;&gt;def&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;writefile&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;name&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;):&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;nb&#39;&gt;open&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;name&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;write&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;msg&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;encode&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;,&lt;/span&gt;&lt;span class=&#39;s&#39;&gt;&amp;#39;ignore&amp;#39;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;))&lt;/span&gt;&lt;span class=&#39;err&#39;&gt;＃&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;just&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;leave&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;the&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;character&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;out&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;of&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;the&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;Unicode&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;result&lt;/span&gt;&lt;span class=&#39;err&#39;&gt;　&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;flush&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;()&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;fp&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;close&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h5 id=&quot;&quot;&gt;总结：&lt;/h5&gt;
+
+&lt;p&gt;因为response.text 的type是unicode，而python对于不接受unicode的xx操作，默认进行ascii编码。所以造成了如上错误。&lt;/p&gt;
+
+&lt;p&gt;顺便贴一下此默认设置的出处的搜索方法和源码。我的环境是mac。一般在python的lib下,我用ack依样画葫芦search。&lt;/p&gt;
+&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;sh&#39;&gt; 
+ack -i setdefaultencoding /Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7
+
+/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site.py
+504:        sys.setdefaultencoding&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;encoding&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;c&#39;&gt;# Needs Python Unicode build !&lt;/span&gt;
+557:    &lt;span class=&#39;c&#39;&gt;# Remove sys.setdefaultencoding() so that users cannot change the&lt;/span&gt;
+560:    &lt;span class=&#39;k&#39;&gt;if &lt;/span&gt;hasattr&lt;span class=&#39;o&#39;&gt;(&lt;/span&gt;sys, &lt;span class=&#39;s2&#39;&gt;&amp;quot;setdefaultencoding&amp;quot;&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;)&lt;/span&gt;:
+561:        del sys.setdefaultencoding
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#39;highlight&#39;&gt;&lt;pre&gt;&lt;code class=&#39;python&#39;&gt; 
+&lt;span class=&#39;k&#39;&gt;def&lt;/span&gt; &lt;span class=&#39;nf&#39;&gt;setencoding&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;():&lt;/span&gt;
+    &lt;span class=&#39;sd&#39;&gt;&amp;quot;&amp;quot;&amp;quot;Set the string encoding used by the Unicode implementation.  The&lt;/span&gt;
+&lt;span class=&#39;sd&#39;&gt;    default is &amp;#39;ascii&amp;#39;, but if you&amp;#39;re willing to experiment, you can&lt;/span&gt;
+&lt;span class=&#39;sd&#39;&gt;    change this.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;s&#39;&gt;&amp;quot;ascii&amp;quot;&lt;/span&gt; &lt;span class=&#39;c&#39;&gt;# Default value set by _PyUnicode_Init()&lt;/span&gt;
+    &lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;0&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;:&lt;/span&gt;
+        &lt;span class=&#39;c&#39;&gt;# Enable to support locale aware default string encodings.&lt;/span&gt;
+        &lt;span class=&#39;kn&#39;&gt;import&lt;/span&gt; &lt;span class=&#39;nn&#39;&gt;locale&lt;/span&gt;
+        &lt;span class=&#39;n&#39;&gt;loc&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;locale&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;getdefaultlocale&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;()&lt;/span&gt;
+        &lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;loc&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;[&lt;/span&gt;&lt;span class=&#39;mi&#39;&gt;1&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;]:&lt;/span&gt;
+            &lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;loc&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;[&lt;/span&gt;&lt;span class=&#39;mi&#39;&gt;1&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;]&lt;/span&gt;
+    &lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;mi&#39;&gt;0&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;:&lt;/span&gt;
+        &lt;span class=&#39;c&#39;&gt;# Enable to switch off string to Unicode coercion and implicit&lt;/span&gt;
+        &lt;span class=&#39;c&#39;&gt;# Unicode to string conversion.&lt;/span&gt;
+        &lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;=&lt;/span&gt; &lt;span class=&#39;s&#39;&gt;&amp;quot;undefined&amp;quot;&lt;/span&gt;
+    &lt;span class=&#39;k&#39;&gt;if&lt;/span&gt; &lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt; &lt;span class=&#39;o&#39;&gt;!=&lt;/span&gt; &lt;span class=&#39;s&#39;&gt;&amp;quot;ascii&amp;quot;&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;:&lt;/span&gt;
+        &lt;span class=&#39;c&#39;&gt;# On Non-Unicode builds this will raise an AttributeError...&lt;/span&gt;
+        &lt;span class=&#39;n&#39;&gt;sys&lt;/span&gt;&lt;span class=&#39;o&#39;&gt;.&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;setdefaultencoding&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;(&lt;/span&gt;&lt;span class=&#39;n&#39;&gt;encoding&lt;/span&gt;&lt;span class=&#39;p&#39;&gt;)&lt;/span&gt; &lt;span class=&#39;c&#39;&gt;# Needs Python Unicode build !&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;代码都是运行不到的，主要看注释。。当然可以手动修改&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;
+encoding = &amp;#39;utf-8&amp;#39; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;一劳永逸。这也就是为什么google说也能通过修改site.py 的 encoding达到目的。&lt;/p&gt;
+
+&lt;p&gt;参考：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.iteye.com/topic/561786&quot;&gt;http://www.iteye.com/topic/561786&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.iteye.com/topic/699510&quot;&gt;http://www.iteye.com/topic/699510&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://docs.python.org/2/howto/unicode.html&quot;&gt;http://docs.python.org/2/howto/unicode.html&lt;/a&gt;&lt;/p&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>吐槽下 NTR 小镇</title>
+   <link href="http://caorong.github.io/anime/2013/09/23/ntr-little-town"/>
+   <updated>2013-09-23T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/anime/2013/09/23/ntr-little-town</id>
+   <content type="html">&lt;h2 id=&quot;&quot;&gt;引子&lt;/h2&gt;
+
+&lt;p&gt;近来貌似NTR小镇很火，我也手贱竟然在中秋假期最后一天晚上睡觉时起了个头，国庆前一周9天晚上再也没睡好过。狗血+虐心的情节让我不得不放下同样看了个开头的蜀山剑侠，一心一意看小镇。&lt;/p&gt;
+
+&lt;p&gt;我没看过动画，仅看漫画，觉得这部作品是日系后宫动漫中少有的，不靠卖肉，仅靠虐心情节，吸引人的作品。男主角也一反常规，竟然没有脚踩n条船（n&amp;gt;=2）。男女主角离离散散，一会儿要好，一会人分手，让人看得纠结万分！吐槽曰，这尼玛让我想到三国中的一句话，分久必合，合久必分。&lt;/p&gt;
+
+&lt;h3 id=&quot;_2&quot;&gt;七海&lt;/h3&gt;
+
+&lt;p&gt;男主一开始的单恋对象。我的评价是，短发中最好看的，女主中最失败的。明明是男主3年多的单恋对象，敌不过女主1年的主角光环。不过庆幸的是，她没有因为失败而走极端。&lt;/p&gt;
+
+&lt;h3 id=&quot;_3&quot;&gt;风间&lt;/h3&gt;
+
+&lt;p&gt;他的人生，再漫画中的情节就像他骑摩托一样，能别开太快行吗？！我还以为能看到男女主和风间和他青梅竹马的4人斗争的说！！竟然手术后，说什么手术很成功，但是人没保住。怎么之前不再加句，要孩子还是要大人。怀疑是不是作者洞歪脑筋想去国产电视剧发展？作者你明明让男主说出是朋友的话，就必须坦诚相待这么帅气的话。但作者你却有意让风间走这么快，是不是有点再骗自己啊？！&lt;/p&gt;
+
+&lt;h3 id=&quot;_4&quot;&gt;明日香&lt;/h3&gt;
+
+&lt;p&gt;虽然很暴力，虽然飞机场，虽然时不时冒出xx音，但善解人意的好女孩用远高分&lt;/p&gt;
+
+&lt;h3 id=&quot;_5&quot;&gt;枝叶懔&lt;/h3&gt;
+
+&lt;p&gt;女主的腹黑妹妹。最后阴差阳错喜欢上了男主！！！不做评价&lt;/p&gt;
+
+&lt;h3 id=&quot;_6&quot;&gt;夏越美奈&lt;/h3&gt;
+
+&lt;p&gt;别活在自己的世界里行吗？小姐！！&lt;/p&gt;
+
+&lt;h3 id=&quot;_7&quot;&gt;知沙&lt;/h3&gt;
+
+&lt;p&gt;女主枝叶的学生，告白失败后化身为中二少女，然后再次失败！你就是一悲剧。&lt;/p&gt;
+
+&lt;p&gt;待续&lt;/p&gt;
+
+&lt;p&gt;继续追漫画。。。&lt;/p&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>如何做一个基于hls的网络收音机（一）实现基本功能</title>
+   <link href="http://caorong.github.io/web/2013/09/16/image-to-build-a-online-radio-1-basic-function"/>
+   <updated>2013-09-16T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/web/2013/09/16/image-to-build-a-online-radio-1-basic-function</id>
+   <content type="html">&lt;p&gt;一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。&lt;/p&gt;
+
+&lt;h2 id=&quot;hlsmsmmsrtmp&quot;&gt;首先，用hls相比以前ms的mms或者开源的rtmp流做网络收音机有什么好处？&lt;/h2&gt;
+
+&lt;p&gt;其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，可以直接用他们的流播放呀，为啥要费服务器资源再去搭建个基于hls的电台呢？&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;可以承受高并发 &lt;strong&gt;（主要原因）&lt;/strong&gt;&lt;/li&gt;
+
+&lt;li&gt;不需要特殊服务器，成本低&lt;/li&gt;
+
+&lt;li&gt;可以回放，点播 &lt;strong&gt;（顺便实现）&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;而对于当今的互联网来说，上网的人越来越多，如果用以前的保持长链接的red5server来建集群承受并发实在是成本太高。&lt;/p&gt;
+
+&lt;h2 id=&quot;hlsm3u8__ts&quot;&gt;如何做一个自己的hls子文件（.m3u8 + .ts）？&lt;/h2&gt;
+
+&lt;p&gt;其实网上有很多opensource项目都帮你实现了子功能。 这里直接用&lt;a href=&quot;http://ffmpeg.org/&quot;&gt;ffmpeg&lt;/a&gt;和m&lt;a href=&quot;https://github.com/johnf/m3u8-segmenter&quot;&gt;3u8segment&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt=.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | \&lt;/code&gt; &lt;code&gt;m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。&lt;/p&gt;
+
+&lt;h4 id=&quot;final&quot;&gt;final&lt;/h4&gt;
+
+&lt;p&gt;如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～&lt;/p&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>毕业后2个月的工作总结</title>
+   <link href="http://caorong.github.io/%E5%B7%A5%E4%BD%9C/2013/09/14/conclusion-about-last-two-month"/>
+   <updated>2013-09-14T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/%E5%B7%A5%E4%BD%9C/2013/09/14/conclusion-about-last-two-month</id>
+   <content type="html">&lt;p&gt;不知不觉已经毕业工作了2个月了，好久没玩游戏了。 大学期间一直好逸恶劳的我来说，上班很辛苦啊。&lt;/p&gt;
+
+&lt;h3 id=&quot;&quot;&gt;现在的工作&lt;/h3&gt;
+
+&lt;p&gt;现在在公司里写java，主要是写爬虫，爬优酷，iqiyi，虾米，懒人听书，ituns podcast，凤凰等等。以前都是用python写的爬虫，拿java写还是头一次。希望日后的工作能更有趣点。&lt;/p&gt;
+
+&lt;h3 id=&quot;_2&quot;&gt;干过的事情&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;增加现有的爬虫的功能。这就不说了&lt;/li&gt;
+
+&lt;li&gt;学着用Selenium，并写了个chrome 插件，用于截取想要的ajax请求。用于获取iqiyi.com的视频的真实地址。因为他的视频下载链接有有效期。&lt;/li&gt;
+
+&lt;li&gt;写了个demo用于爬hls的站点。 qingting.fm&lt;/li&gt;
+
+&lt;li&gt;写了个基于hls的直播流的demo，主要用到m3u8-segment, ffmpeg, nginx, tomcat.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;_&quot;&gt;后面的安排 （这。。算是长期安排吧）&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;学习ruby on rails&lt;/li&gt;
+
+&lt;li&gt;准备写一个可以让android用得podcast站点&lt;/li&gt;
+
+&lt;li&gt;写blog&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;_3&quot;&gt;最近的业余生活&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;听teahour.fm&lt;/li&gt;
+
+&lt;li&gt;论持久战 coc&lt;/li&gt;
+
+&lt;li&gt;看小说，路遥的《平凡的世界》&lt;/li&gt;
+&lt;/ul&gt;</content>
+ </entry>
+ 
+ <entry>
+   <title>Jekyll Introduction</title>
+   <link href="http://caorong.github.io/lessons/2011/12/29/jekyll-introduction"/>
+   <updated>2011-12-29T00:00:00+08:00</updated>
+   <id>http://caorong.github.io/lessons/2011/12/29/jekyll-introduction</id>
+   <content type="html">&lt;p&gt;This Jekyll introduction will outline specifically what Jekyll is and why you would want to use it. Directly following the intro we’ll learn exactly &lt;em&gt;how&lt;/em&gt; Jekyll does what it does.&lt;/p&gt;
+
+&lt;h2 id=&quot;overview&quot;&gt;Overview&lt;/h2&gt;
+
+&lt;h3 id=&quot;what_is_jekyll&quot;&gt;What is Jekyll?&lt;/h3&gt;
+
+&lt;p&gt;Jekyll is a parsing engine bundled as a ruby gem used to build static websites from dynamic components such as templates, partials, liquid code, markdown, etc. Jekyll is known as “a simple, blog aware, static site generator”.&lt;/p&gt;
+
+&lt;h3 id=&quot;examples&quot;&gt;Examples&lt;/h3&gt;
+
+&lt;p&gt;This website is created with Jekyll. &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/Sites&quot;&gt;Other Jekyll websites&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;what_does_jekyll_do&quot;&gt;What does Jekyll Do?&lt;/h3&gt;
+
+&lt;p&gt;Jekyll is a ruby gem you install on your local system. Once there you can call &lt;code&gt;jekyll --server&lt;/code&gt; on a directory and provided that directory is setup in a way jekyll expects, it will do magic stuff like parse markdown/textile files, compute categories, tags, permalinks, and construct your pages from layout templates and partials.&lt;/p&gt;
+
+&lt;p&gt;Once parsed, Jekyll stores the result in a self-contained static &lt;code&gt;_site&lt;/code&gt; folder. The intention here is that you can serve all contents in this folder statically from a plain static web-server.&lt;/p&gt;
+
+&lt;p&gt;You can think of Jekyll as a normalish dynamic blog but rather than parsing content, templates, and tags on each request, Jekyll does this once &lt;em&gt;beforehand&lt;/em&gt; and caches the &lt;em&gt;entire website&lt;/em&gt; in a folder for serving statically.&lt;/p&gt;
+
+&lt;h3 id=&quot;jekyll_is_not_blogging_software&quot;&gt;Jekyll is Not Blogging Software&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Jekyll is a parsing engine.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Jekyll does not come with any content nor does it have any templates or design elements. This is a common source of confusion when getting started. Jekyll does not come with anything you actually use or see on your website - you have to make it.&lt;/p&gt;
+
+&lt;h3 id=&quot;why_should_i_care&quot;&gt;Why Should I Care?&lt;/h3&gt;
+
+&lt;p&gt;Jekyll is very minimalistic and very efficient. The most important thing to realize about Jekyll is that it creates a static representation of your website requiring only a static web-server. Traditional dynamic blogs like Wordpress require a database and server-side code. Heavily trafficked dynamic blogs must employ a caching layer that ultimately performs the same job Jekyll sets out to do; serve static content.&lt;/p&gt;
+
+&lt;p&gt;Therefore if you like to keep things simple and you prefer the command-line over an admin panel UI then give Jekyll a try.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Developers like Jekyll because we can write content like we write code:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Ability to write content in markdown or textile in your favorite text-editor.&lt;/li&gt;
+
+&lt;li&gt;Ability to write and preview your content via localhost.&lt;/li&gt;
+
+&lt;li&gt;No internet connection required.&lt;/li&gt;
+
+&lt;li&gt;Ability to publish via git.&lt;/li&gt;
+
+&lt;li&gt;Ability to host your blog on a static web-server.&lt;/li&gt;
+
+&lt;li&gt;Ability to host freely on GitHub Pages.&lt;/li&gt;
+
+&lt;li&gt;No database required.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;how_jekyll_works&quot;&gt;How Jekyll Works&lt;/h1&gt;
+
+&lt;p&gt;The following is a complete but concise outline of exactly how Jekyll works.&lt;/p&gt;
+
+&lt;p&gt;Be aware that core concepts are introduced in rapid succession without code examples. This information is not intended to specifically teach you how to do anything, rather it is intended to give you the &lt;em&gt;full picture&lt;/em&gt; relative to what is going on in Jekyll-world.&lt;/p&gt;
+
+&lt;p&gt;Learning these core concepts should help you avoid common frustrations and ultimately help you better understand the code examples contained throughout Jekyll-Bootstrap.&lt;/p&gt;
+
+&lt;h2 id=&quot;initial_setup&quot;&gt;Initial Setup&lt;/h2&gt;
+
+&lt;p&gt;After &lt;a href=&quot;/index.html#start-now&quot;&gt;installing jekyll&lt;/a&gt; you’ll need to format your website directory in a way jekyll expects. Jekyll-bootstrap conveniently provides the base directory format.&lt;/p&gt;
+
+&lt;h3 id=&quot;the_jekyll_application_base_format&quot;&gt;The Jekyll Application Base Format&lt;/h3&gt;
+
+&lt;p&gt;Jekyll expects your website directory to be laid out like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.
+|-- _config.yml
+|-- _includes
+|-- _layouts
+|   |-- default.html
+|   |-- post.html
+|-- _posts
+|   |-- 2011-10-25-open-source-is-good.markdown
+|   |-- 2011-04-26-hello-world.markdown
+|-- _site
+|-- index.html
+|-- assets
+    |-- css
+        |-- style.css
+    |-- javascripts&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;_config.yml&lt;/strong&gt; Stores configuration data.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;_includes&lt;/strong&gt; This folder is for partial views.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;_layouts&lt;/strong&gt; This folder is for the main templates your content will be inserted into. You can have different layouts for different pages or page sections.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;_posts&lt;/strong&gt; This folder contains your dynamic content/posts. the naming format is required to be &lt;code&gt;@YEAR-MONTH-DATE-title.MARKUP@&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;_site&lt;/strong&gt; This is where the generated site will be placed once Jekyll is done transforming it.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;assets&lt;/strong&gt; This folder is not part of the standard jekyll structure. The assets folder represents &lt;em&gt;any generic&lt;/em&gt; folder you happen to create in your root directory. Directories and files not properly formatted for jekyll will be left untouched for you to serve normally.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;(read more: &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/Usage&quot;&gt;https://github.com/mojombo/jekyll/wiki/Usage&lt;/a&gt;)&lt;/p&gt;
+
+&lt;h3 id=&quot;jekyll_configuration&quot;&gt;Jekyll Configuration&lt;/h3&gt;
+
+&lt;p&gt;Jekyll supports various configuration options that are fully outlined here: (&lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/Configuration&quot;&gt;https://github.com/mojombo/jekyll/wiki/Configuration&lt;/a&gt;)&lt;/p&gt;
+
+&lt;h2 id=&quot;content_in_jekyll&quot;&gt;Content in Jekyll&lt;/h2&gt;
+
+&lt;p&gt;Content in Jekyll is either a post or a page. These content “objects” get inserted into one or more templates to build the final output for its respective static-page.&lt;/p&gt;
+
+&lt;h3 id=&quot;posts_and_pages&quot;&gt;Posts and Pages&lt;/h3&gt;
+
+&lt;p&gt;Both posts and pages should be written in markdown, textile, or HTML and may also contain Liquid templating syntax. Both posts and pages can have meta-data assigned on a per-page basis such as title, url path, as well as arbitrary custom meta-data.&lt;/p&gt;
+
+&lt;h3 id=&quot;working_with_posts&quot;&gt;Working With Posts&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Creating a Post&lt;/strong&gt; Posts are created by properly formatting a file and placing it the &lt;code&gt;_posts&lt;/code&gt; folder.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Formatting&lt;/strong&gt; A post must have a valid filename in the form &lt;code&gt;YEAR-MONTH-DATE-title.MARKUP&lt;/code&gt; and be placed in the &lt;code&gt;_posts&lt;/code&gt; directory. If the data format is invalid Jekyll will not recognize the file as a post. The date and title are automatically parsed from the filename of the post file. Additionally, each file must have &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter&quot;&gt;YAML Front-Matter&lt;/a&gt; prepended to its content. YAML Front-Matter is a valid YAML syntax specifying meta-data for the given file.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Order&lt;/strong&gt; Ordering is an important part of Jekyll but it is hard to specify a custom ordering strategy. Only reverse chronological and chronological ordering is supported in Jekyll.&lt;/p&gt;
+
+&lt;p&gt;Since the date is hard-coded into the filename format, to change the order, you must change the dates in the filenames.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Tags&lt;/strong&gt; Posts can have tags associated with them as part of their meta-data. Tags may be placed on posts by providing them in the post’s YAML front matter. You have access to the post-specific tags in the templates. These tags also get added to the sitewide collection.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Categories&lt;/strong&gt; Posts may be categorized by providing one or more categories in the YAML front matter. Categories offer more significance over tags in that they can be reflected in the URL path to the given post. Note categories in Jekyll work in a specific way. If you define more than one category you are defining a category hierarchy “set”. Example:&lt;/p&gt;
+&lt;hr /&gt;
+&lt;pre&gt;&lt;code&gt;title :  Hello World
+categories : [lessons, beginner]&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;p&gt;This defines the category hierarchy “lessons/beginner”. Note this is &lt;em&gt;one category&lt;/em&gt; node in Jekyll. You won’t find “lessons” and “beginner” as two separate categories unless you define them elsewhere as singular categories.&lt;/p&gt;
+
+&lt;h3 id=&quot;working_with_pages&quot;&gt;Working With Pages&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Creating a Page&lt;/strong&gt; Pages are created by properly formatting a file and placing it anywhere in the root directory or subdirectories that do &lt;em&gt;not&lt;/em&gt; start with an underscore.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Formatting&lt;/strong&gt; In order to register as a Jekyll page the file must contain &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter&quot;&gt;YAML Front-Matter&lt;/a&gt;. Registering a page means 1) that Jekyll will process the page and 2) that the page object will be available in the &lt;code&gt;site.pages&lt;/code&gt; array for inclusion into your templates.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Categories and Tags&lt;/strong&gt; Pages do not compute categories nor tags so defining them will have no effect.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Sub-Directories&lt;/strong&gt; If pages are defined in sub-directories, the path to the page will be reflected in the url. Example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;.
+|-- people
+    |-- bob
+        |-- essay.html&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This page will be available at &lt;code&gt;http://yourdomain.com/people/bob/essay.html&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Recommended Pages&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;index.html&lt;/strong&gt; You will always want to define the root index.html page as this will display on your root URL.&lt;/li&gt;
+
+&lt;li&gt;&lt;strong&gt;404.html&lt;/strong&gt; Create a root 404.html page and GitHub Pages will serve it as your 404 response.&lt;/li&gt;
+
+&lt;li&gt;&lt;strong&gt;sitemap.html&lt;/strong&gt; Generating a sitemap is good practice for SEO.&lt;/li&gt;
+
+&lt;li&gt;&lt;strong&gt;about.html&lt;/strong&gt; A nice about page is easy to do and gives the human perspective to your website.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;templates_in_jekyll&quot;&gt;Templates in Jekyll&lt;/h2&gt;
+
+&lt;p&gt;Templates are used to contain a page’s or post’s content. All templates have access to a global site object variable: &lt;code&gt;site&lt;/code&gt; as well as a page object variable: &lt;code&gt;page&lt;/code&gt;. The site variable holds all accessible content and metadata relative to the site. The page variable holds accessible data for the given page or post being rendered at that point.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Create a Template&lt;/strong&gt; Templates are created by properly formatting a file and placing it in the &lt;code&gt;_layouts&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Formatting&lt;/strong&gt; Templates should be coded in HTML and contain YAML Front Matter. All templates can contain Liquid code to work with your site’s data.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rending Page/Post Content in a Template&lt;/strong&gt; There is a special variable in all templates named : &lt;code&gt;content&lt;/code&gt;. The &lt;code&gt;content&lt;/code&gt; variable holds the page/post content including any sub-template content previously defined. Render the content variable wherever you want your main content to be injected into your template:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;...
+&amp;lt;body&amp;gt;
+  &amp;lt;div id=&quot;sidebar&quot;&amp;gt; ... &amp;lt;/div&amp;gt;
+  &amp;lt;div id=&quot;main&quot;&amp;gt;
+    &amp;#123;{content}&amp;#125;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/body&amp;gt;
+...&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;subtemplates&quot;&gt;Sub-Templates&lt;/h3&gt;
+
+&lt;p&gt;Sub-templates are exactly templates with the only difference being they define another “root” layout/template within their YAML Front Matter. This essentially means a template will render inside of another template.&lt;/p&gt;
+
+&lt;h3 id=&quot;includes&quot;&gt;Includes&lt;/h3&gt;
+
+&lt;p&gt;In Jekyll you can define include files by placing them in the &lt;code&gt;_includes&lt;/code&gt; folder. Includes are NOT templates, rather they are just code snippets that get included into templates. In this way, you can treat the code inside includes as if it was native to the parent template.&lt;/p&gt;
+
+&lt;p&gt;Any valid template code may be used in includes.&lt;/p&gt;
+
+&lt;h2 id=&quot;using_liquid_for_templating&quot;&gt;Using Liquid for Templating&lt;/h2&gt;
+
+&lt;p&gt;Templating is perhaps the most confusing and frustrating part of Jekyll. This is mainly due to the fact that Jekyll templates must use the Liquid Templating Language.&lt;/p&gt;
+
+&lt;h3 id=&quot;what_is_liquid&quot;&gt;What is Liquid?&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/Shopify/liquid&quot;&gt;Liquid&lt;/a&gt; is a secure templating language developed by &lt;a href=&quot;http://shopify.com&quot;&gt;Shopify&lt;/a&gt;. Liquid is designed for end-users to be able to execute logic within template files without imposing any security risk on the hosting server.&lt;/p&gt;
+
+&lt;p&gt;Jekyll uses Liquid to generate the post content within the final page layout structure and as the primary interface for working with your site and post/page data.&lt;/p&gt;
+
+&lt;h3 id=&quot;why_do_we_have_to_use_liquid&quot;&gt;Why Do We Have to Use Liquid?&lt;/h3&gt;
+
+&lt;p&gt;GitHub uses Jekyll to power &lt;a href=&quot;http://pages.github.com/&quot;&gt;GitHub Pages&lt;/a&gt;. GitHub cannot afford to run arbitrary code on their servers so they lock developers down via Liquid.&lt;/p&gt;
+
+&lt;h3 id=&quot;liquid_is_not_programmerfriendly&quot;&gt;Liquid is Not Programmer-Friendly.&lt;/h3&gt;
+
+&lt;p&gt;The short story is liquid is not real code and its not intended to execute real code. The point being you can’t do jackshit in liquid that hasn’t been allowed explicitly by the implementation. What’s more you can only access data-structures that have been explicitly passed to the template.&lt;/p&gt;
+
+&lt;p&gt;In Jekyll’s case it is not possible to alter what is passed to Liquid without hacking the gem or running custom plugins. Both of which cannot be supported by GitHub Pages.&lt;/p&gt;
+
+&lt;p&gt;As a programmer - this is very frustrating.&lt;/p&gt;
+
+&lt;p&gt;But rather than look a gift horse in the mouth we are going to suck it up and view it as an opportunity to work around limitations and adopt client-side solutions when possible.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Aside&lt;/strong&gt; My personal stance is to not invest time trying to hack liquid. It’s really unnecessary &lt;em&gt;from a programmer’s&lt;/em&gt; perspective. That is to say if you have the ability to run custom plugins (i.e. run arbitrary ruby code) you are better off sticking with ruby. Toward that end I’ve built &lt;a href=&quot;http://github.com/plusjade/mustache-with-jekyll&quot;&gt;Mustache-with-Jekyll&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;static_assets&quot;&gt;Static Assets&lt;/h2&gt;
+
+&lt;p&gt;Static assets are any file in the root or non-underscored subfolders that are not pages. That is they have no valid YAML Front Matter and are thus not treated as Jekyll Pages.&lt;/p&gt;
+
+&lt;p&gt;Static assets should be used for images, css, and javascript files.&lt;/p&gt;
+
+&lt;h2 id=&quot;how_jekyll_parses_files&quot;&gt;How Jekyll Parses Files&lt;/h2&gt;
+
+&lt;p&gt;Remember Jekyll is a processing engine. There are two main types of parsing in Jekyll.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Content parsing.&lt;/strong&gt; This is done with textile or markdown.&lt;/li&gt;
+
+&lt;li&gt;&lt;strong&gt;Template parsing.&lt;/strong&gt; This is done with the liquid templating language.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;And thus there are two main types of file formats needed for this parsing.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Post and Page files.&lt;/strong&gt; All content in Jekyll is either a post or a page so valid posts and pages are parsed with markdown or textile.&lt;/li&gt;
+
+&lt;li&gt;&lt;strong&gt;Template files.&lt;/strong&gt; These files go in &lt;code&gt;_layouts&lt;/code&gt; folder and contain your blogs &lt;strong&gt;templates&lt;/strong&gt;. They should be made in HTML with the help of Liquid syntax. Since include files are simply injected into templates they are essentially parsed as if they were native to the template.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Arbitrary files and folders.&lt;/strong&gt; Files that &lt;em&gt;are not&lt;/em&gt; valid pages are treated as static content and pass through Jekyll untouched and reside on your blog in the exact structure and format they originally existed in.&lt;/p&gt;
+
+&lt;h3 id=&quot;formatting_files_for_parsing&quot;&gt;Formatting Files for Parsing.&lt;/h3&gt;
+
+&lt;p&gt;We’ve outlined the need for valid formatting using &lt;strong&gt;YAML Front Matter&lt;/strong&gt;. Templates, posts, and pages all need to provide valid YAML Front Matter even if the Matter is empty. This is the only way Jekyll knows you want the file processed.&lt;/p&gt;
+
+&lt;p&gt;YAML Front Matter must be prepended to the top of template/post/page files:&lt;/p&gt;
+&lt;hr /&gt;
+&lt;pre&gt;&lt;code&gt;layout: post
+category : pages
+tags : [how-to, jekyll]&lt;/code&gt;&lt;/pre&gt;
+&lt;hr /&gt;
+&lt;pre&gt;&lt;code&gt;... contents ...&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Three hyphens on a new line start the Front-Matter block and three hyphens on a new line end the block. The data inside the block must be valid YAML.&lt;/p&gt;
+
+&lt;p&gt;Configuration parameters for YAML Front-Matter is outlined here: &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter&quot;&gt;A comprehensive explanation of YAML Front Matter&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;defining_layouts_for_posts_and_templates_parsing&quot;&gt;Defining Layouts for Posts and Templates Parsing.&lt;/h4&gt;
+
+&lt;p&gt;The &lt;code&gt;layout&lt;/code&gt; parameter in the YAML Front Matter defines the template file for which the given post or template should be injected into. If a template file specifies its own layout, it is effectively being used as a &lt;code&gt;sub-template.&lt;/code&gt; That is to say loading a post file into a template file that refers to another template file with work in the way you’d expect; as a nested sub-template.&lt;/p&gt;
+
+&lt;h2 id=&quot;how_jekyll_generates_the_final_static_files&quot;&gt;How Jekyll Generates the Final Static Files.&lt;/h2&gt;
+
+&lt;p&gt;Ultimately, Jekyll’s job is to generate a static representation of your website. The following is an outline of how that’s done:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Jekyll collects data.&lt;/strong&gt; Jekyll scans the posts directory and collects all posts files as post objects. It then scans the layout assets and collects those and finally scans other directories in search of pages.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Jekyll computes data.&lt;/strong&gt; Jekyll takes these objects, computes metadata (permalinks, tags, categories, titles, dates) from them and constructs one big &lt;code&gt;site&lt;/code&gt; object that holds all the posts, pages, layouts, and respective metadata. At this stage your site is one big computed ruby object.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Jekyll liquifies posts and templates.&lt;/strong&gt; Next jekyll loops through each post file and converts (through markdown or textile) and &lt;strong&gt;liquifies&lt;/strong&gt; the post inside of its respective layout(s). Once the post is parsed and liquified inside the the proper layout structure, the layout itself is “liquified”. &lt;strong&gt;Liquification&lt;/strong&gt; is defined as follows: Jekyll initiates a Liquid template, and passes a simpler hash representation of the ruby site object as well as a simpler hash representation of the ruby post object. These simplified data structures are what you have access to in the templates.&lt;/p&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Jekyll generates output.&lt;/strong&gt; Finally the liquid templates are “rendered”, thereby processing any liquid syntax provided in the templates and saving the final, static representation of the file.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Notes.&lt;/strong&gt; Because Jekyll computes the entire site in one fell swoop, each template is given access to a global &lt;code&gt;site&lt;/code&gt; hash that contains useful data. It is this data that you’ll iterate through and format using the Liquid tags and filters in order to render it onto a given page.&lt;/p&gt;
+
+&lt;p&gt;Remember, in Jekyll you are an end-user. Your API has only two components:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;The manner in which you setup your directory.&lt;/li&gt;
+
+&lt;li&gt;The liquid syntax and variables passed into the liquid templates.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;All the data objects available to you in the templates via Liquid are outlined in the &lt;strong&gt;API Section&lt;/strong&gt; of Jekyll-Bootstrap. You can also read the original documentation here: &lt;a href=&quot;https://github.com/mojombo/jekyll/wiki/Template-Data&quot;&gt;https://github.com/mojombo/jekyll/wiki/Template-Data&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I hope this paints a clearer picture of what Jekyll is doing and why it works the way it does. As noted, our main programming constraint is the fact that our API is limited to what is accessible via Liquid and Liquid only.&lt;/p&gt;
+
+&lt;p&gt;Jekyll-bootstrap is intended to provide helper methods and strategies aimed at making it more intuitive and easier to work with Jekyll =)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Thank you&lt;/strong&gt; for reading this far.&lt;/p&gt;
+
+&lt;h2 id=&quot;next_steps&quot;&gt;Next Steps&lt;/h2&gt;
+
+&lt;p&gt;Please take a look at &lt;a href=&quot;&quot;&gt;&lt;/a&gt; or jump right into &lt;a href=&quot;&quot;&gt;Usage&lt;/a&gt; if you’d like.&lt;/p&gt;</content>
+ </entry>
+ 
+ 
+</feed>
