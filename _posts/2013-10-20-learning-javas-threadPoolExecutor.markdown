@@ -33,11 +33,13 @@ public ThreadPoolExecutor(int corePoolSize,
 
 	ArrayBlockingQueue
 	一个固定大小的
-	[阻塞队列](http://ifeve.com/blocking-queues/)，放满后不可再放入,可以定义取数据是否按照fifo的顺序还是随机顺序,超过定义的size后会throw java.lang.IllegalStateException 的异常。
+	[阻塞队列](http://ifeve.com/blocking-queues/)，放满后不可再放入,可以定义取数据是否按照fifo的顺序还是随机顺序,
+	超过定义的size后会throw java.lang.IllegalStateException 的异常。
 
 
 	DelayedWorkQueue	
-	这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，专用queue。不再本篇的讨论范围之内。
+	这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，
+	专用queue。不再本篇的讨论范围之内。
 
 	DelayQueue	
 	这是无界阻塞队列，队列中的对象需要继承Delayed接口，满足延迟条件才可以使用。
@@ -49,7 +51,8 @@ public ThreadPoolExecutor(int corePoolSize,
 	同样也是个无界阻塞队列对象需要继承Comparable接口，使对象可以进行优先级比较。
 
 	SynchronousQueue	
-	一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。webmagic的ThreadPool的queue就用了此queue
+	一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。
+	webmagic的ThreadPool的queue就用了此queue
 
 ######ThreadFactory 执行程序创建新线程时使用的工厂。（可选）
 Executors也提供了默认的ThreadFactory方法：Executors.defaultThreadFactory()
