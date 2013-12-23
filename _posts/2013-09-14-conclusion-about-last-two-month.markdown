@@ -3,7 +3,7 @@ layout: post
 title: "毕业后2个月的工作总结"
 tagline: "第一篇blog"
 description: "-desc-"
-category: 工作
+category: work
 tags: [工作, 总结, 心情]
 ---
 {% include JB/setup %}
