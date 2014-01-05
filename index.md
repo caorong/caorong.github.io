@@ -1,6 +1,6 @@
 ---
 layout: page
-title: this is index
+title: lelouchcr's home
 tagline: xx xx
 ---
 {% include JB/setup %}
