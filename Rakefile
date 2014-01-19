@@ -97,6 +97,51 @@ task :page do
   end
 end # task :page
 
+# make a slideshow page
+# specify a path like -> slideshow/zookeeper
+# it will make a html page name as zookeeper
+desc "Generate a slideshow xx.html page in slideshow/xx => title=xx"
+task :slideshow do
+  name = ENV["title"]
+  abort("name can't be nil!") unless name
+
+  dirname = File.join("slideshow",name)
+  abort("directory don't exists!") unless File.directory?(dirname)
+
+  # http://stackoverflow.com/questions/2512254/iterate-through-every-file-in-one-directory
+  #Dir[dirname+"/*"].each do |file|
+    #p file
+  #end
+  slist = []
+  Dir.glob(dirname+"/*") do |file|
+    slist << file
+  end
+  # http://stackoverflow.com/questions/11710820/a-better-way-to-sort-array-by-regex
+  slist =  slist.sort_by{ |f| f.scan(/(\d+)\.jpg/).flatten[0].to_i}
+
+  #p slist
+
+  #p filename.methods.sort
+  #p '------'
+  #p filename.class
+  filename = File.join("slideshow", name + ".html")
+  puts "Creating new slideshow: #{filename}"
+  open(filename, 'w') do |post|
+    post.puts "<!DOCTYPE html>"
+    post.puts "<html lang=\"en\">"
+    post.puts "<head>"
+    post.puts "<meta charset=\"utf-8\">"
+    post.puts "<title>" + "slideshow -"  + name + "</title>"
+    post.puts "</head>"
+    post.puts "<body>"
+    slist.each do |pic|
+      post.puts "<p>" + "<img src='" + "../" + pic + "' alt='" + name + "'>" + "</p>"
+    end
+    post.puts "</body>"
+    post.puts "</html>"
+  end
+end
+
 desc "Launch preview environment"
 task :preview do
   system "jekyll serve -w"
