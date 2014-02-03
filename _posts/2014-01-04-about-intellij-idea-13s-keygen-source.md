@@ -2,7 +2,7 @@
 layout: post
 title: "intellij IDEA 13's licence generater source"
 description: ""
-category: ""
+category: "java"
 tags: [idea, java ,crack]
 ---
 {% include JB/setup %}
