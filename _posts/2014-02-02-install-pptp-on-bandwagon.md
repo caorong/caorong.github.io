@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "install pptp on bandwagon"
+title: "install pptp on bandwagon(openvz)"
 description: ""
 category: "life"
 tags: [linux,pptp,gfw,vps]
