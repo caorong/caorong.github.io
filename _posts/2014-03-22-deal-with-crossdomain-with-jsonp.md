@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "用jsonp解决跨域"
+title: "扯一下jsonp"
 description: ""
 category: "web"
 tags: [js, ajax, jsonp, youku]
