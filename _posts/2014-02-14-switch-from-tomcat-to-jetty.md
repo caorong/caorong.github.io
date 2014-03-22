@@ -17,7 +17,7 @@ tags: [java,tomcat,jetty,web，eclipse]
 ###why tomcat with eclipse sometimes make me crazy
 迷之音：eclipse的workplace里面项目多了以后好像是经常性抽筋额。是神马原因造成的呢？
 
-嗯哼，我就说说maven的web项目，再eclispe里面每次按下`ctrl+s`保存代码时maven会把编译好的代码放到target里面，然后如果配置了server的话，还会编译一份到eclipse的workplace里面的某号temp server里面比如
+嗯哼，我就说说maven的web项目，在eclispe里面每次按下`ctrl+s`保存代码时maven会把编译好的代码放到target里面，然后如果配置了server的话，还会编译一份到eclipse的workplace里面的某号temp server里面比如
 	
 `X:\project_workplace\.metadata\.plugins
 \org.eclipse.wst.server.core\tmpx\m2ewebapp\WEB-INF\classes`
