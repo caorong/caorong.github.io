@@ -5,7 +5,7 @@ description: ""
 category: "game"
 tags: [game,quack3,mac]
 ---
-{% include JB/setup %}
+ 
 
 首先，这是github上id的[官方源码](https://github.com/id-Software/Quake-III-Arena),可以在win上用vc， linux上gcc等编译，但在mac上用xcode会提示说此项目太古老。。。
 

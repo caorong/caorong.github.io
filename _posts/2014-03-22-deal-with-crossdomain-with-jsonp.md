@@ -5,7 +5,7 @@ description: ""
 category: "web"
 tags: [js, ajax, jsonp, youku]
 ---
-{% include JB/setup %}
+ 
 
 好久没有写blog了，最近实在是好忙啊。上周在研究[朱一的插件代码](https://github.com/zythum/youkuhtml5playerbookmark) 时，发现了原来可以用jsonp来解决跨域问题，而且解决方法非常巧妙，而且，优酷就是这么干的。
 
@@ -22,7 +22,8 @@ script标签是个好东西，url里的domain是啥都行。正因如此，一�
 ####一个栗子
 服务端代码，用于接收ajax请求，返回一个json：
 
-{% highlight python %}
+
+```python
 from bottle import route, request
 
 json = "{\"a\" = \"1\"}"
@@ -34,27 +35,27 @@ def get_data():
 		callback = request.query['__callback'] + "("
 	return callback + json + ")"
 
-{% endhighlight %}
+```
 
 浏览器代码，
-{% highlight javascript %}
+```javascript
 <script url ="http://mydomain.com/data?__callback=run_callback" />
-{% endhighlight %}
+```
 
 至此完结。
 
 ####script得到的是什么？
-{% highlight javascript %}
+```javascript
 run_callback("{\"a\" = \"1\"}")
 // 哇，竟然将json传到某function里去了
-{% endhighlight %}
+```
 
-{% highlight javascript %}
+```javascript
 function run_callback(data){
 	console.log(data['a'])
 	// ...
-}
-{% endhighlight %}
+```
+
 
 是不是很巧妙！！！
 

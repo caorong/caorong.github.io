@@ -5,7 +5,7 @@ description: ""
 category: "life"
 tags: [linux,pptp,gfw,vps]
 ---
-{% include JB/setup %}
+ 
 
 ####缘起
 今天下午正好去办了网银，然后回家后看v2ex时正好看到搬瓦工的年付9.99刀的vps又出现了（话说之前还出了年付2.99刀的我又没有珍惜）512内存，5G硬盘，500G流量/per month。

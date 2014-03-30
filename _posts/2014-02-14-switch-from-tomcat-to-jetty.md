@@ -5,16 +5,16 @@ description: ""
 category: "work"
 tags: [java,tomcat,jetty,web，eclipse]
 ---
-{% include JB/setup %}
+ 
 
 今天我研究了一上午，尝试了下用jetty配合eclipse调试web项目。
 
-###why choose jetty
+####why choose jetty
 迷之音：eclipse本来不就有server插件的嘛，可以直接用tomcat呀，为嘛要用jetty呀？
 
 嗯哼，前几天调试代码的时候，有不知道那个文件被锁住还是神马的，class没有拷贝到eclipse的temp tomcat目录里面。害得我又浪费时间，以为是小伙伴的代码出了问题，各种看别人代码。。。
 
-###why tomcat with eclipse sometimes make me crazy
+####why tomcat with eclipse sometimes make me crazy
 迷之音：eclipse的workplace里面项目多了以后好像是经常性抽筋额。是神马原因造成的呢？
 
 嗯哼，我就说说maven的web项目，在eclispe里面每次按下`ctrl+s`保存代码时maven会把编译好的代码放到target里面，然后如果配置了server的话，还会编译一份到eclipse的workplace里面的某号temp server里面比如
@@ -26,13 +26,13 @@ tags: [java,tomcat,jetty,web，eclipse]
 
 那如果我用jetty的话，会怎样？我只要指定我的webapp的path是target目录，然后就不用管他了，也就没有了所谓的第二次的复制，异常发生机率更小了，即使发生异常，也只要delete掉target，然后rebuild就行了，不像eclipse还要clean server，有时clean server还会报exception，真让人想掀桌！！！
 
-###config jetty plugin in maven
+####config jetty plugin in maven
 迷之音：原来如此，那就快教教我怎么配置maven的eclipse插件啊
 
 1.在pom里面的 `<build>` 下加一个plugin
 
-{% highlight xml %} 
- 
+
+```xml
 <plugin>
 	<groupId>org.eclipse.jetty</groupId> <!-- if jdk7 jetty9 -->
 	<groupId>org.mortbay.jetty</groupId> <!-- if jdk6 jetty8 -->
@@ -43,7 +43,7 @@ tags: [java,tomcat,jetty,web，eclipse]
 		</webApp>
 	</configuration>
 </plugin>
-{% endhighlight %}
+```
 
 关于版本的选择
 
@@ -62,7 +62,6 @@ tags: [java,tomcat,jetty,web，eclipse]
 `<outputDirectory>WebContent/WEBINF/classes</outputDirectory>`
 
 3.mvn jetty:run 起动
-
 
 
 ####reference

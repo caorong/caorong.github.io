@@ -6,13 +6,14 @@ description: "-desc-"
 category: java
 tags: [java, threadpool]
 ---
-{% include JB/setup %}
+ 
 
 
 最近再看[webmagic](https://github.com/code4craft/webmagic)的源码，发现他的底层线程池也用了java collections自带的ThreadPoolExecutor。之前一直是抱着拿来主义的态度，但其实还是有有必要仔细研究一番的。
 
 ThreadPoolExecutor 是一个可定制性非常强的线程池。
-{% highlight java %}  
+
+```java
 public ThreadPoolExecutor(int corePoolSize,
                               int maximumPoolSize,
                               long keepAliveTime,
@@ -20,7 +21,7 @@ public ThreadPoolExecutor(int corePoolSize,
                               BlockingQueue<Runnable> workQueue,
                               ThreadFactory threadFactory,
                               RejectedExecutionHandler handler)
-{% endhighlight %}
+```
 
 从参数可看出，可以定制
 ######poolsize, 持久存在poolsize
@@ -68,7 +69,8 @@ ThreadPoolExecutor.DiscardPolicy() 同AbortPolicy，但不会抛错
 
 
 webmagic创建的线程池的代码
-{% highlight java %}  
+
+```java
 public static ExecutorService newFixedThreadPool(int threadSize) {
 		if (threadSize <= 1) {
 			throw new IllegalArgumentException("ThreadSize must be greater than 1!");
@@ -76,7 +78,8 @@ public static ExecutorService newFixedThreadPool(int threadSize) {
 		return new ThreadPoolExecutor(threadSize - 1, threadSize - 1, 0L, TimeUnit.MILLISECONDS,
 				new SynchronousQueue<Runnable>(), new ThreadPoolExecutor.CallerRunsPolicy());
 	}
-{% endhighlight %}
+```
+
 使用作为通道的SynchronousQueue，当所需线程超过规定的线程后，将超过线程池size的当前任务交给主线程执行。（CallerRunsPolicy）
 因为webmagic的主循环为一个Thread，里面起一个ThreadPool，所以超出size的task将有Thread执行，不会影响main函数，（其实main也就起了个Thread）
  

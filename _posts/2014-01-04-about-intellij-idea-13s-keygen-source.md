@@ -5,14 +5,14 @@ description: ""
 category: "java"
 tags: [idea, java ,crack]
 ---
-{% include JB/setup %}
+ 
 
 ###注意：以下仅作为学习目的，如有任何问题，请mail我删除。
 
-由于网上下载的keygen要求jdk7+ ，而我的mac只有1.6，so，decompile了。以下是licence code generate 部分的源码。
+由于网上下载的keygen要求jdk7+ ，而我的mac只有1.6，so，decompile了看看。以下是licence code generate 部分的源码。
 在main函数里重写自己的name，选择自己licence 过期时间。 
 
-{% highlight java %} 
+```java 
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.zip.CRC32;
@@ -147,4 +147,4 @@ public class Idea13 {
     }
 }
 
-{% endhighlight %}
+```

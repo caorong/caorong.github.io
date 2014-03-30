@@ -5,7 +5,7 @@ description: ""
 category: "work"
 tags: [ffmpeg,ubuntu]
 ---
-{% include JB/setup %}
+ 
 
 ####本来
 我之前一直很喜欢ubuntu，甚至觉得他比redhat系列更好用。因为我已经习惯使用apt命令了。直到。。。
@@ -29,7 +29,7 @@ google一搜，https://trac.ffmpeg.org/ticket/943
 
 其实把libaacplus换成libfaac 时可以用的，不过faac编码出来的文件大小比libaacplus大了一倍有余，略坑。。
 
-####现在
+####结论
 嗯哼，珍爱生命，远离ubuntu。话说我已经把自己的ubuntu卸了，换fedora了。（不过我可能又走上了另一条不归路）
 
 

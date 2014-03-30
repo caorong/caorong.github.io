@@ -6,13 +6,14 @@ description: "-desc-"
 category: java
 tags: [java, spring, Transactional]
 ---
-{% include JB/setup %}
+ 
 
 
 这周在抄袭ruby代码时遇到了个奇怪的问题。
 
 原代码
-{% highlight java %}
+
+```java
 public class XXService implements IXXService {
 
 	@Override
@@ -24,12 +25,14 @@ public class XXService implements IXXService {
 		sendqueue(msg);
 	}
 }
-{% endhighlight %}
+
+```
 
 后面发现由于send queue时，收queue方也会对数据库操作，并发比较厉害时会发生不一致问题。so 将send queue的部分与 operate database 部分分开
 
 新代码
-{% highlight java %}
+
+```java
 public class XXService implements IXXService {
 	
 	@Override
@@ -48,14 +51,15 @@ public class XXService implements IXXService {
 		sendqueue(msg);
 	}
 }
-{% endhighlight %}
+```
 
 ####看起来还是挺合理的代码额，然后单步调试时发现事务并没有起作用，可是改之前事务明明是器作用的呀？
 
 参考springsource reference，可并没有找到什么。。。
 
 然后，考虑到java的编码范式，将Transaction的方法单独提出到一个新的service里。然后XXService里利用spring的autowire引入，
-{% highlight java %}
+
+```java
 public class XXService implements IXXService {
 	
 	@Autowired
@@ -80,7 +84,8 @@ public class XXDBService implements IXXDBService {
 		sendqueue(msg);
 	}
 }
-{% endhighlight %}
+```
+
 结果。。it works!!!
 
 但是为什么呢？说到这个其实与spring aop的实现有密不可分的联系。
@@ -94,7 +99,8 @@ public class XXDBService implements IXXDBService {
 同样抛开解析xml等等不谈。
 
 他的本质其实就是java的动态代理：
-{% highlight java %}
+
+```java
 public class DoTransaction implements InvocationHandler{
 	Object obj = null;
 	public DoTransaction(Object _obj){
@@ -111,7 +117,7 @@ public class DoTransaction implements InvocationHandler{
 		return result;
 	}
 }
-{% endhighlight %}
+```
 
 所以，当我在一个方法前加了@Transactional。
 于是，spring先在create 此 dynamic对象的时候将会实用DoTransaction创建一个proxy&xxx对象，此对象即带了事务该做的事情。
