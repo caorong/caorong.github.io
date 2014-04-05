@@ -57,7 +57,31 @@ GB18030的特点：
 - 支持中国国内少数民族的文字，不需要动用造字区。
 - 汉字收录范围包含繁体汉字以及日韩汉字。
 
+GB系列的都有很好的兼容性，旧的系列都是新的系列的子集。
 
+
+#### 总结
+
+我觉得，其实所谓的各种字符编码其实就是定义了一套规则，一套说明如何将其字符转换成ascii表示的过程和相应的逆过程。
+
+最后举个例子应该就能明白。
+
+```python
+>>> unicode(u'我').encode('gb18030')
+'\xce\xd2'
+>>> unicode(u'我').encode('gbk')
+'\xce\xd2'
+>>> unicode(u'我').encode('utf8')
+'\xe6\x88\x91'
+
+>>> unicode(u'abc%^&*()').encode('gbk')
+'abc%^&*()'
+>>> unicode(u'abc%^&*()').encode('gb18030')
+'abc%^&*()'
+>>> unicode(u'abc%^&*()').encode('utf8')
+'abc%^&*()'
+```
+因为`abc%^&*()`这些符号ascii已经有了，编码后保持不变，所以也就能兼容ascii了。
 
 
 ### reference
