@@ -11,13 +11,20 @@ logo: /assets/images/profile.png
  style="background-image: url({{ page.cover }})"
  {% endif %}  -->
 
+<link rel="stylesheet" type="text/css" href="/assets/css/ihover.min.css" />
+
 <header class="site-head" style="background-image: url({{ page.cover }})" >
     <div class="vertical">
         <div class="site-head-content" class="inner">
             {% if page.logo %}
-                <a class="blog-logo" href="{{ site.baseurl }}">
+                <!-- <a class="blog-logo" href="{{ site.baseurl }}">
                     <img src="{{ page.logo }}" alt="Blog Logo" />
-                </a>
+                </a> -->
+                <div class="ih-item circle colored effect15 right_to_left" style="margin: 0 auto;">
+                    <a href="#">
+                        <div class="img"><img src="{{ page.logo }}" alt="img"></div>
+                    </a>
+                </div>
             {% endif %}
             <h1 class="blog-title">{{ site.name }}</h1>
             <h2 class="blog-description"> 
