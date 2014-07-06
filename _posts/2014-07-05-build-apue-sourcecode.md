@@ -54,8 +54,9 @@ With _POSIX_C_SOURCE or _DARWIN_C_SOURCE for i386, or when building for any othe
 ```
 
 编译完apue的lib后，如此编译代码：
+
 ```shell
-lang -Wall -I /Users/caorong/Documents/apue/apue.2e/include/ ls1.c apue.2e/lib/libapue.a -o ls1
+clang -Wall -I apue.2e/include/ ls1.c apue.2e/lib/libapue.a -o ls1
 ```
 
 - - -
@@ -79,7 +80,7 @@ On other platforms, type "make" (as long as this is gnu make).
 clang: error: unknown argument: '-R.' [-Wunused-command-line-argument-hard-error-in-future]
 ```
 
-去`apue.3e/db/`把它的makefile里面的－R去掉就行了，新版太霸道了，clang认为他用不到的，你他妈敢写？！
+去`apue.3e/db/`把它的makefile里面的－R去掉就行了。话说不管是装gem还是pip装python lib都不定期遇到这个问题，不过这次前置AFLAGS不知为何无效。clang认为他用不到的，你敢写？！
 
 ```makefile
 # line20
@@ -95,5 +96,5 @@ endif
 
 最后写代码推荐如果用vim的话，一定要配合https://github.com/Valloric/YouCompleteMe
 
-谁用谁知道，自带语法检测，代码跳转，包办了syntastic，ctags的功能，及其强大！
+谁用谁知道，自带语法检测，代码跳转，包办了syntastic，ctags的功能，极其强大！
 
