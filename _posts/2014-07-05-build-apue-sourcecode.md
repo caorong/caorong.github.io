@@ -55,7 +55,7 @@ With _POSIX_C_SOURCE or _DARWIN_C_SOURCE for i386, or when building for any othe
 
 编译完apue的lib后，如此编译代码：
 
-```shell
+```sh
 clang -Wall -I apue.2e/include/ ls1.c apue.2e/lib/libapue.a -o ls1
 ```
 
