@@ -96,5 +96,7 @@ endif
 
 最后写代码推荐如果用vim的话，一定要配合https://github.com/Valloric/YouCompleteMe
 
+附[.ycm_extra_conf.py](https://gist.github.com/caorong/1ba46227534c3473257a)
+
 谁用谁知道，自带语法检测，代码跳转，包办了syntastic，ctags的功能，极其强大！
 
