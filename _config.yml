@@ -4,6 +4,8 @@ meta_description: "lelouchcr's blog"
 
 markdown: redcarpet
 pygments: true
+# rouge: true
+
 # logo: /assets/images/153xx.jpg
 logo: false
 paginate: 15
