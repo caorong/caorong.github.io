@@ -6,7 +6,7 @@ category: "python"
 tags: [python, website]
 ---
 
-注，由于 与 jekyll 模版冲突 后文所有的双大括号中间都多加了各空格。
+注，由于 与 jekyll 模版冲突 后文所有的双大括号中间都多加了各空格。[原因见此](http://jekyllrb.com/docs/troubleshooting/#liquid)
 
 ===
 
