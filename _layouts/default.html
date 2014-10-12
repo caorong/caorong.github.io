@@ -40,6 +40,31 @@
     <!--<script type="text/javascript" src="/assets/js/jquery-1.10.2.min.js"></script>-->
 
     <script type="text/javascript" src="http://libs.baidu.com/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        // Great thanks to http://hitokoto.us/
+        setTimeout( function(){
+            var hjs=document.createElement('script');
+            hjs.setAttribute('src','http://api.hitokoto.us/rand?charset=utf-8&cat=a&encode=jsc&fun=hitokoto');
+            document.body.appendChild(hjs);} ,0);
+
+        // add background pic
+        // <img src="http://crtest.qiniudn.com/bg1.jpg" id="bkImg" onmousedown="return false">
+        var bgsize=2;
+        bgurl = "http://crtest.qiniudn.com/bg";
+
+        setTimeout( function(){
+          var bgimg =document.createElement('img');
+          bgimg.setAttribute('src',bgurl + Math.floor(Math.random() * bgsize) + '.jpg');
+          // bgimg.setAttribute('src',bgurl + 1 + '.jpg');
+          bgimg.setAttribute('id', 'bkImg');
+          bgimg.setAttribute('onmousedown', 'return false');
+          document.body.appendChild(bgimg);} ,0);
+
+        function hitokoto(option){
+            console.log(option);
+            $(".blog-description").text(option.hitokoto + "    出自：" + option.source);
+        }
+    </script>
     <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
     <script type="text/javascript" src="/assets/js/index.js"></script>
 

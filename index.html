@@ -27,7 +27,7 @@ logo: /assets/images/profile.png
                     </a>
                 </div>
             {% endif %}
-            <h1 class="blog-title">{{ site.name }}</h1>
+            <h1 class="blog-title"> {{ site.name }} </h1>
             <h2 class="blog-description"> 
                 {{ site.description }}. 
                 {% if page.about %} <a href='{{ site.baseurl }}{{ page.about }}'> About me </a> {% endif %}
@@ -41,8 +41,9 @@ logo: /assets/images/profile.png
     var images = [];
     images[0] = "http://crtest.qiniudn.com/153xx.jpg";
     images[1] = "http://crtest.qiniudn.com/154xx.jpg";
+    // images[2] = "http://crtest.qiniudn.com/155xx.jpg";
 
-    document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[Math.floor(Math.random() * 2)]+')'
+    document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[Math.floor(Math.random() * images.length)]+')'
     // $('.site-head').attr('style','background-image: url('+Math.floor(Math.random() * 2) +')');
     // console.log(Math.floor(Math.random() * 2));
 </script>

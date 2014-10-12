@@ -33,3 +33,18 @@ img.profile {
   	border-radius: 50px;
 }
 
+#bkImg{
+	position:fixed;
+	right:0;
+	bottom:0;
+	filter:alpha(opacity=13);
+	-moz-opacity:0.13;
+	-khtml-opacity:0.13;
+	opacity:0.10;
+	z-index:-999;
+	-khtml-user-select:none;
+	-ms-user-select:none;
+	-webkit-user-select:none;
+	user-select:none;
+	-moz-user-select:none;
+}
