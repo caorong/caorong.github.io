@@ -41,9 +41,11 @@ logo: /assets/images/profile.png
     var images = [];
     images[0] = "http://crtest.qiniudn.com/153xx.jpg";
     images[1] = "http://crtest.qiniudn.com/154xx.jpg";
-    // images[2] = "http://crtest.qiniudn.com/155xx.jpg";
+    images[2] = "http://crtest.qiniudn.com/bg0.jpg";
+    images[3] = "http://crtest.qiniudn.com/bg1.jpg";
 
     document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[Math.floor(Math.random() * images.length)]+')'
+    // document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[2]+')'
     // $('.site-head').attr('style','background-image: url('+Math.floor(Math.random() * 2) +')');
     // console.log(Math.floor(Math.random() * 2));
 </script>
