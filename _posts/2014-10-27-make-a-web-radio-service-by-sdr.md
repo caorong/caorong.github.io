@@ -13,18 +13,30 @@ published: false
 
 要么就是他们由电台独家给的地址，要么他们是直接收集的无线电信号？
 
-于是网上搜索一番确实找到了点思路。
+那么如果要收集无线信号并能将数据传到 pc 用什么设备？
 
-原理是用 sdr 连接 pc 然后用 gnuradio 将逻辑信号通过 udp 或者 tcp 服务发出去。
+sdr（hackrf，rtl-sdr）光做收音，后者便宜45rmb
 
-gnuradio 线路图如下
+那么如何控制想要接受的频段，以及如何将raw audio 输出？
 
+用 gnuradio 写代码，拖控件。
 
+[gnuradio 的安装]()
 
+步骤如下 
 
+1. 实现能够接收fm
 
+具体参考 hackrf官方 tutorial 1 https://greatscottgadgets.com/sdr/1/
 
+2. 实现一个程序能同时接收多个频道 
 
+参考 tutorial 1的课后习题 https://greatscottgadgets.com/sdr/2/  [flowgraph for lesson 2 homework](https://greatscottgadgets.com/sdr/grc/lesson2.grc)
 
+3. 实现对外将多个频道通过udp 或者 tcp 传出去
+
+如图，将模拟信号强转成short（16bit）然后将raw audio发出去
+
+[grc代码]()
 
 
