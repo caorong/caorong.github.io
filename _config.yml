@@ -3,7 +3,7 @@ description: Blogging about the programming life
 meta_description: "lelouchcr's blog"
 
 markdown: redcarpet
-pygments: true
+# pygments: true
 # rouge: true
 
 # logo: /assets/images/153xx.jpg
