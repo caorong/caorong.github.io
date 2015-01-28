@@ -54,16 +54,36 @@
 
         // add background pic
         // <img src="http://crtest.qiniudn.com/bg1.jpg" id="bkImg" onmousedown="return false">
-        var bgsize=2;
-        bgurl = "http://crtest.qiniudn.com/bg";
+        
+        // old 
+        // var bgsize=2;
+        // bgurl = "http://crtest.qiniudn.com/bg";
 
-        setTimeout( function(){
-          var bgimg =document.createElement('img');
-          bgimg.setAttribute('src',bgurl + Math.floor(Math.random() * bgsize) + '.jpg');
-          // bgimg.setAttribute('src',bgurl + 1 + '.jpg');
-          bgimg.setAttribute('id', 'bkImg');
-          bgimg.setAttribute('onmousedown', 'return false');
-          document.body.appendChild(bgimg);} ,0);
+        // setTimeout( function(){
+        //   var bgimg =document.createElement('img');
+        //   bgimg.setAttribute('src',bgurl + Math.floor(Math.random() * bgsize) + '.jpg');
+        //   // bgimg.setAttribute('src',bgurl + 1 + '.jpg');
+        //   bgimg.setAttribute('id', 'bkImg');
+        //   bgimg.setAttribute('onmousedown', 'return false');
+        //   document.body.appendChild(bgimg);} ,0);
+        
+        // lelouchcrgallery.tk
+        function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            //bgimg.setAttribute('src', option.p_mid);
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+        setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc');
+            document.body.appendChild(hjs);
+        }, 0);
+
 
         function hitokoto(option){
             console.log(option);
