@@ -36,6 +36,7 @@ img.profile {
 #bkImg{
 	position:fixed;
 	right:0;
+	width: 100%;
 	top:0;
 	filter:alpha(opacity=13);
 	-moz-opacity:0.13;
