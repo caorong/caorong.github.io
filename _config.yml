@@ -1,6 +1,7 @@
 name: Lelouchcr's blog
 description: Blogging about the programming life
 meta_description: "lelouchcr's blog"
+baseurl: /
 
 markdown: redcarpet
 # pygments: true

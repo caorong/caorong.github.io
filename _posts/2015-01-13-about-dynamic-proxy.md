@@ -2,7 +2,7 @@
 layout: post
 title: "扯一下动态代理"
 description: ""
-category: "java, redis, scala"
+category: "java"
 tags: [ java, scala, redis, with]
 published: true
 ---
@@ -128,7 +128,7 @@ with jedis() as j:
 
 ```
 
-这个封装的很爽，就是使用者有点不爽，每次都要包 with
+这个封装的很爽，只不过每次都要包 with
 
 
 表示 scala 也可以用 with！！！

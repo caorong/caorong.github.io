@@ -2,7 +2,7 @@
 layout: post
 title: "jdbc 好坑啊"
 description: ""
-category: "java, jdbc"
+category: "java"
 tags: [ java, jdbc]
 published: true
 ---

@@ -2,7 +2,7 @@
 layout: default
 title: Home
 <!-- cover: /assets/images/154xx.jpg -->
-cover: http://crtest.qiniudn.com/154xx.jpg
+<!-- cover: http://crtest.qiniudn.com/154xx.jpg -->
 about: 'about.html'
 logo: /assets/images/profile.png
 ---
@@ -22,7 +22,7 @@ logo: /assets/images/profile.png
                     <img src="{{ page.logo }}" alt="Blog Logo" />
                 </a> -->
                 <div class="ih-item circle colored effect15 right_to_left" style="margin: 0 auto;">
-                    <a href="#">
+                    <a href="/about.html">
                         <div class="img"><img src="{{ page.logo }}" alt="img"></div>
                     </a>
                 </div>
@@ -37,17 +37,33 @@ logo: /assets/images/profile.png
 </header>
 
 <script type="text/javascript">
-    
-    var images = [];
-    images[0] = "http://crtest.qiniudn.com/153xx.jpg";
-    images[1] = "http://crtest.qiniudn.com/154xx.jpg";
-    images[2] = "http://crtest.qiniudn.com/bg0.jpg";
-    images[3] = "http://crtest.qiniudn.com/bg1.jpg";
+    // old
+    // var images = [];
+    // images[0] = "http://crtest.qiniudn.com/153xx.jpg";
+    // images[1] = "http://crtest.qiniudn.com/154xx.jpg";
+    // images[2] = "http://crtest.qiniudn.com/bg0.jpg";
+    // images[3] = "http://crtest.qiniudn.com/bg1.jpg";
 
-    document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[Math.floor(Math.random() * images.length)]+')'
-    // document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[2]+')'
-    // $('.site-head').attr('style','background-image: url('+Math.floor(Math.random() * 2) +')');
-    // console.log(Math.floor(Math.random() * 2));
+    // document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+images[Math.floor(Math.random() * images.length)]+')'
+    
+    // now use lelouchcr gallery service
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=toppic');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function toppic(option) {
+            console.log(option);
+            document.getElementsByClassName('site-head')[0].attributes[1].value='background-image: url('+option.p_ori+')'
+            // var bgimg = document.createElement('img');
+            //bgimg.setAttribute('src', option.p_mid);
+            // bgimg.setAttribute('src', option.p_ori);
+            // bgimg.setAttribute('id', 'bkImg');
+            // bgimg.setAttribute('onmousedown', 'return false');
+            // document.body.appendChild(bgimg);
+        }
+
 </script>
 
 <main class="content" role="main">

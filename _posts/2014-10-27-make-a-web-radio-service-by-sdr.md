@@ -2,9 +2,9 @@
 layout: post
 title: "如何用 sdr 做一个在线收音机服务"
 description: ""
-category: "sdr, gnuradio, ffmpeg"
+category: "sdr"
 tags: [ web, sdr, gnuradio, ffmpeg]
-published: false
+published: true
 ---
 
 最近一直在做类似 qingting.fm， anyradio.cn 的直播。
@@ -35,8 +35,23 @@ sdr（hackrf，rtl-sdr）光做收音，后者便宜45rmb
 
 3. 实现对外将多个频道通过udp 或者 tcp 传出去
 
-如图，将模拟信号强转成short（16bit）然后将raw audio发出去
+路线图
 
-[grc代码]()
+hackrfSDR -> computer -> wav
 
+computer 主要做了修改采样频率，最后， 将模拟信号强转成short（16bit）然后将raw audio 通过 udp 发出去， 然后ffmpeg 爬
+
+[grc代码](https://github.com/caorong/testgrc)
+
+参考里面的 multifm_noGUI.grc 
+
+---
+
+15.1.30
+
+最后直播没有选择这个备选方案 ＝ ＝
+
+表示这篇烂尾文，一直拖到现在，因为中间太忙了，还去研究了卫星锅爬卫星广播信号。也是醉了。
+
+主要原因是去参加了pycon 遇到了蜻蜓的小伙伴。于是知道他们是纯网络流。好吧，我想多了。
 
