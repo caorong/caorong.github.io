@@ -8,7 +8,7 @@ published: true
 ---
 
 
-翻译自 [juliangamble - The Little Schemer in Clojure – Chapter 1 – Cons the Magnificent](http://juliangamble.com/blog/2012/08/03/the-little-schemer-in-clojure-chapter-3/) 
+翻译自 [juliangamble - The Little Schemer in Clojure – Chapter 3 – Cons the Magnificent](http://juliangamble.com/blog/2012/08/03/the-little-schemer-in-clojure-chapter-3/) 
 
 这是 [The Little Schemer](http://www.ccs.neu.edu/home/matthias/BTLS/) to Clojure 的第三章
 
@@ -68,8 +68,9 @@ published: true
 
 
 -----
-
 补充
+
+后文非原文内容
 
 
 insertR 
@@ -215,4 +216,37 @@ when using cdr, test termination with null?
 总之就是，递归深度增加，就必须越来越满足（靠近）结束条件
 
 上文就是数组越来越接近 null？
+
+
+#### 回到 Clojure 
+
+Clojure 如何实现 `multirember`?
+
+
+```Clojure
+; multirember
+(remove #{:foo} #{:foo :bar})
+(remove #{:foo} [:foo :bar])
+(remove #{:foo} (list :foo :bar))
+
+; 类似的用于处理别的数据结构
+(disj #{:foo :bar} :foo)
+(dissoc {:foo 1 :bar 2} :foo)
+(pop [:bar :foo])
+```
+
+
+remove 源码， 可以要看懂他还得理解 filter 和 complement
+
+```Clojure
+(defn remove
+  "Returns a lazy sequence of the items in coll for which
+  (pred item) returns false. pred must be free of side-effects."
+  {:added "1.0"
+   :static true}
+  [pred coll]
+  (filter (complement pred) coll))
+```
+
+
 
