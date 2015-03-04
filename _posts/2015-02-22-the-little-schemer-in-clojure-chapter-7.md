@@ -10,7 +10,7 @@ published: true
 
 翻译自 [juliangamble - The Little Schemer in Clojure – Chapter 7 Shadows](http://juliangamble.com/blog/2012/08/31/the-little-schemer-in-clojure-chapter-7-shadows/) 
 
-这是 [The Little Schemer](http://www.ccs.neu.edu/home/matthias/BTLS/) to Clojure 的第五章
+这是 [The Little Schemer](http://www.ccs.neu.edu/home/matthias/BTLS/) to Clojure 的第七章
 
 注，后文讲用 TLS 代替 The Little Schemer
 
