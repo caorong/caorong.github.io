@@ -34,7 +34,9 @@ spring出品，貌似grails就用的这个。不用给jvm打补丁，只要加�
 
 tomcat的话需要记得修改配置文件 (server.xml)，将reloadable 设置为false。
 
-
+```sh
+java -javaagent:/Users/xxxx/Documents/springloaded-1.2.1.RELEASE.jar -noverify SomeJavaClass
+```
 
 
 ## 注意事项
