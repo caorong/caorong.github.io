@@ -110,5 +110,3 @@ http://www.scala-sbt.org/release/docs/Proxy-Repositories.html
 
 http://stackoverflow.com/questions/22794149/scala-play-sbt-change-order-of-resolvers
 
-
-123
