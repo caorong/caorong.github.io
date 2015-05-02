@@ -93,12 +93,36 @@ oschina 有点坑, 由于最新的jar没同步, 所以各种超时
 
 比如 [`playGenerateSecret`](https://www.playframework.com/documentation/2.3.x/ApplicationSecret)
 
+
+### source
+
+用maven的话, 如果在ide里面就勾上 auto download source 就可以让他自己下源码了.
+
+可是这个规则在sbt里面行不通了, 并不是说sbt 不能下载源码而是play的依赖是`com.typesafe.play" % "sbt-plugin % "2.3.8"` 这个插件下载的. 貌似没办法设置让他里面下载jar的时候顺便下载源码.
+
+后来看到[这篇blog](http://www.plotprojects.com/create-an-intellij-idea-project-with-library-sources-attached/)想到个变通的方式
+
+直接在 `build.sbt` 里面对需要看源码的jar 手动加dependence
+
+然后加一个alias, 打 `generate-project` 自动运行`update-classifiers`(下载source, doc) `gen-idea` (生成idea 项目) 
+
+```
+libraryDependencies ++= Seq(
+  // "group" % "artifact" % "version"
+  "com.typesafe.play" % "play_2.11" % "2.3.8",
+  "com.typesafe.play" % "play-java-ebean_2.11" % "2.3.8"
+)
+
+
+addCommandAlias("generate-project", ";update-classifiers;gen-idea")
+```
+
 ### idea
 
-最后导入 idea 选择 SBT project, 因为本地已经装了sbt, 所以选择 custom sbt
+最后导入 idea 选择 SBT project, 因为本地已经装了sbt, 修改下自己的sbt的path, 以及添加 idea 的env 就是上面的 `SBT_OPTS="-Dsbt.override.build.repos=true` 不然在idea里面 他又会走默认的地址了
 
 
-最后, 开始折腾
+
 
 
 #### reference
@@ -109,4 +133,6 @@ http://www.scala-sbt.org/release/docs/Proxy-Repositories.html
 
 
 http://stackoverflow.com/questions/22794149/scala-play-sbt-change-order-of-resolvers
+
+http://www.plotprojects.com/create-an-intellij-idea-project-with-library-sources-attached/
 
