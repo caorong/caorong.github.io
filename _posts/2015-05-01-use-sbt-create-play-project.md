@@ -102,9 +102,8 @@ oschina 有点坑, 由于最新的jar没同步, 所以各种超时
 
 后来看到[这篇blog](http://www.plotprojects.com/create-an-intellij-idea-project-with-library-sources-attached/)想到个变通的方式
 
-直接在 `build.sbt` 里面对需要看源码的jar 手动加dependence
+直接在 `build.sbt` 里面对需要看源码的jar 手动加dependence 
 
-然后加一个alias, 打 `generate-project` 自动运行`update-classifiers`(下载source, doc) `gen-idea` (生成idea 项目) 
 
 ```
 libraryDependencies ++= Seq(
@@ -113,16 +112,116 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" % "play-java-ebean_2.11" % "2.3.8"
 )
 
-
-addCommandAlias("generate-project", ";update-classifiers;gen-idea")
 ```
+
+可是这样其实还有问题, 我自己测试下来 `play-java-ebean_2.11` 能吧源码下载下来, 但是 `play_2.11` 还是下载不下来, 没有任何报错信息
+
+这种时候只能再手动强制加上 `withSource()` [官方出处](http://www.scala-sbt.org/0.13.5/docs/Detailed-Topics/Library-Management.html#download-sources)
+
+于是变成了这样
+
+```
+libraryDependencies ++= Seq(
+  // "group" % "artifact" % "version"
+  "com.typesafe.play" % "play_2.11" % "2.3.8" withSources(),
+  "com.typesafe.play" % "play-java-ebean_2.11" % "2.3.8"
+)
+
+```
+
+然后源码下载下来了, 看了报错信息, 原来是javadoc下载不下来 = =
+
+
+```
+[test-project] $ updateClassifiers
+[info] Updating {file:/home/caorong/workspace_scala/pic-share/}pic-share...
+[info] Resolving jline#jline;2.12 ...
+[warn]  [FAILED     ] com.typesafe.play#play_2.11;2.3.8!play_2.11.jar(doc):  (0ms)
+[warn] ==== local: tried
+[warn]   /home/caorong/.ivy2/local/com.typesafe.play/play_2.11/2.3.8/docs/play_2.11-javadoc.jar
+[warn] ==== local-Maven-Repository: tried
+[warn]   /~/.m2/repository/jar/com.typesafe.play/play_2.11/2.3.8/docs/play_2.11-javadoc.jar
+[warn] ==== typesafe-ivy-releases: tried
+[warn]   https://repo.typesafe.com/typesafe/ivy-releases/com.typesafe.play/play_2.11/2.3.8/docs/play_2.11-javadoc.jar
+[warn] ==== typesafe-maven-release: tried
+[warn]   http://repo.typesafe.com/typesafe/maven-releases/com/typesafe/play/play_2.11/2.3.8/play_2.11-2.3.8-javadoc.jar
+[warn] ==== typesafe-release: tried
+[warn]   http://repo.typesafe.com/typesafe/releases/com/typesafe/play/play_2.11/2.3.8/play_2.11-2.3.8-javadoc.jar
+[warn] ==== public: tried
+[warn]   https://repo1.maven.org/maven2/com/typesafe/play/play_2.11/2.3.8/play_2.11-2.3.8-javadoc.jar
+[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+[warn]  ::              FAILED DOWNLOADS            ::
+[warn]  :: ^ see resolution messages for details  ^ ::
+[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+[warn]  :: com.typesafe.play#play_2.11;2.3.8!play_2.11.jar(doc)
+[warn]  ::::::::::::::::::::::::::::::::::::::::::::::
+[trace] Stack trace suppressed: run last *:update for the full output.
+[error] (*:update) sbt.ResolveException: download failed: com.typesafe.play#play_2.11;2.3.8!play_2.11.jar(doc)
+[error] Total time: 4 s, completed 2015-5-2 16:19:55
+
+```
+
+列一下 本地cache
+
+```
+caorong@caorong-ub2 ~/.ivy2/cache/com.typesafe.play/play_2.11
+$ tree 
+.
+├── ivy-2.3.8.xml
+├── ivy-2.3.8.xml.original
+├── ivydata-2.3.8.properties
+├── jars
+│   └── play_2.11-2.3.8.jar
+└── srcs
+    └── play_2.11-2.3.8-sources.jar
+
+2 directories, 5 files
+
+```
+
+```
+caorong@caorong-ub2 ~/.ivy2/cache/com.typesafe.play/play-java-ebean_2.11
+$ tree 
+.
+├── 2.3.8
+│   ├── ivys
+│   │   ├── ivy.xml
+│   │   ├── ivy.xml.md5
+│   │   └── ivy.xml.sha1
+│   └── jars
+│       ├── play-java-ebean_2.11.jar
+│       ├── play-java-ebean_2.11.jar.md5
+│       └── play-java-ebean_2.11.jar.sha1
+├── ivy-2.3.8.xml
+├── ivy-2.3.8.xml.original
+├── ivydata-2.3.8.properties
+├── jars
+│   └── play-java-ebean_2.11-2.3.8.jar
+└── srcs
+    └── play-java-ebean_2.11-2.3.8-sources.jar
+
+```
+
+javadoc 果然没下载下来 
+
+查了下[远程仓库](http://dl.bintray.com/typesafe/maven-releases/com/typesafe/play/play_2.11/2.3.8/)
+
+确实就是没有javadoc 
+
+可是为什么我 `updateClassifiers` 的时候不直接帮我静默把 source下载下来呢
+
+而是这样错也不报, 也不知道到底哪里的问题
+
+这方面感觉 maven 更好用
 
 ### idea
 
 最后导入 idea 选择 SBT project, 因为本地已经装了sbt, 修改下自己的sbt的path, 以及添加 idea 的env 就是上面的 `SBT_OPTS="-Dsbt.override.build.repos=true` 不然在idea里面 他又会走默认的地址了
 
 
+### 总结
 
+sbt 没 maven 好用 = =
 
 
 #### reference
@@ -135,4 +234,6 @@ http://www.scala-sbt.org/release/docs/Proxy-Repositories.html
 http://stackoverflow.com/questions/22794149/scala-play-sbt-change-order-of-resolvers
 
 http://www.plotprojects.com/create-an-intellij-idea-project-with-library-sources-attached/
+
+http://www.scala-sbt.org/0.13.5/docs/Detailed-Topics/Library-Management.html
 
