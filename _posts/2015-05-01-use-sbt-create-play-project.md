@@ -219,6 +219,20 @@ javadoc 果然没下载下来
 最后导入 idea 选择 SBT project, 因为本地已经装了sbt, 修改下自己的sbt的path, 以及添加 idea 的env 就是上面的 `SBT_OPTS="-Dsbt.override.build.repos=true` 不然在idea里面 他又会走默认的地址了
 
 
+### debug
+
+由于 play 是由 sbt 启动的, 所以调试也就只能通过启动参数加上远程调试的参数(顺便把 sbt 也一起调试了). 通过看 sbt 的脚本发现, SBT_OPTS 和 JAVA_OPTS 都可以设置, 或者直接 sbt 自带 -jvm-debug 原理都一样
+
+```
+$ env SBT_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999" sbt
+
+$ env JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9999" sbt
+
+$ sbt -jvm-debug 9999
+```
+
+
+
 ### 总结
 
 sbt 没 maven 好用 = =
