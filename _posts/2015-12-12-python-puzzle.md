@@ -4,7 +4,7 @@ title: "python puzzle"
 description: ""
 category: "python"
 tags: [python, puzzle]
-published: false
+published: true
 ---
 
 记录开发时遇到的一些令人眼前一亮的坑！
