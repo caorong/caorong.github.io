@@ -30,30 +30,38 @@ mvn clean package (关闭除了scala-maven-plugin，compile-plugin以外所有�
 
 no zinc server
 
+```
 [INFO] news-xxxx ................................ SUCCESS [ 30.615 s]
 [INFO] news-xxx2 ................................ SUCCESS [ 59.325 s]
-
+```
 
 启动zinc 后 第一次
 
+```
 [INFO] news-xxxx ................................ SUCCESS [ 51.443 s]
 [INFO] news-xxx2 ................................ SUCCESS [ 18.390 s]
+```
 
 第二次 编译，没有修改代码
 
+```
 [INFO] news-xxxx ................................ SUCCESS [ 19.443 s]
 [INFO] news-xxx2 ................................ SUCCESS [ 17.214 s]
+```
 
 第三次 编译，没有修改代码
 
+```
 [INFO] news-xxxx ................................ SUCCESS [ 17.473 s]
 [INFO] news-xxx2 ................................ SUCCESS [ 17.113 s]
+```
 
 修改几行代码后
 
+```
 [INFO] news-xxxx ................................ SUCCESS [ 22.295 s]
 [INFO] news-xxx2 ................................ SUCCESS [ 19.668 s]
-
+```
 
 ## 结论
 
