@@ -7,9 +7,11 @@ tags: [python, puzzle]
 published: true
 ---
 
-记录开发时遇到的一些令人眼前一亮的坑！
+记录python开发时遇到的一些令人眼前一亮的坑！
 
-## lambda
+## python 对象重用
+
+下面代码目的是构造2个 提供不同默认参数的 `testfn` 函数。正常的思路，如下。。
 
 ```python
 
@@ -26,7 +28,7 @@ for i in watch_list.keys():
     print(fn, lambda: testfn(i, watch_list[i]))
 ```
 
-猜想下结果时什么？ 是不是print 出来的4个函数应该都是不同的？ 
+理想中的结果应该print出来2个函数是不同的...
 
 然而...
 
@@ -52,11 +54,21 @@ Out[12]: 4328343392
 
 于是上面的 lambda 对象也被重用了，于是发生这种结果。
 
-解决方法 [详](http://stackoverflow.com/questions/938429/scope-of-python-lambda-functions-and-their-parameters)
+sof的解决方法 [详](http://stackoverflow.com/questions/938429/scope-of-python-lambda-functions-and-their-parameters)
 
 1. 加一层工厂，这样工厂里面的入参引用必定不同
 2. 使用 functools.partial 建新函数
 
+或者 循环创建函数的同时直接 消费或激活函数... (如果可以的话)
 
-## reference
+```python
+for i in watch_list.keys():
+    fn = functools.partial(testfn, name=i, data=watch_list[i])
+    fn()
+    print(fn, lambda: testfn(i, watch_list[i]))
+```
+
+
+
+
 
