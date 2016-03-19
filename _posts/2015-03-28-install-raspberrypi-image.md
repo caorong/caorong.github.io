@@ -1,12 +1,13 @@
 ---
 layout: post
-title: "制作raspberrypi image"
+title: "raspberrypi 记录"
 description: ""
 category: "raspberrypi"
 tags: [raspberrypi, hacking]
 published: true
 ---
 
+## 制作 image 
 
 上个月再 RS 买了个树莓派， 等了一个月之后终于送了过来。记录安装一下过程。
 
@@ -94,9 +95,29 @@ http://superuser.com/questions/631592/mac-osx-why-is-dev-rdisk-20-times-faster-t
 http://raspberrypi.stackexchange.com/questions/499/how-can-i-resize-my-root-partition
 
 
+## 挂在移动硬盘部署NAS
+
+网上教程很多，不过要注意以下问题
+
+### 电源
+	
+1. 移动硬盘无法启动，lsusb 存在，但是fdisk 无法看到，很有可能是电源的问题，检查usb插头上面写的是 1A 还是 2A，尽量找2A的。
+
+2. 在 `/boot/config.txt` 最后加一行  `max_usb_current=1` 并重启。
+
+注意，如果不挂载额外移动硬盘，以上步骤可有可无。。。
+
+### 配置步骤 
+
+参考教程 http://elinux.org/R-Pi_NAS
 
 
+#### reference 
 
+http://pimylifeup.com/raspberry-pi-nas/
 
+https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=53832
+
+http://dumbpcs.blogspot.ca/2014/07/getting-external-hdd-to-work-with.html
 
 

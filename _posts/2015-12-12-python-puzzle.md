@@ -69,6 +69,37 @@ for i in watch_list.keys():
 ```
 
 
+## 用 dis 看python bytecode
 
+比如
+
+```py
+a = 0
+b = 0
+a = a + 1
+b += 1
+```
+
+```
+  1           0 LOAD_CONST               0 (0)
+              3 STORE_NAME               0 (a)
+
+  2           6 LOAD_CONST               0 (0)
+              9 STORE_NAME               1 (b)
+
+  3          12 LOAD_NAME                0 (a)
+             15 LOAD_CONST               1 (1)
+             18 BINARY_ADD
+             19 STORE_NAME               0 (a)
+
+  4          22 LOAD_NAME                1 (b)
+             25 LOAD_CONST               1 (1)
+             28 INPLACE_ADD
+             29 STORE_NAME               1 (b)
+             32 LOAD_CONST               2 (None)
+             35 RETURN_VALUE
+```
+
+所以 a的写法更好些。。。
 
 
