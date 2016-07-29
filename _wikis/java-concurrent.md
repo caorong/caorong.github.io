@@ -206,7 +206,11 @@ http://agapple.iteye.com/blog/970055
 
 对于一个Map，先看HashTable 他和SynchronizedCollection的实现类似，简单的将所有的操作都用synchronized 包起来。
 
-而HashMap 则使用分段锁，也就是将数据拆分，用多个锁，细节看[这里](http://blog.csdn.net/guangcigeyun/article/details/8278346)
+而HashMap则使用分段锁，也就是将数据拆分，用多个锁，细节看[这里](http://blog.csdn.net/guangcigeyun/article/details/8278346)
+
+所以，总结，只要collection 是collection 就有临界变量 （index），所以，需要锁住临街变量。
+
+提升锁的性能的方法就是 考虑 不锁全局，也就是多个锁，或者 考虑空间换效率的方式比如(CopyOnWriteArrayList), 或者 Immutable的方式(每次都操作独立的唯一变量, 其实也是空间换时间)
 
 ## 练习
 
@@ -302,152 +306,5 @@ public interface ConcurrentTable<R, C, V> {
 
 以下是实现
 
-```java
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkElementIndex;
-
-/**
- * <li>每个R可以有多个不重复的C，每个(R, C)最多有一个V
- * <p/>
- * <li>实现一个C是enum，V是Boolean，以减少内存使用和读多于写为优化目标的特殊版本
- * <p/>
- * <p/>
- * 20085
- *
- * TODO 优化 由于C 是enum， 可以省去columnList, 直接用 enum.ordinal
- *
- * @author caorong
- */
-public class MyConcurrentTable<R, C extends Enum, V> implements ConcurrentTable<R, C, V> {
-
-  private final ImmutableList<R> rowList;
-  private final ImmutableList<C> columnList;
-  private final ImmutableMap<R, Integer> rowKeyToIndex;
-  private final ImmutableMap<C, Integer> columnKeyToIndex;
-  private final V[][] array;
-  final ReadWriteLock rwl = new ReentrantReadWriteLock();
-  private final Lock readLock = rwl.readLock();
-  private final Lock writeLock = rwl.writeLock();
-
-  public MyConcurrentTable(Iterable<? extends R> rowKeys, Iterable<? extends C> columnKeys) {
-    this.rowList = ImmutableList.copyOf(rowKeys);
-    this.columnList = ImmutableList.copyOf(columnKeys);
-    checkArgument(!rowList.isEmpty());
-    checkArgument(!columnList.isEmpty());
-
-    // 提供通过 rowkey和column key 反查, 用不着遍历了
-    rowKeyToIndex = index(rowList);
-    columnKeyToIndex = index(columnList);
-
-    V[][] tmpArray = (V[][]) new Object[rowList.size()][columnList.size()];
-    array = tmpArray;
-  }
-
-  private static <E> ImmutableMap<E, Integer> index(List<E> list) {
-    ImmutableMap.Builder<E, Integer> columnBuilder = ImmutableMap.builder();
-    for (int i = 0; i < list.size(); i++) {
-      columnBuilder.put(list.get(i), i);
-    }
-    return columnBuilder.build();
-  }
-
-  @Override
-  public boolean contains(R row, C column, V value) {
-    // read lock
-    readLock.lock();
-    try {
-      return containsRow(row) && containsColumn(column);
-    } finally {
-      readLock.unlock();
-    }
-  }
-
-  public boolean containsRow(Object rowKey) {
-    return rowKeyToIndex.containsKey(rowKey);
-  }
-
-  public boolean containsColumn(Object columnKey) {
-    return columnKeyToIndex.containsKey(columnKey);
-  }
-
-  public V set(int rowIndex, int columnIndex, V value) {
-    // In GWT array access never throws IndexOutOfBoundsException.
-    checkElementIndex(rowIndex, rowList.size());
-    checkElementIndex(columnIndex, columnList.size());
-    V oldValue = array[rowIndex][columnIndex];
-    array[rowIndex][columnIndex] = value;
-    return oldValue;
-  }
-
-  @Override
-  public V put(R row, C column, V value) {
-    // write lock
-    Integer rowIndex = rowKeyToIndex.get(row);
-    checkArgument(rowIndex != null, "Row %s not in %s", row, rowList);
-    Integer columnIndex = columnKeyToIndex.get(column);
-    checkArgument(columnIndex != null, "Column %s not in %s", column, columnList);
-    writeLock.lock();
-    try {
-      return set(rowIndex, columnIndex, value);
-    } finally {
-      writeLock.unlock();
-    }
-  }
-
-  @Override
-  public V putIfAbsent(R row, C column, V value) {
-    return put(row, column, value);
-  }
-
-  public V at(int rowIndex, int columnIndex) {
-    // In GWT array access never throws IndexOutOfBoundsException.
-    checkElementIndex(rowIndex, rowList.size());
-    checkElementIndex(columnIndex, columnList.size());
-    readLock.lock();
-    try {
-      return array[rowIndex][columnIndex];
-    } finally {
-      readLock.unlock();
-    }
-  }
-
-  @Override
-  public V get(R row, C column) {
-    Integer rowIndex = rowKeyToIndex.get(row);
-    Integer columnIndex = columnKeyToIndex.get(column);
-    return (rowIndex == null || columnIndex == null) ? null : at(rowIndex, columnIndex);
-  }
-
-  @Override
-  public NavigableMap<C, V> getColumnRange(R row, C startColumnInclude, C endColumnExclude) {
-    readLock.lock();
-    try {
-      int colStart = columnKeyToIndex.get(startColumnInclude);
-      int colEnd = columnKeyToIndex.get(endColumnExclude);
-      TreeMap treeMap = new TreeMap<C, V>();
-      Integer rowIndex = rowKeyToIndex.get(row);
-      for (int i = colStart; i < colEnd; i++) {
-        treeMap.put(columnList.get(i), array[rowIndex][i]);
-      }
-      return treeMap;
-    } finally {
-      readLock.unlock();
-    }
-  }
-
-  public static void main(String[] args) {
-
-  }
-}
-```
+https://gist.github.com/caorong/31bf10e5f45a109d7568e2955fbb5965
 
