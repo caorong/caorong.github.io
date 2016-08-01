@@ -48,11 +48,7 @@ published: true
 Histogram histogram2 = new Histogram(3600000l, 1);
 ```
 
-他根据最大值，得出需要的指数大小，再根据自己配置的线性值
-
-$$ = 10 * log_{10} (x / y) $$
-
-根据代码，baseBucket count 约为 $$ 2^(baseCount+5) $$ 至于为什么要＋5， 因为最小格的大小时从32 开始计算的 (太小的话，反倒是浪费空间)
+根据代码，baseBucket count 约为 $$ 2^{(baseCount+5)} $$ 至于为什么要＋5， 因为最小格的大小时从32 开始计算的 (太小的话，反倒是浪费空间)
 
 而 subBucket 的大小为 根据 文档建议的 0-5 大小分别为
 
