@@ -87,29 +87,31 @@ dropwizard 的 metric 也同样提供了 histogram 的功能.
 
 根据个人看法，1 的实现更适合我们的业务，而且和 hdrhistogram 的实现更类似。
 
-不过 根据源码来看，他比 hdrhistogram 多了2个开销，
+他的是[这篇论文](http://dimacs.rutgers.edu/~graham/pubs/papers/fwddecay.pdf)的实现
+
+我没仔细看论文，不过 根据源码来看，他比 hdrhistogram 多了3个开销.
 
 1. 他用 ConcurrentSkipListMap 来做 hdrhistogram 的bucket 干的事情，虽然 skipList 很快，但肯定快不过数组。
 2. 他没有 可预估最大值的概念，所以每当插入 比当前空间最大值还大的值时，它需要好多事。。请看一下 code snippet
 
-```java
-if (newCount <= size) {
-    values.put(priority, sample);
-} else {
-    Double first = values.firstKey();
-    if (first < priority && values.putIfAbsent(priority, sample) == null) {
-        // ensure we always remove an item
-        while (values.remove(first) == null) {
-            first = values.firstKey();
+    ```java
+    if (newCount <= size) {
+        values.put(priority, sample);
+    } else {
+        Double first = values.firstKey();
+        if (first < priority && values.putIfAbsent(priority, sample) == null) {
+            // ensure we always remove an item
+            while (values.remove(first) == null) {
+                first = values.firstKey();
+            }
         }
     }
-}
-```
-
+    ```
+3. 默认设置是每小时要rescale 一下，而 rescale 是要锁写的。
 
 # 总结
 
-如果你的业务，需要metric的数据无法预估，那么dropwizard 的 histogram 更适合你。
+如果你的业务，需要metric的数据无法预估, 并对写入的耗时没那么苛刻，那么 dropwizard 的 histogram 更适合你。
 
 不过对于 可预估最大值的，并且希望写入代价最小的业务来说，还是 hdrhistogram 更合适。
 
