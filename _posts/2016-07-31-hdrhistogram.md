@@ -90,19 +90,20 @@ dropwizard 的 metric 也同样提供了 histogram 的功能.
 1. 他用 ConcurrentSkipListMap 来做 hdrhistogram 的bucket 干的事情，虽然 skipList 很快，但肯定快不过数组。
 2. 他没有 可预估最大值的概念，所以每当插入 比当前空间最大值还大的值时，它需要好多事。。请看一下 code snippet
 
-    ```java
-    if (newCount <= size) {
-        values.put(priority, sample);
-    } else {
-        Double first = values.firstKey();
-        if (first < priority && values.putIfAbsent(priority, sample) == null) {
-            // ensure we always remove an item
-            while (values.remove(first) == null) {
-                first = values.firstKey();
-            }
+```java
+if (newCount <= size) {
+    values.put(priority, sample);
+} else {
+    Double first = values.firstKey();
+    if (first < priority && values.putIfAbsent(priority, sample) == null) {
+        // ensure we always remove an item
+        while (values.remove(first) == null) {
+            first = values.firstKey();
         }
     }
-    ```
+}
+```
+
 3. 默认设置是每小时要rescale 一下，而 rescale 是要锁写的。
 
 # 总结
