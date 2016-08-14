@@ -36,7 +36,7 @@ Bar bar = barFuture.get(); // 同理等待bar返回。
 
 理想的异步是什么？应该是类似 脚本语言(node,python) 的event driven 的方式。
 
-而所谓的 event driven 就是 原本程序需要 blocking 住等待返回，现在不blocking，将回调放到内存，等出结果后让系统通知你，然后你在调回调。
+而所谓的 event driven 就是 原本程序需要 blocking 住等待返回，现在不blocking，将回调放到内存，等出结果后让系统通知你，然后你在调回调。（也就是说，等待返回的开销并没有消失，只是从应用层转嫁给系统层）
 
 而在脚本语言 比如node `让系统通知` 是依赖 libev 封装的 epoll/kqueue.. 实现的，并且只适合io 操作。
 
