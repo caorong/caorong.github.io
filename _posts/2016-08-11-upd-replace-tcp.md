@@ -160,7 +160,7 @@ net.ipv4.tcp_congestion_control=hybla
 
 
 ```
-net.ipv4.tcp_congestion_control=hybla
+net.ipv4.tcp_congestion_control=htcp
 ```
 
 记得设置完后执行 
