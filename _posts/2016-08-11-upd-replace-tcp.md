@@ -3,7 +3,7 @@ layout: post
 title: "udp 替代 tcp？"
 description: ""
 category: "network"
-tags: [QUIC, tcp, udp, kcp]
+tags: [QUIC, tcp, udp, kcp, 拥塞算法]
 published: true
 ---
 
@@ -13,30 +13,34 @@ published: true
 
 首先 他们 是基于 UDP 的自定义的协议。
 
-**那么为什么要自定并用 UDP?**
+### 那么为什么要自定并用 UDP?
 
 他们都为了能在不修改系统层的情况下，解决 tcp 丢包重穿带来的延迟的问题。
 
-**用了什么策略?**
+### 用了什么策略?
 
 策略可以参考kcp 的[技术特性](https://github.com/skywind3000/kcp#技术特性)
 
-**结论，他们其实都为了改善 `高丢包` 环境的网络质量。**
+### 结论
+
+他们其实都为了改善 `高丢包` 环境的网络质量。
 
 QUIC 的目的是为了在2g，3g下，目前也只有google自己的网站支持。
 
 而 kcp 则是为了fq的目的，解决自己的境外vps 与 国内的网络质量。
 
+### 坊间传闻
 
 再扯一下QQ， 貌似用 基于 udp 来自定义tcp 的事情 [很早之前qq就是这么做的, 虽然初衷并不同](https://www.zhihu.com/question/20292749)
 
+### tcp 的简易解决方案
 
 不过对于 自己的vps来说我们有能力自己sudo，所以其实很早就有类似 锐速 这种基于tcp的加速软件。还有类似原理[开源版本](https://github.com/snooda/net-speeder.git)
 
 不过 这种基于 tcp 的方式，原理都是靠发多倍的数据包，减小丢包的情况。不过如果人人都这么搞，会让原本已经拥塞的国际网络出口更加堵。
 
 
-## 网络基础
+### 网络基础
 
 为了理解kcp 的配置方法，需要再复习下网络基础
 
@@ -58,7 +62,7 @@ QUIC 的目的是为了在2g，3g下，目前也只有google自己的网站支�
 
 点对点通信通过差错控制提供数据帧（Frame）在信道上无差错的传输。（帧有check sum）
 
-先说下 点对点信道 的数据链路层 的协议数据单位 － `帧`，而这层不同的协议，都有不同的 `最大传输单元 MTU`, 所谓的 MTU 就是帧的数据部分的数据大小。
+先说下 点对点信道 的数据链路层 的协议数据单位 － `帧`，而这层不同的协议，都有不同的 `最大传输单元 MTU`, 所谓的 MTU 就是帧的数据部分的数据大小, 也就是kcp 需要配置的 MTU。
 
 目前链路层协议一般用点对点协议 ppp (Point-to-point Protocol)，所以上层网络层的数据包将被组装成 ppp 协议的帧。
 
@@ -80,9 +84,9 @@ mac 上可以通过  `ping -D -s 1414 45.63.xx.xx` 来测试最大的MTU 大小�
 
 主要就是 tcp， udp 2个协议, 也是配置kcp 参数需要重点理解的
 
-tcp： 面向连接， 可靠的流协议。
+    tcp： 面向连接， 可靠的流协议。
 
-udp： 之保证发了消息，别的不保证。
+    udp： 只保证发了消息，别的不保证。
 
 也就是说，tcp 在udp 之上增加了许多功能，以保证他的可靠，所以，他的头部也比 udp 大很多，具体可以参考[这里 ](http://www.jianshu.com/p/8be9b3204864) 
 
@@ -106,11 +110,11 @@ kcp 具体的技术特性[参考官方文档](https://github.com/skywind3000/kcp
 
 也就是说，tcp 的发送窗口会根据发送情况，不断的 变大变小，(丢包的话就会变小)
 
-而对于 kcp 来说，他不能自动的，需要自己设定 client rcvwnd和server sndwnd。如果过大，反而会造成人为造成的丢包。
+而对于 kcp 来说，他不能自动的，需要自己设定 client rcvwnd和server sndwnd。如果过大，反而会造成人为造成的丢包，或者参考[内置模式](https://github.com/xtaci/kcptun#内置模式-lollipop) 配置流控(丢包退让，满启动等)。
 
 调整方式参考[文档](https://github.com/xtaci/kcptun#推荐参数-lollipop)
 
-所以，如果个人的网络质量比较好，比如有接入国际精品网(基本上 丢包率0%)，那还是用tcp吧, 多省事。
+所以，如果个人的网络质量比较好(不丢包)，比如有接入国际精品网(基本上 丢包率0%)，那还是根据情况修改tcp 的拥塞算法加速。
 
 ##### tcp 拥塞算法
 
@@ -169,7 +173,7 @@ net.ipv4.tcp_congestion_control=htcp
 sysctl -p
 ```
 
-## 实测结果
+### 实测结果
 
 由于我家是国际精品网，所以 测试下来 kcp 对我来说没什么变化。
 
@@ -208,7 +212,7 @@ Saving to: '100MB-singapore.bin'
 
 ```
 
-## 结论
+### 结论
 
 对于 bwg 这种 openvz 的机器，由于不能 添加tcp 算法模块，所以建议使用 [kcptun](https://github.com/xtaci/kcptun) 
 
@@ -216,7 +220,7 @@ Saving to: '100MB-singapore.bin'
 
 对于 不丢包的情况，强烈建议 直接tcp，并使用 htcp 算法。
 
-# reference
+## reference
 
 https://www.zhihu.com/question/29705994
 
