@@ -164,7 +164,7 @@ math.randomseed(tonumber(_time[2]))
 开发环境 建议直接用类似虚拟机的环境比如docker，以便节省不必要的时间花在不同环境下.
 
 
-# refernece
+# reference
 
 https://moonbingbing.gitbooks.io/openresty-best-practices
 
