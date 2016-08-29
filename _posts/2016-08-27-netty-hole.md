@@ -411,7 +411,7 @@ public void recycle(Object object) {
 
 代码比较长，我直接画图表示下
 
-[!wiki/netty/netty.png](/post_images/netty.png)
+![wiki/netty/netty.png](/assets/post_images/netty.png)
 
 也就是说 一个Thread 最多cache `256` 个 `WriteAndFlushTask` 对象, 总数又 `IO Thread` 数量决定, 默认最多应该是 IOThreadCount * 256 个对象
 
