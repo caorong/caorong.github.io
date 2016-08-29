@@ -7,7 +7,7 @@ tags: [QUIC, tcp, udp, kcp, 拥塞算法]
 published: true
 ---
 
-话说最近看到 2 个消息，google 将使用 QUIC 协议，ss-android 还看到个 changelog 开始支持kcp。
+话说最近看到 2 个消息，google 自家主页已经支持 QUIC 协议，ss-android 还看到个 changelog 开始支持kcp。
 
 于是就查了下资料看看, 发现其实 QUIC 和 kcp 这2东东其实都是为类似的目的开发的类似的东西。
 
