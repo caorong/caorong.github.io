@@ -15,7 +15,7 @@ published: true
 
 但其实不论从方便性或者从安全性来说，用公私钥登录服务器更好。
 
-ubuntu 的话 有个 `ssh-copy-id` 的工具可以帮助在远程 server 里添上自己的公钥，只要在这次输一次密码，以后都不用输密码。
+ubuntu 的话 自带 `ssh-copy-id` 的工具可以帮助在远程 server 里添上自己的公钥，只要在这次输一次密码，以后都不用输密码。
 
 mac的话 默认没有，可以自己弄一个简化版的
 
@@ -96,14 +96,16 @@ scp 是一个基于ssh 的 remote copy program (from man)
 Host proxyed_vps5
 HostName vps5IP
 # setisify gateway private key position for connect remote %h %p
-ProxyCommand ssh -C -c blowfish -l root -i ~/.ssh/vps5_id_rsa vps3IP -W %h:%p
-# this is gateway private key
-IdentityFile ~/.ssh/vps3_id_rsa
+ProxyCommand ssh -C -c blowfish -l root -i ~/.ssh/vps3_id_rsa vps3IP -W %h:%p
+# this is private key for destination on local machine
+IdentityFile ~/.ssh/vps5_id_rsa
 Compression yes
 Cipher blowfish
 Port 28030
 User root
 ```
+
+当然也可以先配置一个 `vps3` 再配置一个 `vps5` 然后 ProxyCommand 里面就不用 -c -C -i 这种了
 
 这里我配置了一个 vps5的代理，将vps3 作为 网关。
 
