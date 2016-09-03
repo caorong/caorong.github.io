@@ -34,7 +34,7 @@ cat ~/.ssh/id_rsa.pub | ssh $1 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys
 
 man的官方解释
 
-```nohighlight
+```text
 -F configfile
        Specifies an alternative per-user configuration file.  If a configuration file is given on the command line, the system-
        wide configuration file (/etc/ssh/ssh_config) will be ignored.  The default for the per-user configuration file is
@@ -45,7 +45,7 @@ man的官方解释
 
 然后 添加方式如下
 
-```nohighlight
+```text
 Host vps5
 HostName 1xx.xx.xx.xx
 Port 22
