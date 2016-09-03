@@ -53,7 +53,6 @@ Histogram histogram2 = new Histogram(3600000l, 1);
 而 subBucket 的大小为 根据 文档建议的 0-5 大小分别为
 
 ```
-2
 32
 256
 2048
