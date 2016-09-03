@@ -34,18 +34,18 @@ cat ~/.ssh/id_rsa.pub | ssh $1 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys
 
 man的官方解释
 
-```txt 
-     -F configfile
-             Specifies an alternative per-user configuration file.  If a configuration file is given on the command line, the system-
-             wide configuration file (/etc/ssh/ssh_config) will be ignored.  The default for the per-user configuration file is
-             ~/.ssh/config.
+```nohighlight
+-F configfile
+       Specifies an alternative per-user configuration file.  If a configuration file is given on the command line, the system-
+       wide configuration file (/etc/ssh/ssh_config) will be ignored.  The default for the per-user configuration file is
+       ~/.ssh/config.
 ```
 
 根据man 可以知道 *nux 在 /etc/ssh/ssh_config 有一份默认配置, cp 到 自己的 ~/.ssh/config 下作为自己的配置
 
 然后 添加方式如下
 
-```
+```nohighlight
 Host vps5
 HostName 1xx.xx.xx.xx
 Port 22
@@ -53,9 +53,7 @@ IdentityFile ~/.ssh/id_rsa
 User root
 ```
 
-```
 然后可以通过 `ssh vps5` 登录服务器
-```
 
 
 ## proxy jump hosts
@@ -69,13 +67,13 @@ User root
 
 注： 需要在vps3 上 可以用默认privatekey 登录vps5
 
-```
+```nohighlight
 ssh -o ProxyCommand="ssh -W %h:%p vps3" vps5
 ```
 
 或者 
 
-```
+```nohighlight
 ssh -tt vps3 ssh -tt vps5
 ```
 
@@ -94,7 +92,7 @@ scp 是一个基于ssh 的 remote copy program (from man)
 由于文件比较大，所以需要选择更合适的 加密方式，以及压缩，以便提高效率，举个例子
 
 
-```
+```nohighlight
 Host proxyed_vps5
 HostName vps5IP
 # setisify gateway private key position for connect remote %h %p
@@ -123,8 +121,8 @@ User root
 
 看一下效果:
 
-```
 
+```nohighlight
 ~/Documents/xxx ᐅ scp  -r proxyed_vps5:download/xxx-319 ./
 xxx-319.mp4                                                                                                    1%   38MB   2.3MB/s   21:52 ETA^CKilled by signal 2.
 Killed by signal 2.
