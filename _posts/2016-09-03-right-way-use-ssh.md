@@ -125,7 +125,7 @@ User root
 
 ```
 
-~/Documents/xxx ᐅ scp  -r vps55:download/xxx-319 ./
+~/Documents/xxx ᐅ scp  -r proxyed_vps5:download/xxx-319 ./
 xxx-319.mp4                                                                                                    1%   38MB   2.3MB/s   21:52 ETA^CKilled by signal 2.
 Killed by signal 2.
 ~/Documents/xxx ᐅ scp  -r vps5:download/xxx-319 ./
