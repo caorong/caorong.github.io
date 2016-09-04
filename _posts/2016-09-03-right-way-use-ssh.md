@@ -109,7 +109,7 @@ User root
 
 这里我配置了一个 vps5的代理，将vps3 作为 网关。
 
-在 `ProxyCommand` 里面 配置gateway 的选项: 表示通过 root 和 本地 秘钥 通过 `-C` 启用压缩 `-c blowfish` [blowfish 加密效率更高](http://www.hypexr.org/linux_scp_help.php)
+在 `ProxyCommand` 里面 配置gateway 的选项: 表示通过 root 和 本地 秘钥 通过 `-C` 启用压缩 `-c blowfish` [blowfish 加密效率更高](http://www.hypexr.org/linux_scp_help.php) (ps: 压缩挺费cpu的)
 
 在 ssh_options 里面 用 Compression Cipher 代替。
 
@@ -133,6 +133,8 @@ xxx-319.mp4                                                                     
 ```
 
 还有 rsync 同理。
+
+还有，既然能2层，就能 3 层，这是个递归，具体参考 [wiki](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#Recursively_Chaining_Gateways_Using_stdio_Forwarding) 
 
 
 # reference
