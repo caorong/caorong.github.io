@@ -7,7 +7,7 @@ tags: [aria2c, ssh, scp]
 published: true
 ---
 
-做了快3年多开发，但发现很多人对最常用的 ssh 使用程度还是 hello world 级别。下面总结下，一些可以提升生产力的正确使用姿势。
+做了快3年多开发，结合最近的情况，总结下，一些可以提升生产力的正确使用姿势。
 
 ## private key
 
@@ -136,6 +136,13 @@ xxx-319.mp4                                                                     
 
 还有，既然能2层，就能 3 层，这是个递归，具体参考 [wiki](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#Recursively_Chaining_Gateways_Using_stdio_Forwarding) 
 
+# 插曲
+
+之所以会研究下载是因为最近发现，迅雷太恶心了，不但下载速度没以前快，还强制嵌入了一个浏览器。
+
+然后发现国外vps 下载bt 速度非常快，一半1，2G 的 大小，10分钟左右就能下完。于是就找到了这个方法。
+
+ps，如果下载的是 mp4 格式的话，如果前置头 的话，是可以实现scp 边传边播的功能, 毕竟scp 是顺序传输的。。。
 
 # reference
 
