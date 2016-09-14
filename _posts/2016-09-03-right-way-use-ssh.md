@@ -134,6 +134,12 @@ xxx-319.mp4                                                                     
 
 还有 rsync 同理。
 
+当scp 下载到一般 发现代理慢了，那么可以将scp停掉，用rsync 换代理断点续传
+
+```shell
+rsync -z -r --partial --progress --rsh=ssh vps5:download/xxx-319.mp4  ./
+```
+
 还有，既然能2层，就能 3 层，这是个递归，具体参考 [wiki](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#Recursively_Chaining_Gateways_Using_stdio_Forwarding) 
 
 # 插曲
