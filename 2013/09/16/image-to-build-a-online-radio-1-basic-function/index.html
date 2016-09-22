@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>如何做一个基于hls的网络收音机（一）基本功能 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2013/09/16/image-to-build-a-online-radio-1-basic-function/">如何做一个基于hls的网络收音机（一）基本功能</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">September 16 2013</p>
+  </section>
+
+  <section class="article-entry">
+    <p>一个类似qingting.fm是如何实现的。纯属个人yy，请勿较真。</p>
+<p>#####首先，用hls相比以前ms的mms或者开源的rtmp流做网络收音机有什么好处？</p>
+<p>其实网上有许多现成的基于rtsp，rtmp，mms，mmsh的国家，地方或私有网络电台，google可以搜出来很多网站，可以直接用他们的流播放呀，为啥要费服务器资源再去搭建个基于hls的电台呢？</p>
+<ol>
+<li>可以承受高并发    <strong>（主要原因）</strong></li>
+<li>不需要特殊服务器，成本低</li>
+<li>可以回放，点播  <strong>（顺便实现）</strong></li>
+</ol>
+<p>而对于当今的互联网来说，上网的人越来越多，如果用以前的保持长链接的red5server来建集群承受并发实在是成本太高。</p>
+<p>#####如何做一个自己的hls子文件（.m3u8 + .ts）？</p>
+<p>其实网上有很多opensource项目都帮你实现了子功能。<br>这里直接用<a href="http://ffmpeg.org/" target="_blank" rel="external">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter" target="_blank" rel="external">3u8segment</a></p>
+<p><code>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt=.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | \</code><br> <code>m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/</code></p>
+<p>然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。</p>
+<h5 id="final"><a href="#final" class="headerlink" title="final"></a>final</h5><p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=一个类似qingting.fm是如何实现"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2013/09/16/image-to-build-a-online-radio-1-basic-function/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

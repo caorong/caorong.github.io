@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>6.828 note 1, os interface | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2016/07/16/6.828-note1-os-interface/">6.828 note 1, os interface</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">July 16 2016</p>
+  </section>
+
+  <section class="article-entry">
+    <p>6.828 笔记</p>
+<h2 id="process-由-代码段-数据段，堆栈段等组成"><a href="#process-由-代码段-数据段，堆栈段等组成" class="headerlink" title="process 由 代码段, 数据段，堆栈段等组成"></a>process 由 代码段, 数据段，堆栈段等组成</h2><h2 id="system-call"><a href="#system-call" class="headerlink" title="system call"></a>system call</h2><p>当用户进程需要调用 内核服务时，会需要调用内核，这个过程为 system call</p>
+<p><img src="/assets/post_images/system-call.png" alt="_wikis/6.828/assets/system-call.png"></p>
+<h2 id="fork"><a href="#fork" class="headerlink" title="fork"></a>fork</h2><p>fork 能创建一个子进程，copy 一份和parent 一样的新的数据段 （是copy一份<code>独立</code>的，并非 <code>公用</code>）</p>
+<p>除了以下4点不同 (see man fork): </p>
+<ol>
+<li>child process 有自己的唯一pid</li>
+<li>The child process has a different parent process ID? 没看懂, 结果并不是如此，见下面</li>
+<li>child process 的 file descriptor 会copy 一份 自己的 但是和 parent process 的 fd 所引用的对象是同一个。</li>
+<li>The child processes resource utilizations are set to 0; see setrlimit(2).</li>
+</ol>
+<p>fork 会返回 child process 的pid，对于启动的child process，的代码从 fork 这里运行。child process 的fork 会返回 0</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> r;</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"sssssssss?\n"</span>);     <span class="comment">// 只会打印一次，child process 从下面才开始运行.</span></span><br><span class="line"><span class="keyword">int</span> pid = fork();</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"lalala pid = %d\n"</span>, pid); <span class="comment">// 会print 2次，第二次是0，说明 从child process 从 fork 开始运行</span></span><br><span class="line"><span class="keyword">if</span>(pid &gt; <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"parent: child=%d, pid=%d, ppid=%d\n"</span>, pid,getpid(),getppid());</span><br><span class="line">    pid = wait(&amp;r);  <span class="comment">// 参见 man 2 wait， wait and return the pid of an exited child of current process</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"r=%d \n"</span>, r);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child=%d is done, pid=%d, ppid=%d\n"</span>, pid,getpid(),getppid());</span><br><span class="line">&#125;<span class="keyword">else</span> <span class="keyword">if</span>(pid == <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"child: exiting\n"</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"fork error\n"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>result </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sssssssss?</span><br><span class="line">lalala pid = 80062</span><br><span class="line">parent: child=80062, pid=80061, ppid=35277</span><br><span class="line">lalala pid = 0</span><br><span class="line">child: exiting</span><br><span class="line">r=0</span><br><span class="line">child=80062 is done, pid=80061, ppid=35277</span><br></pre></td></tr></table></figure>
+<h2 id="exec-与-fork-与-system"><a href="#exec-与-fork-与-system" class="headerlink" title="exec 与 fork 与 system"></a>exec 与 fork 与 system</h2><p>The exec family of functions replaces the current process image with a new process image.</p>
+<p>exec 不产生新的child process， </p>
+<p>exec命令在执行时会把当前的shell process关闭，然后换到后面的命令继续执行。</p>
+<pre><code>系统调用exec是以新的进程去代替原来的进程，但进程的PID保持不变。
+因此，可以这样认为，exec系统调用并没有创建新的进程，只是替换了原来进程上下文的内容。
+原进程的代码段，数据段，堆栈段被新的进程所代替。
+</code></pre><p>参考 <code>man 3 exec</code> 会发现 exec是一个函数簇，由6个函数组成。</p>
+<pre><code>执行exec系统调用，一般都是这样，用fork()函数新建立一个进程，然后让进程去执行exec调用。我们知道，在fork()建立新进程之后，父进各与子进程共享代码段，但数据空间是分开的，但父进程会把自己数据空间的内容copy到子进程中去，还有上下文也会copy到子进程中去。
+而为了提高效率，采用一种写时copy的策略，即创建子进程的时候，并不copy父进程的地址空间，父子进程拥有共同的地址空间，只有当子进程需要写入数据时(如向缓冲区写入数据),这时候会复制地址空间，复制缓冲区到子进程中去。
+从而父子进程拥有独立的地址空间。而对于fork()之后执行exec后，这种策略能够很好的提高效率，如果一开始就copy,那么exec之后，子进程的数据会被放弃，被新的进程所代替。
+</code></pre><p>fork <code>copy</code> 一份 一样的内存。。。</p>
+<p>exec与system的区别</p>
+<pre><code>exec是直接用新的进程去代替原来的程序运行，运行完毕之后不回到原先的程序中去。
+system是调用shell执行你的命令，system=fork+exec+waitpid,执行完毕之后，回到原先的程序中去。继续执行下面的部分。
+总之，如果你用exec调用，首先应该fork一个新的进程，然后exec. 而system不需要你fork新进程，已经封装好了。
+</code></pre><h2 id="IO-与-File-descriptors-fd"><a href="#IO-与-File-descriptors-fd" class="headerlink" title="IO 与 File descriptors (fd)"></a>IO 与 File descriptors (fd)</h2><p>fd 是一个给 user process 读写数据的 内核对象(kernel-managed object) 引用， 用int 表示</p>
+<p>一般来说，一个进程默认有3个 fd</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">FD	说明</span><br><span class="line">0	stdin，标准输入</span><br><span class="line">1	stdout，标准输出</span><br><span class="line">2	stderr，标准错误输出</span><br></pre></td></tr></table></figure>
+<p>举例一个简版 <code>cat</code> 的例子，他从stdin 读数据，然后写入 stdout</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> buf[<span class="number">512</span>];</span><br><span class="line"><span class="keyword">int</span> n;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(;;) &#123;</span><br><span class="line">    n = read(<span class="number">0</span>, buf, <span class="keyword">sizeof</span> buf);</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="number">0</span>)&#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (n &lt; <span class="number">0</span>)&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">"read error\n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(write(<span class="number">1</span>, buf, n)!=n)&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">"write error\n"</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>编译： clang -Wall -g cat.c -o mycat</code> mycat 后面会用到  </p>
+<p>注，这里的cat 并不是shell 自带的cat 那么强大，他不支持 直接 读取文件名。</p>
+<p>只能从stdin 读取，所以 原本shell 可以 <code>cat cat.c</code> 需要用 <code>./cat &lt; cat.c</code> 替代</p>
+<p>那么这个 <code>&lt;</code> 是如何让右边 cat.c 文件里面的数据 写入到 cat 的stdin的呢？</p>
+<h2 id="io-redirect"><a href="#io-redirect" class="headerlink" title="io redirect"></a>io redirect</h2><p>先看下常用的 shell 重定向</p>
+<p>比如 后台运行程序时常见的 <code>nohup xxx &gt;xx.log 2&gt;&amp;1 &amp;</code> </p>
+<p><code>&amp;n</code> 使用系统调用 dup (2) 复制文件描述符 n 并把结果用作标准输出</p>
+<p><code>2&gt;&amp;1</code> 将前面的命令的 stdout 和 stderr 合并 ( 严格的说是通过复制文件描述符 1 来建立文件描述符 2 , 结果是合并了2个流 )</p>
+<p><code>&amp;</code> 关闭stdout</p>
+<p>综上： stdout 和 stderr 被写入 xx.log 并关闭 monitor 的 stdout</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">M&gt;N</span><br><span class="line">  # &quot;M&quot;是一个文件描述符, 如果没有明确指定的话默认为1.</span><br><span class="line">  # &quot;N&quot;是一个文件名.</span><br><span class="line">  # 文件描述符&quot;M&quot;被重定向到文件&quot;N&quot;.</span><br><span class="line"></span><br><span class="line">M&gt;&amp;N</span><br><span class="line">  # &quot;M&quot;是一个文件描述符, 如果没有明确指定的话默认为1.</span><br><span class="line">  # &quot;N&quot;是另一个文件描述符.</span><br><span class="line"></span><br><span class="line">[j]&lt;&gt;filename</span><br><span class="line">   # 为了读写&quot;filename&quot;, 把文件&quot;filename&quot;打开, 并且将文件描述符&quot;j&quot;分配给它.</span><br><span class="line">   # 如果文件&quot;filename&quot;不存在, 那么就创建它.</span><br><span class="line">   # 如果文件描述符&quot;j&quot;没指定, 那默认是fd 0, stdin.</span><br><span class="line">   #</span><br><span class="line">   # 这种应用通常是为了写到一个文件中指定的地方.</span><br><span class="line">   echo 1234567890 &gt; File    # 写字符串到&quot;File&quot;.</span><br><span class="line">   exec 3&lt;&gt; File             # 打开&quot;File&quot;并且将fd 3分配给它.</span><br><span class="line">   read -n 4 &lt;&amp;3             # 只读取4个字符.</span><br><span class="line">   echo -n . &gt;&amp;3             # 写一个小数点.</span><br><span class="line">   exec 3&gt;&amp;-                 # 关闭fd 3.</span><br><span class="line">   cat File                  # ==&gt; 1234.67890</span><br><span class="line">   # 随机访问.</span><br></pre></td></tr></table></figure>
+<p>更多例子<a href="http://xstarcd.github.io/wiki/shell/exec_redirect.html" target="_blank" rel="external">参考这里</a></p>
+<h3 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h3><p><code>close</code>: 可以释放一个fd，被释放的fd 包括 0，1，2 (std in/out/err) 可以被重新使用。</p>
+<p>新申请的 fd 总是当前进程中最小的未使用的fd，比如 0 被close了，新申请的一定是 0</p>
+<p><code>fork</code>: 出的child process 和 parent 的 fd 一样，指向同一个 fd object.</p>
+<p>shell 实现 io redirect 的过程 </p>
+<ol>
+<li>fork 一个 child process</li>
+<li>关闭child process 的 stdin</li>
+<li>把需要读的文件内容用 stdin 来引用。（reuse stdin）</li>
+<li>exec 新程序</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> *aa[<span class="number">3</span>];</span><br><span class="line"><span class="keyword">int</span> re;</span><br><span class="line">aa[<span class="number">0</span>] = <span class="string">"mycat"</span>;  <span class="comment">// 照惯例 第一个参数是 被执行文件的文件名(改成别的不影响程序运行) @see man 2 exec</span></span><br><span class="line">aa[<span class="number">1</span>] = <span class="number">0</span>;      <span class="comment">// 数组的最后一位应该是一个 NULL pointer， 在 c 语言中，0 == NULL</span></span><br><span class="line"><span class="keyword">if</span> (fork() == <span class="number">0</span>) &#123;</span><br><span class="line">    close(<span class="number">0</span>);</span><br><span class="line">    open(<span class="string">"ioredirtest.c"</span>, O_RDONLY);</span><br><span class="line">    re = execv(<span class="string">"mycat"</span>, aa); <span class="comment">// 或者改成系统的 /bin/cat</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的child process 关闭 fd 0 后，这里的open 就会申请新的最小的 fd 数字，于是就是0了</p>
+<p>然后在 exec 之前的 mycat，注，这时，mycat 的 stdin 其实是 <code>ioredirtest.c</code> fd了.</p>
+<p>这里有人会问，为啥要 fork，不fork 其实也行。但是 这里是模拟shell 的操作，如果shell 不fork，直接exec，那么结果就是 shell 做redirect 的命令后，自己也会退出。。</p>
+<p>我们再来看下 <code>2&gt;&amp;1</code> 的代码实现</p>
+<p>dup: 复制一个已经存在的 fd，返回一个fd， 这个fd 和之前的fd 指向同一个IO对象。 这种关系 就和 forked child process 的 std in/out/err 和 parent process 的 std in/out/err 一样。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> r;</span><br><span class="line">write(<span class="number">2</span>, <span class="string">"123\n"</span>, <span class="number">4</span>);</span><br><span class="line"><span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"abcerr\n"</span>);</span><br><span class="line"><span class="keyword">if</span> (fork() == <span class="number">0</span>) &#123;</span><br><span class="line">    close(<span class="number">2</span>);  <span class="comment">// close stderr</span></span><br><span class="line">    dup(<span class="number">1</span>);    <span class="comment">// make stderr use stdout</span></span><br><span class="line">    write(<span class="number">1</span>, <span class="string">"123\n"</span>, <span class="number">4</span>);</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"22222\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line">wait(&amp;r);</span><br></pre></td></tr></table></figure>
+<h2 id="pipe"><a href="#pipe" class="headerlink" title="pipe"></a>pipe</h2><p>pipe的定义: 一个有一对 读/写 fd 的内核缓冲 (A pipe is a small kernel buffer exposed to processes as a pair of file descriptors, one for reading and one for writing)</p>
+<p>在shell 里面 有 管道 <code>|</code> ， 下面用代码来实现下 <code>echo &quot;hello world\!&quot; |wc</code> 这个命令</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> p[<span class="number">2</span>];  <span class="comment">// pair of file desc, [read, write]</span></span><br><span class="line"><span class="keyword">char</span> *argv[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">argv[<span class="number">0</span>] = <span class="string">"wc"</span>;</span><br><span class="line">argv[<span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">pipe(p);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (fork() == <span class="number">0</span>) &#123;</span><br><span class="line">    close(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">int</span> d = dup(p[<span class="number">0</span>]); <span class="comment">// 将 pipe 的 read fd 挂载到 child process 的stdin </span></span><br><span class="line">    close(p[<span class="number">0</span>]);</span><br><span class="line">    close(p[<span class="number">1</span>]);</span><br><span class="line">    execv(<span class="string">"/usr/bin/wc"</span>, argv); <span class="comment">// 将 pipe 的read 挂给 wc 的 stdin</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    write(p[<span class="number">1</span>], <span class="string">"hello world!\n"</span>, <span class="number">13</span>);</span><br><span class="line">    close(p[<span class="number">0</span>]);</span><br><span class="line">    close(p[<span class="number">1</span>]);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<h1 id="tip"><a href="#tip" class="headerlink" title="tip"></a>tip</h1><p>省略的include 可以通过 man 查看 e.g <code>man 3 exit</code> , <code>man 3 fprintf</code></p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://xstarcd.github.io/wiki/shell/exec_redirect.html" target="_blank" rel="external">http://xstarcd.github.io/wiki/shell/exec_redirect.html</a></p>
+<p><a href="https://pdos.csail.mit.edu/6.828/2014/schedule.html" target="_blank" rel="external">https://pdos.csail.mit.edu/6.828/2014/schedule.html</a></p>
+<p><a href="https://pdos.csail.mit.edu/6.828/2014/xv6/book-rev8.pdf" target="_blank" rel="external">https://pdos.csail.mit.edu/6.828/2014/xv6/book-rev8.pdf</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=6.828 笔记</p>
+<h2 id="
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2016/07/16/6.828-note1-os-interface/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

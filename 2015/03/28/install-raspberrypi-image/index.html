@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>raspberrypi 记录 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2015/03/28/install-raspberrypi-image/">raspberrypi 记录</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">March 28 2015</p>
+  </section>
+
+  <section class="article-entry">
+    <h2 id="制作-image"><a href="#制作-image" class="headerlink" title="制作 image"></a>制作 image</h2><p>上个月再 RS 买了个树莓派， 等了一个月之后终于送了过来。记录安装一下过程。</p>
+<p>去<a href="http://www.raspberrypi.org/downloads/" target="_blank" rel="external">这里</a>下载镜像</p>
+<p><a href="http://www.raspberrypi.org/documentation/installation/installing-images/mac.md" target="_blank" rel="external">官网的安装教程</a></p>
+<p>注意 如果按照教程的 <code>dd</code> 方式会非常慢</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dd bs=1m <span class="keyword">if</span>=pi-snappy.img of=/dev/disk1</span><br></pre></td></tr></table></figure>
+<p>需要改成</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dd bs=1m <span class="keyword">if</span>=pi-snappy.img of=/dev/rdisk1</span><br></pre></td></tr></table></figure>
+<p>原因：</p>
+<pre><code>/dev/rdisk nodes are character-special devices, but are &quot;raw&quot; in the BSD sense and force block-aligned I/O. They are closer to the physical disk than the buffer cache. /dev/disk nodes, on the other hand, are buffered block-special devices and are used primarily by the kernel&apos;s filesystem code.
+</code></pre><p>还有</p>
+<p><code>dd</code> 的时候可以按 <code>CTRL-T</code> 查看进度</p>
+<p>启动后 密码注意查看<a href="http://www.raspberrypi.org/downloads/" target="_blank" rel="external">这里</a></p>
+<p>quick-start-guide 说登录密码是 pi/raspberry， 但如果你装的不是 NOOBS 密码要各自的 <code>Default Login</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Default login:  ubuntu / ubuntu</span><br><span class="line">``` </span><br><span class="line"></span><br><span class="line">我装的是 ubuntu snappy, 启动后原来的 `apt-get` 由 `snappy` 替代了，然后初始时间是1970，需要改成当前的，不然 ssl 报错</span><br><span class="line"></span><br><span class="line">```sh</span><br><span class="line">sudo date 032320042015.00</span><br><span class="line"></span><br><span class="line">#format is mm ddhhnnyyyy.ss, nn=minutes, so the 22th of march 2015, 23:04 sharp</span><br></pre></td></tr></table></figure>
+<p><a href="http://www.raspberrypi.org/forums/viewtopic.php?f=56&amp;t=98633" target="_blank" rel="external">http://www.raspberrypi.org/forums/viewtopic.php?f=56&amp;t=98633</a></p>
+<p>但是我那啃爹 snappy gcc, git, make, 除了python 别的什么都没有。snappy search 也什么都搜不到。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ubuntu@localhost:~$ sudo snappy versions</span><br><span class="line">Part         Tag   Installed  Available  Fingerprint     Active</span><br><span class="line">ubuntu-core  edge  2          3          f442b1d8d6db3f  *</span><br><span class="line">webdm        edge  0.1        -          1604c8b7c9f6c5  *</span><br></pre></td></tr></table></figure>
+<p>于是放弃了ubuntu snappy，<a href="https://wiki.ubuntu.com/ARM/RaspberryPi" target="_blank" rel="external">改装了 ubuntu 14.04LTS</a></p>
+<p>装能装上去，但问题是，这个源没有国内镜像，一个 apt-update 都完成不了，速度只有1kb 卧槽了。</p>
+<p>最后换成了 Debian Wheezy (推荐)。</p>
+<p>然后ssh进入后，开头由下面这东东 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NOTICE: the software on this Raspberry Pi has not been fully configured. Please run &apos;sudo raspi-config&apos;</span><br></pre></td></tr></table></figure>
+<p>最后跟着初始设置就行了。</p>
+<h4 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h4><p><a href="http://www.raspberrypi.org/forums/viewtopic.php?f=2&amp;t=3360" target="_blank" rel="external">http://www.raspberrypi.org/forums/viewtopic.php?f=2&amp;t=3360</a></p>
+<p><a href="http://daoyuan.li/solution-dd-too-slow-on-mac-os-x/" target="_blank" rel="external">http://daoyuan.li/solution-dd-too-slow-on-mac-os-x/</a></p>
+<p><a href="http://superuser.com/questions/631592/mac-osx-why-is-dev-rdisk-20-times-faster-than-dev-disk" target="_blank" rel="external">http://superuser.com/questions/631592/mac-osx-why-is-dev-rdisk-20-times-faster-than-dev-disk</a></p>
+<p><a href="http://raspberrypi.stackexchange.com/questions/499/how-can-i-resize-my-root-partition" target="_blank" rel="external">http://raspberrypi.stackexchange.com/questions/499/how-can-i-resize-my-root-partition</a></p>
+<h2 id="挂在移动硬盘部署NAS"><a href="#挂在移动硬盘部署NAS" class="headerlink" title="挂在移动硬盘部署NAS"></a>挂在移动硬盘部署NAS</h2><p>网上教程很多，不过要注意以下问题</p>
+<h3 id="电源"><a href="#电源" class="headerlink" title="电源"></a>电源</h3><ol>
+<li><p>移动硬盘无法启动，lsusb 存在，但是fdisk 无法看到，很有可能是电源的问题，检查usb插头上面写的是 1A 还是 2A，尽量找2A的。</p>
+</li>
+<li><p>在 <code>/boot/config.txt</code> 最后加一行  <code>max_usb_current=1</code> 并重启。</p>
+</li>
+</ol>
+<p>注意，如果不挂载额外移动硬盘，以上步骤可有可无。。。</p>
+<h3 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h3><p>参考教程 <a href="http://elinux.org/R-Pi_NAS" target="_blank" rel="external">http://elinux.org/R-Pi_NAS</a></p>
+<h4 id="reference-1"><a href="#reference-1" class="headerlink" title="reference"></a>reference</h4><p><a href="http://pimylifeup.com/raspberry-pi-nas/" target="_blank" rel="external">http://pimylifeup.com/raspberry-pi-nas/</a></p>
+<p><a href="https://www.raspberrypi.org/forums/viewtopic.php?f=28&amp;t=53832" target="_blank" rel="external">https://www.raspberrypi.org/forums/viewtopic.php?f=28&amp;t=53832</a></p>
+<p><a href="http://dumbpcs.blogspot.ca/2014/07/getting-external-hdd-to-work-with.html" target="_blank" rel="external">http://dumbpcs.blogspot.ca/2014/07/getting-external-hdd-to-work-with.html</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="制作-image"><a hr"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2015/03/28/install-raspberrypi-image/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

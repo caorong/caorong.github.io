@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>谈谈 hdrhistogram 和 metrics | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2016/07/31/hdrhistogram/">谈谈 hdrhistogram 和 metrics</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">July 31 2016</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近在做rcp框架的 metric 收集部分，说到metric 收集，一般第一个想到工具便是 dropwizard 的 metrics。</p>
+<p>然后，看了Hytrix 的代码后发现，他用了 <a href="https://github.com/HdrHistogram/HdrHistogram" target="_blank" rel="external">hdrhistogram</a> 来统计latency。</p>
+<p>后面将说说 这2个东东。</p>
+<h2 id="hdrhistogram"><a href="#hdrhistogram" class="headerlink" title="hdrhistogram"></a>hdrhistogram</h2><h3 id="作者"><a href="#作者" class="headerlink" title="作者"></a>作者</h3><p>首先，关于 hdrhistogram 作者 Gil Tene 是 Azul System 的CTO，说 Azul 可能很多人不知道，不过如果说，RednaxelaFx 很多人都知道，具体介绍可以看<a href="http://www.zhihu.com/question/24938498" target="_blank" rel="external">这里</a></p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>首先 histogram 就是一个直方图</p>
+<p>而一般来说我们要实现一个直方图可以用数组表示，数组的每个值表示 一个区间的大小。</p>
+<p>而分割区间一般有2种方式</p>
+<ol>
+<li>线性的，也就是对于 0..R 如果用 B 分隔， 那么总共可以分隔 R/B 个格子，数组的size也是 R/B</li>
+<li>指数的，也就是基于指数分隔，好处是可以减少空间。</li>
+</ol>
+<p>举个例子，比如 10w 个数字</p>
+<p>采用 1 的分隔方法需要 1000 个buckets, 每个bucket 可以表示100个值:  <code>[1..100][101..200]...[99,901..100,000]</code></p>
+<p>采用 2 的方式 只需要 17 个 buckets， <code>[2^K..(2^(K+1)-1)]</code> e.g. <code>[1..1][2..3][4..7]...[65,536..131,071]</code></p>
+<p>当然以上都有个缺点，需要一个可预估的最大值。超过最大值的数字将存不进来。</p>
+<p>那么 hdrhistogram 是如何解决上面的问题的呢？</p>
+<pre><code>对于分隔buckets，hdrhistogram 同时采用了 1 和 2，他内部有2个 index, bucketsIdx 和 subBucketIndex. 前者是指数的 后者是线性的，也就是说可以根据业务精度需求控制后面的线性的大小。
+</code></pre><p>这也是为什么初始化时需要填写2个参数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Histogram histogram2 = <span class="keyword">new</span> Histogram(<span class="number">3600000l</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>根据代码，baseBucket count 约为 $$ 2^{(baseCount+5)} $$ 至于为什么要＋5， 因为最小格的大小时从32 开始计算的 (太小的话，反倒是浪费空间)</p>
+<p>而 subBucket 的大小为 根据 文档建议的 0-5 大小分别为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">32</span><br><span class="line">256</span><br><span class="line">2048</span><br><span class="line">32768</span><br><span class="line">262144</span><br></pre></td></tr></table></figure>
+<p>一般定义在2，3左右，定义的越大，约占空间，对了，可以用 <code>histogram.getEstimatedFootprintInBytes()</code> 打出占用的空间。</p>
+<p>而对于可预估的最大值，提供了一个 autoResize 的功能，不过这个resize 和 arrayList 一样，有 arrayCopy 的成本，所以如果业务上能知道最大值，尽量不要使用autoResize，ps, 官方的autoresize 是从 min 1,  max 2 开始的，太尼玛坑爹了。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>hdrhistogram 底层其实就是个数组，所以保证了极快的写入速度，也因为如此，所以获取metric的话需要遍历数组统计，所以他非常适合 写多读少的 metric 业务，ps 我们用它来记录rpc 的 latency。</p>
+<h2 id="dropwizard’s-metric"><a href="#dropwizard’s-metric" class="headerlink" title="dropwizard’s metric"></a>dropwizard’s metric</h2><p>dropwizard 的 metric 也同样提供了 histogram 的功能.</p>
+<p>他提供了 4 种收集方式</p>
+<ol>
+<li>ExponentiallyDecayingReservoir 指数级别的</li>
+<li>UniformReservoir   均匀采样</li>
+<li>SlidingWindowReservoir   类似ringbuffer 的存最近n条记录</li>
+<li>SlidingTimeWindowReservoir   在3的基础上，增加了时间窗口</li>
+</ol>
+<p>根据个人看法，1 的实现更适合我们的业务，而且和 hdrhistogram 的实现更类似。</p>
+<p>他的是<a href="http://dimacs.rutgers.edu/~graham/pubs/papers/fwddecay.pdf" target="_blank" rel="external">这篇论文</a>的实现</p>
+<p>我没仔细看论文，不过 根据源码来看，他比 hdrhistogram 多了3个开销.</p>
+<ol>
+<li>他用 ConcurrentSkipListMap 来做 hdrhistogram 的bucket 干的事情，虽然 skipList 很快，但肯定快不过数组。</li>
+<li>他没有 可预估最大值的概念，所以每当插入 比当前空间最大值还大的值时，它需要好多事。。请看一下 code snippet</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (newCount &lt;= size) &#123;</span><br><span class="line">    values.put(priority, sample);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    Double first = values.firstKey();</span><br><span class="line">    <span class="keyword">if</span> (first &lt; priority &amp;&amp; values.putIfAbsent(priority, sample) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// ensure we always remove an item</span></span><br><span class="line">        <span class="keyword">while</span> (values.remove(first) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            first = values.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>默认设置是每小时要rescale 一下，而 rescale 是要锁写的。</li>
+</ol>
+<h1 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h1><p>如果你的业务，需要metric的数据无法预估, 并对写入的耗时没那么苛刻，那么 dropwizard 的 histogram 更适合你。</p>
+<p>不过对于 可预估最大值的，并且希望写入代价最小的业务来说，还是 hdrhistogram 更合适。</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://psy-lob-saw.blogspot.jp/2015/02/hdrhistogram-better-latency-capture.html" target="_blank" rel="external">http://psy-lob-saw.blogspot.jp/2015/02/hdrhistogram-better-latency-capture.html</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近在做rcp框架的 metric 收集"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2016/07/31/hdrhistogram/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

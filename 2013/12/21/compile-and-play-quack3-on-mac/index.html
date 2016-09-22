@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>在mac上编译安装quack3 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2013/12/21/compile-and-play-quack3-on-mac/">在mac上编译安装quack3</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">December 21 2013</p>
+  </section>
+
+  <section class="article-entry">
+    <p>首先，这是github上id的<a href="https://github.com/id-Software/Quake-III-Arena" target="_blank" rel="external">官方源码</a>,可以在win上用vc， linux上gcc等编译，但在mac上用xcode会提示说此项目太古老。。。</p>
+<p>于是google上便找到了这个<a href="https://github.com/ioquake/ioq3" target="_blank" rel="external">非官方源码</a><br>这个非官方组织在q3的基础上继续维护q3。</p>
+<p>安装方法：</p>
+<ol>
+<li>我是64位的系统，于是console下直接 <code>./make-macosx.sh x86_64</code></li>
+<li>此时编译完后在build/releasexx/ 文件夹下直接运行会提示错误。因为仅仅编译了引擎，而没有资源文件-pak0.pk3。下载后将他放在ioquake3.app里面的ioquake3.app/MacOs/baseq3 directory.<a href="http://pan.baidu.com/s/1dDqrMtb" target="_blank" rel="external">资源文件地址</a></li>
+<li>下载资源文件<a href="http://ioquake3.org/extras/patch-data/" target="_blank" rel="external">更新包</a>同样合并到oquake3.app/MacOs/下。</li>
+<li>play it with fun～</li>
+</ol>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=首先，这是github上id的<a hr"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2013/12/21/compile-and-play-quack3-on-mac/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

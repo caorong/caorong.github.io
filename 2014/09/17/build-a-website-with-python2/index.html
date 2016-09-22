@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>用python写网站（二） | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2014/09/17/build-a-website-with-python2/">用python写网站（二）</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">September 17 2014</p>
+  </section>
+
+  <section class="article-entry">
+    <p>注，由于 与 jekyll 模版冲突 后文所有的双大括号中间都多加了各空格。<a href="http://jekyllrb.com/docs/troubleshooting/#liquid" target="_blank" rel="external">原因见此</a></p>
+<p>===</p>
+<h4 id="模版部分"><a href="#模版部分" class="headerlink" title="模版部分"></a>模版部分</h4><p>本来模版应该没什么好谈的，flask自带Jinja2。但如果前端又配合这angular的话就冲突了。他们的模版占位符都是</p>
+<p>这里总结了下网上找到几个方案</p>
+<ol>
+<li>修改 angular 不修改flask </li>
+</ol>
+<p>flask 占位符内模版里面 写angular的模版</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">span</span>&gt;</span>&#123; &#123;'&#123; &#123;book&#125;&#125;'&#125; &#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ol>
+<li>前后各包裹  和  让 jinja 不解析中间的所有字符串</li>
+</ol>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;% raw %&#125;</span><br><span class="line"><span class="tag">&lt;<span class="name">span</span>&gt;</span>&#123; &#123; book &#125; &#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">&#123;% endraw %&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>修改 angular 的启动参数，修改 angular 的模版符号</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">app.jinja_env.variable_start_string = <span class="string">'&#123; &#123; '</span></span><br><span class="line">app.jinja_env.variable_end_string = <span class="string">' &#125; &#125;'</span> </span><br><span class="line"></span><br><span class="line">// 这样的话 带空格的是jinja的 不待空格的是angular的</span><br></pre></td></tr></table></figure>
+<ol>
+<li>同上，不过修改的是 angular 的模版符号</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> app = angular.module(<span class="string">'myApp'</span>, []);</span><br><span class="line"></span><br><span class="line">    app.config([<span class="string">'$interpolateProvider'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">$interpolateProvider</span>) </span>&#123;</span><br><span class="line">      <span class="comment">// 将 angular 的模版符号改称 &#123;[</span></span><br><span class="line">      $interpolateProvider.startSymbol(<span class="string">'&#123;['</span>);</span><br><span class="line">      $interpolateProvider.endSymbol(<span class="string">']&#125;'</span>);</span><br><span class="line">    &#125;]);</span><br></pre></td></tr></table></figure>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=注，由于 与 jekyll 模版冲突 后"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2014/09/17/build-a-website-with-python2/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

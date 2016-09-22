@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>install ffmpeg with aac and mp3 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2014/01/16/install-ffmpeg-with-aac-and-mp3/">install ffmpeg with aac and mp3</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">January 16 2014</p>
+  </section>
+
+  <section class="article-entry">
+    <p>####本来<br>我之前一直很喜欢ubuntu，甚至觉得他比redhat系列更好用。因为我已经习惯使用apt命令了。直到。。。</p>
+<p>####直到<br>最近我把所有爬虫的机器都迁到linux上面去。自然就先装上ubuntu server版本（我装的时12.04LTS版本）。32位的破机器都很稳定，装jvm，交叉便宜ffmpeg等都很顺利。可是再装最后一台也是唯一的64位的机器时却发生了令人意想不到的事情。在交叉编译完ffmpeg之后，兴冲冲地测试下转码时，在转aac时，竟然报错了，错误很简单，也很令人无语。</p>
+<pre><code>segmentfault，core dumped
+</code></pre><p>这尼玛遇到null point了，怎么这种事情都会发生？然后各种google不到。<br>明明线上的ffmpeg都是好的（线上的是centos）</p>
+<p>绝望之余，便出下策想把ffmpeg源码check下来，gdb看看到底哪里出了问题，后来搜时都到一条命令</p>
+<pre><code>dmesg --dmesg命令，找到最近发生的段错误输出信息
+</code></pre><p>段错误上面一排libfftw3.so error<br>google一搜，<a href="https://trac.ffmpeg.org/ticket/943" target="_blank" rel="external">https://trac.ffmpeg.org/ticket/943</a><br>果然有人和我一样遇到了这个问题。<br>把libfftw3-dev apt remove掉，重新编译，问题解决。</p>
+<p>其实把libaacplus换成libfaac 时可以用的，不过faac编码出来的文件大小比libaacplus大了一倍有余，略坑。。</p>
+<p>####结论<br>嗯哼，珍爱生命，远离ubuntu。话说我已经把自己的ubuntu卸了，换fedora了。（不过我可能又走上了另一条不归路）</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=####本来<br>我之前一直很喜欢ub"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2014/01/16/install-ffmpeg-with-aac-and-mp3/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

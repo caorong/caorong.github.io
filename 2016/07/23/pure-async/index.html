@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>pure async | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2016/07/23/pure-async/">pure async</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">July 23 2016</p>
+  </section>
+
+  <section class="article-entry">
+    <p>谈谈 java 的异步</p>
+<p>最近在搞公司的rpc 框架，花了1 多月的时间，参考 dubbo 和 motan 弄。</p>
+<p>最近快弄完了，准备用client 的接入层，这时想到个问题，是不是 我提供了 future 的接口，就是异步了？</p>
+<p>比如<a href="https://www.zhihu.com/question/31440152" target="_blank" rel="external">知乎</a>上的例子:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fooService.findFoo(fooId); </span><br><span class="line">Future&lt;Foo&gt; fooFuture = RpcContext.getContext().getFuture(); </span><br><span class="line"> </span><br><span class="line">barService.findBar(barId); </span><br><span class="line">Future&lt;Bar&gt; barFuture = RpcContext.getContext().getFuture(); </span><br><span class="line"></span><br><span class="line">Foo foo = fooFuture.get(); <span class="comment">// 如果foo已返回，直接拿到返回值，否则线程wait住，等待foo返回后，线程会被notify唤醒。</span></span><br><span class="line">Bar bar = barFuture.get(); <span class="comment">// 同理等待bar返回。</span></span><br></pre></td></tr></table></figure>
+<p>这仅保证了我们的应用花费的时间 由原本同步的 ttl(foo) + ttl(bar) 变成了 max(ttl(foo), ttl(bar))</p>
+<p>运行这段代码的线程依旧阻塞，当又有请求来的话，又需要申请新的线程处理。。。</p>
+<p>理想的异步是什么？应该是类似 脚本语言(node,python) 的event driven 的方式。</p>
+<p>而所谓的 event driven 就是 原本程序需要 blocking 住等待返回，现在不blocking，将回调放到内存，等出结果后让系统通知你，然后你在调回调。（也就是说，等待返回的开销并没有消失，只是从应用层转嫁给系统层）</p>
+<p>而在脚本语言 比如node <code>让系统通知</code> 是依赖 libev 封装的 epoll/kqueue.. 实现的，并且只适合io 操作。</p>
+<p>然而在java 里面，我们这里虽然可能是 io 操作，但很多情况下，并无法直接利用 类似libev 的东西，(比如jdbc 模型是同步的, 不过 twitter 的 <a href="https://github.com/twitter/finagle" target="_blank" rel="external">finagle</a> 将大多数常用的都实现了异步)，</p>
+<p>也就是说，类似node 并发量大的话，仅仅多耗费些内存(存 fd callback mapping)。</p>
+<p>而 java 的话，不仅要耗费上面的内存，还要自己实现 <code>通知</code> 的机制。</p>
+<p>这里就我所知，guava 的 <code>ListenableFuture</code> 实现了这样的功能。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">AsyncFunction&lt;String, Integer&gt; barFuture = <span class="keyword">new</span> AsyncFunction&lt;String, Integer&gt;() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> ListenableFuture&lt;Integer&gt; <span class="title">apply</span><span class="params">(Integer barId)</span> </span>&#123;</span><br><span class="line">        barService.findBar(barId);</span><br><span class="line">        <span class="keyword">return</span> RpcContext.getContext().getFuture();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">ListenableFuture&lt;Integer&gt; resultFuture = Futures.transform(fooFuture, barFuture);</span><br><span class="line"></span><br><span class="line">    Futures.addCallback(resultFuture, <span class="keyword">new</span> FutureCallback&lt;Integer&gt;() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSuccess</span><span class="params">(Integer result)</span> </span>&#123;</span><br><span class="line">        System.out.println(result);</span><br><span class="line">        <span class="comment">// ....</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Throwable t)</span> </span>&#123;</span><br><span class="line">        t.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<p>看一下她的实现，分析下开销。</p>
+<p>SettableFuture 底层内部其实是一个aqs，当对 future 做 <code>get</code> 操作的时候，就会park住当前线程。</p>
+<p>但如果用 她的transform 的方式，构造一条链式的future(它内部实现链式的通知)，内部没有get。</p>
+<p>没有一次调用，我的开销就是 一个SettableFuture 对象，一个runnable 对象(通知), 实现是一个FakeExecutor，并没有 创建 Thread 的开销。 </p>
+<p>就结果来说也就实现了 靠内存 提高了并发。</p>
+<p>不过以上都针对 java7以内，java8 新增了个 <code>CompletableFuture</code> 他收集了所有ListenableFuture in Guava 和 SettableFuture的特征，</p>
+<p>再加上lambda 的链式调用，写起来比上面简单多了。。。</p>
+<p>java8 的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">final</span> CompletableFuture completableFuture1 = <span class="keyword">new</span> CompletableFuture&lt;String&gt;();</span><br><span class="line"><span class="keyword">final</span> CompletableFuture completableFuture2 = <span class="keyword">new</span> CompletableFuture&lt;String&gt;();</span><br><span class="line"></span><br><span class="line">completableFuture1.thenAcceptBoth(completableFuture2, (a, b) -&gt; &#123;</span><br><span class="line">      System.out.println(a);</span><br><span class="line">      System.out.println(b);</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<p>不过java8 的get 没有再使用 aqs ，而是依赖 <code>Signaller</code>, 不过设计思路都是 将return<br>task 放进 一个queue 里面，blocking操作用 LockSupport.park 实现。</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://www.zhihu.com/question/31440152" target="_blank" rel="external">https://www.zhihu.com/question/31440152</a></p>
+<p><a href="http://ifeve.com/introduce-abstractqueuedsynchronizer/" target="_blank" rel="external">http://ifeve.com/introduce-abstractqueuedsynchronizer/</a></p>
+<p><a href="https://leanpub.com/whatsnewinjava8/read" target="_blank" rel="external">https://leanpub.com/whatsnewinjava8/read</a></p>
+<p><a href="http://www.importnew.com/10815.html" target="_blank" rel="external">http://www.importnew.com/10815.html</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=谈谈 java 的异步</p>
+<p>最"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2016/07/23/pure-async/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>编译 apue2e 和 apue3e 代码 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2014/07/05/build-apue-sourcecode/">编译 apue2e 和 apue3e 代码</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">July 05 2014</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近觉得一直写高层语言写的有点淡然无味了，遂拿起apue开始看起来，调和一下。</p>
+<p>看到第一个例子的时候就看到代码 include 了作者自己的库，<code>apue.h</code> 然后下载源码后编译了几次才过，记录一下。。</p>
+<p>###apue 2e</p>
+<p>首先看README，需要根据系统更改Make.defines.{your system},的WKDIR，</p>
+<p>然后先别make all</p>
+<p>不然会遇到错误</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">clang: warning: argument unused during compilation: &apos;-ansi&apos;</span><br><span class="line">Undefined symbols for architecture x86_64:</span><br><span class="line">  &quot;_CMSG_LEN&quot;, referenced from:</span><br><span class="line">      _recv_fd in libapue.a(recvfd.o)</span><br><span class="line">ld: symbol(s) not found for architecture x86_64</span><br><span class="line">clang: error: linker command failed with exit code 1 (use -v to see invocation)</span><br><span class="line">make[2]: *** [call] Error 1</span><br><span class="line">make[1]: *** [macos] Error 1</span><br><span class="line">make: *** [all] Error 2</span><br></pre></td></tr></table></figure>
+<p>然后到apue.2e/</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(SOLARIS)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _XOPEN_SOURCE	500	<span class="comment">/* Single UNIX Specification, Version 2  for Solaris 9 */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CMSG_LEN(x)	_CMSG_DATA_ALIGN(sizeof(struct cmsghdr)+(x))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">elif</span> !defined(BSD)</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _XOPEN_SOURCE	600	<span class="comment">/* Single UNIX Specification, Version 3 */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> MACOS</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _DARWIN_C_SOURCE</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>需要加上最后3行，至于为啥详见<a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/Manpages/man5/compat.5.html" target="_blank" rel="external">这里</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">With _POSIX_C_SOURCE or _DARWIN_C_SOURCE for i386, or when building for any other architecture, system and library calls conform to Version 3 of the Single UNIX Specification (``SUSv3&apos;&apos;).</span><br></pre></td></tr></table></figure>
+<p>编译完apue的lib后，如此编译代码：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clang -Wall -I apue.2e/include/ ls1.c apue.2e/lib/libapue.a -o ls1</span><br></pre></td></tr></table></figure>
+<hr>
+<p>###apue 3e</p>
+<p>话说下载源码的时候，看到官网上出现了第三版，于是果断下载了电子书，看看</p>
+<p>话说第三版编译超级方便，直接make就行了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">On Freebsd, type &quot;gmake&quot;.</span><br><span class="line">On other platforms, type &quot;make&quot; (as long as this is gnu make).</span><br></pre></td></tr></table></figure>
+<p>但是。。。</p>
+<p>又出现了这个报错</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clang: error: unknown argument: <span class="string">'-R.'</span> [-Wunused-command-line-argument-hard-error-in-future]</span><br></pre></td></tr></table></figure>
+<p>去<code>apue.3e/db/</code>把它的makefile里面的－R去掉就行了。话说不管是装gem还是pip装python lib都不定期遇到这个问题，不过这次前置AFLAGS不知为何无效。clang认为他用不到的，你敢写？！</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># line20</span></span><br><span class="line">ifeq "$(PLATFORM)" "macos"</span><br><span class="line">  <span class="comment"># EXTRALD=-R.</span></span><br><span class="line">  EXTRALD=</span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
+<p>然后就顺利编译完成，开始看书，写代码吧。</p>
+<hr>
+<p>最后写代码推荐如果用vim的话，一定要配合<a href="https://github.com/Valloric/YouCompleteMe" target="_blank" rel="external">https://github.com/Valloric/YouCompleteMe</a></p>
+<p>附<a href="https://gist.github.com/caorong/1ba46227534c3473257a" target="_blank" rel="external">.ycm_extra_conf.py</a></p>
+<p>谁用谁知道，自带语法检测，代码跳转，包办了syntastic，ctags的功能，极其强大！</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近觉得一直写高层语言写的有点淡然无味了"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2014/07/05/build-apue-sourcecode/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

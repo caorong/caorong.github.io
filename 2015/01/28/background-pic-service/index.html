@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>图床的诞生始末 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2015/01/28/background-pic-service/">图床的诞生始末</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">January 28 2015</p>
+  </section>
+
+  <section class="article-entry">
+    <p>差不多花了一个月20天，我做了一个<a href="http://lelouchcrgallery.tk/" target="_blank" rel="external">“无限流量”的图站</a>。但其实，我最最开始想做的并不是这个 ＝ ＝。但还是记录下，他是怎么一步一步进化到现在这个姿态的。</p>
+<h3 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h3><p>其实一开始我只是想找个项目练手scala，然后那一次正好在看 Ehentai 上的 cosplay ，由于echentai 服务器在国外，电信连过去很慢。于是我想做一个东西，能在晚上用电信很顺畅的看。</p>
+<p>思路很简单，爬图，然后上传到网上找的国内图床（微博图床 和 贴图库）。然后就没了。</p>
+<p>ehentai的爬取直接用了<a href="https://github.com/4pr0n/ripme" target="_blank" rel="external">现成的</a>，于是花了一个礼拜的晚上，就做完了，爬取部分。 </p>
+<p>然后花了一天，研究了下 scalatra 做了个最最简单的web页面。于是发到了bandwagonghost。</p>
+<p>可是，当天我还觉得挺有意思，但是之后我就不想看了。太无聊的东西了。于是一期落幕了。</p>
+<h3 id="图库"><a href="#图库" class="headerlink" title="图库"></a>图库</h3><p>之后休息大概一个礼拜，主要在看<a href="http://twitter.github.io/scala_school/zh_cn/" target="_blank" rel="external">twitter scala school</a>和 <a href="http://twitter.github.io/effectivescala/index-cn.html" target="_blank" rel="external">effective scala</a> 玩了下scala。</p>
+<p>直到某天在v2上看到了某人发了个帖子，做了个自动替换壁纸的脚本。</p>
+<p>于是我就想到了个点子，做一个可以提供随机图作为背景图片的服务。给我的blog用。（表示之前是手工弄了3张图片，然后随机取一张作为背景图）</p>
+<p>于是就有了现在<a href="http://lelouchcrgallery.tk/api" target="_blank" rel="external">这个</a></p>
+<p>api的设计参考了<a href="http://hitokoto.us/api.html" target="_blank" rel="external">hitokoto</a>。</p>
+<p>最后，花了一个多月，陆陆续续做了4个图床的模拟上传。</p>
+<p>找了2个资源比较不错的图源 p站和 yande。 yande 图多，可惜h也多 ＝ ＝。</p>
+<p>最后由于压图需要很多内存 ＝ ＝ （weibo最大支持10mb的图），于是把爬单独部署在了bandwagong，web部分部署在了linode。</p>
+<p>最后，其实图库只是个衍生品，啊哈哈。</p>
+<p>好水的一篇博。。。</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=差不多花了一个月20天，我做了一个<a "
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2015/01/28/background-pic-service/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

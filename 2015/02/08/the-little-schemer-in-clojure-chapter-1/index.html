@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>little schemer in Clojure chapter 1 - Toys | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2015/02/08/the-little-schemer-in-clojure-chapter-1/">little schemer in Clojure chapter 1 - Toys</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">February 08 2015</p>
+  </section>
+
+  <section class="article-entry">
+    <p>翻译自 <a href="http://juliangamble.com/blog/2012/07/20/the-little-schemer-in-clojure-chapter-1/" target="_blank" rel="external">juliangamble - The Little Schemer in Clojure – Chapter 1 – Toys</a> </p>
+<p>这是 <a href="http://www.ccs.neu.edu/home/matthias/BTLS/" target="_blank" rel="external">The Little Schemer</a> to Clojure 的第一章</p>
+<p>注，后文讲用 TLS 代替 The Little Schemer</p>
+<p>第一章的主题是<code>数据简化</code>，在 The Little Schemer 的世界里在语法层面有两种描述数据的方式 - <code>atoms</code> 和 <code>lists</code>。 注， TLS 里面的 atom 指字符串(<a href="http://hyperpolyglot.org/lisp#atom" target="_blank" rel="external">或者说不是 list 的都是</a>, -ie a non-list), 而在 Clojure 里 <code>atom</code> 是事务的一部分。 <a href="https://clojuredocs.org/clojure.core/atom" target="_blank" rel="external">doc</a></p>
+<p>测试下 atoms － 使用 atom? function:</p>
+<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">def</span></span> atom?</span><br><span class="line">  (<span class="name"><span class="builtin-name">fn</span></span> [a]</span><br><span class="line">    not (<span class="name"><span class="builtin-name">seq?</span></span> a))</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+<p>注意， 我们这里没有使用 defn 而是 def … fn。 故意这样是因为 TLS 将以此作为后文讲匿名函数的铺垫。</p>
+<p>说一下 <code>null</code> - <a href="http://hyperpolyglot.org/lisp" target="_blank" rel="external">原生 Scheme 里的 nil</a> 和 <a href="http://clojure.org/lisps" target="_blank" rel="external">今天 Clojure 的 nil</a> 的概念并不一样, 为了使 Clojure 和书里的表现一致，我们使用自己定义的 null? 函数</p>
+<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">def</span></span> null?</span><br><span class="line">  (<span class="name"><span class="builtin-name">fn</span></span> [a]</span><br><span class="line">    (<span class="name"><span class="builtin-name">or</span></span></span><br><span class="line">      (<span class="name"><span class="builtin-name">nil?</span></span> a)</span><br><span class="line">      (<span class="name"><span class="builtin-name">=</span></span> () a))))</span><br></pre></td></tr></table></figure>
+<p>TLS 的重心也在<code>简化语法</code>上。所有的结构都以 list, 和 nested listed (list 套 list) 形式表现。Clojure 内置许多类型的数据结构，不过最接近我们想要的是 <a href="http://clojure.org/sequences" target="_blank" rel="external">Sequence</a>. (不过，他功能不仅是那么单一，因为 Clojure 的 sequence 更像一个可迭代的接口)</p>
+<p>第一章的另一个要点是 lists 比起 array 更像是一个 stack。先进后出。TLS 和 Clojure 对应的操作的函数</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>push</th>
+<th>pop</th>
+<th>get he remainder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LTS</td>
+<td>cons</td>
+<td>car</td>
+<td>cdr</td>
+</tr>
+<tr>
+<td>Clojure</td>
+<td>cons</td>
+<td>first</td>
+<td>rest</td>
+</tr>
+</tbody>
+</table>
+<p>注， Clojure 也有 <code>conj</code> 不过我们目前仍使用 sequences 和 cons </p>
+<p>第一章的最后一个要点是 nested lists. 简单总结，将一个 list push 到 list 得到一个 nested list (用 cons)。 反之，用 (car/first) 得到 nested list 里面的 list。</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=翻译自 <a href="http://"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2015/02/08/the-little-schemer-in-clojure-chapter-1/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

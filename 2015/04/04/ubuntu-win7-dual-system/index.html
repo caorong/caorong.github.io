@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ubuntu 安装黑屏 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2015/04/04/ubuntu-win7-dual-system/">Ubuntu 安装黑屏</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">April 04 2015</p>
+  </section>
+
+  <section class="article-entry">
+    <h2 id="异常蛋疼的装-ubuntu，win7-双系统经历"><a href="#异常蛋疼的装-ubuntu，win7-双系统经历" class="headerlink" title="异常蛋疼的装 ubuntu，win7 双系统经历"></a>异常蛋疼的装 ubuntu，win7 双系统经历</h2><h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>新组装机， i7, N卡</p>
+<h2 id="首次安装进入-install-ubuntu-后黑屏"><a href="#首次安装进入-install-ubuntu-后黑屏" class="headerlink" title="首次安装进入 install ubuntu 后黑屏"></a>首次安装进入 install ubuntu 后黑屏</h2><p>装玩 windows 后，重启，更改bios的启动顺序，重启，插入ubuntu 的 usb installer </p>
+<p>然后进入选择界面，选择 <code>install ubuntu</code> 后黑屏。</p>
+<h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a><a href="http://wiki.ubuntu-tw.org/index.php?title=FAQinstall" target="_blank" rel="external">解决方法</a></h3><p>在选择界面，按e ，修改开机选项， 然后在 linux 一行，找到”quite splash” 然后在后面加上 <code>nomodeset</code></p>
+<p>然后就能进入安装了。</p>
+<h2 id="安装完后重启之后没看到grub直接黑屏"><a href="#安装完后重启之后没看到grub直接黑屏" class="headerlink" title="安装完后重启之后没看到grub直接黑屏"></a>安装完后重启之后没看到grub直接黑屏</h2><p>这说明了2件事情</p>
+<ol>
+<li><p>grub没看到 说明win7的分区信息消失了，只剩下了默认的ubuntu 分区，于是没有显示grub，而直接进入ubuntu了。</p>
+</li>
+<li><p>进入系统黑屏，遇上吗一样的情况 n卡的问题</p>
+</li>
+</ol>
+<h3 id="解决方法-1"><a href="#解决方法-1" class="headerlink" title="解决方法"></a>解决方法</h3><p>1想办法进入系统重写grub</p>
+<ol>
+<li>用livecd进入系统</li>
+</ol>
+<p>我先装的 win7 再装的 ubuntu，所以我的sda1是win7 sda3 是ubuntu</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo mount /dev/sda3 /mnt</span><br><span class="line"></span><br><span class="line">## 表示硬盘</span><br><span class="line">sudo grub-install --root-directory=/mnt /dev/sda</span><br></pre></td></tr></table></figure>
+<ol>
+<li>按照下面方式直接进入</li>
+</ol>
+<p>2的解决方法同上。不过要想办法强制进入grub，开机时按住<code>shift</code>不放即可进入grub，然后同上增加<code>nomodeset</code></p>
+<p>最后进入 ubuntu 改grub， 添加 <code>nomodeset</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/default/grub</span><br><span class="line"></span><br><span class="line">GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash&quot;</span><br><span class="line">## 改称</span><br><span class="line">GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash nomodeset&quot;</span><br></pre></td></tr></table></figure>
+<h2 id="装-N卡驱动"><a href="#装-N卡驱动" class="headerlink" title="装 N卡驱动"></a>装 N卡驱动</h2><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>其实可以不需要再用live cd 模式进入 ubuntu 重写 grub， 只不过当时我以为是连ubuntu的分区信息都木有了，于是就用live cd 模式重写了grub。</p>
+<h4 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h4><p><a href="http://wiki.ubuntu-tw.org/index.php?title=FAQinstall" target="_blank" rel="external">http://wiki.ubuntu-tw.org/index.php?title=FAQinstall</a></p>
+<p><a href="http://askubuntu.com/questions/207663/cannot-update-grub-with-paramters-on-live-usb" target="_blank" rel="external">http://askubuntu.com/questions/207663/cannot-update-grub-with-paramters-on-live-usb</a></p>
+<p><a href="http://dectinc.cc/2014/07/13/ubuntu-14-04-black-screen/" target="_blank" rel="external">http://dectinc.cc/2014/07/13/ubuntu-14-04-black-screen/</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="异常蛋疼的装-ubuntu，w"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2015/04/04/ubuntu-win7-dual-system/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

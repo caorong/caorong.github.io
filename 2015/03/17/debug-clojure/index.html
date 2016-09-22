@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>debug Clojure | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2015/03/17/debug-clojure/">debug Clojure</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">March 17 2015</p>
+  </section>
+
+  <section class="article-entry">
+    <h2 id="调试clojure程序的几个方法"><a href="#调试clojure程序的几个方法" class="headerlink" title="调试clojure程序的几个方法"></a>调试clojure程序的几个方法</h2><ol>
+<li><p>打 print</p>
+</li>
+<li><p>用ide 的debug功能 比如 idea</p>
+</li>
+<li><p>用工具 <a href="https://github.com/clojure/tools.trace" target="_blank" rel="external">tools.trace</a> 打印堆栈信息</p>
+</li>
+<li><p>配合上面的远程调试repl</p>
+</li>
+</ol>
+<p>下面主要讲4</p>
+<p>因为我的idea经常死机，所以我自己是先用 lein 启动一个 repl，然后用 idea 连接到 remote repl。<a href="https://cursiveclojure.com/userguide/repl.html" target="_blank" rel="external">参考 cursive 的 RemoteREPL</a></p>
+<p>因为 lein 会在启动的时候先读取自定义参数</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Support $JAVA_OPTS for backwards-compatibility.</span></span><br><span class="line">JVM_OPTS=<span class="variable">$&#123;JVM_OPTS:-"$JAVA_OPTS"&#125;</span></span><br><span class="line">JAVA_CMD=<span class="variable">$&#123;JAVA_CMD:-"java"&#125;</span></span><br></pre></td></tr></table></figure>
+<p>所以可以启动之前先加入远程调试参数</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> <span class="string">"JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=9092,server=y,suspend=n -Dclojure.compiler.disable-locals-clearing=true"</span></span><br><span class="line"></span><br><span class="line">$ lein repl</span><br></pre></td></tr></table></figure>
+<p>最后, ide 远程连repl，和远程debug，就可以调试repl了。</p>
+<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><p>现在的 tools.trace 如需打印堆栈信息需要自己再函数前面加上 <code>^:dynamic</code></p>
+<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">defn</span></span> ^<span class="symbol">:dynamic</span> fib [n] (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">&lt;</span></span> n <span class="number">2</span>) n (<span class="name"><span class="builtin-name">+</span></span> (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">1</span>)) (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">2</span>)))))</span><br><span class="line">(<span class="name">dotrace</span> [fib] (<span class="name">fib</span> <span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="refrence"><a href="#refrence" class="headerlink" title="refrence"></a>refrence</h4><p><a href="http://stackoverflow.com/questions/2352020/debugging-in-clojure" target="_blank" rel="external">http://stackoverflow.com/questions/2352020/debugging-in-clojure</a></p>
+<p><a href="https://github.com/acug/drinkup/issues/1" target="_blank" rel="external">https://github.com/acug/drinkup/issues/1</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="调试clojure程序的几个方"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2015/03/17/debug-clojure/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

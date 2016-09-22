@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>关于http session | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2014/06/01/about-http-session/">关于http session</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">June 01 2014</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近在玩clojure，准备用<a href="https://github.com/weavejester/compojure" target="_blank" rel="external">compojure</a>和<a href="https://github.com/ring-clojure/ring" target="_blank" rel="external">ring</a>写一个网站。写登录注册模块的时候纠结在session上了。说来惭愧，上班都快一年了连session都没玩过。</p>
+<p>然后先网上搜一下看到了<a href="http://www.zhihu.com/question/19786827" target="_blank" rel="external">这个</a>，然后再看ring的源码的时候，发现各种问题。结论，zhihu真的不靠谱。</p>
+<h4 id="什么是http"><a href="#什么是http" class="headerlink" title="什么是http"></a>什么是http</h4><p>简单来说http，干的事情就是服务端和客户端相互请求和发送字符串。</p>
+<p>ring把它抽象成一段hash</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;:ssl-client-cert nil, :remote-addr "0:0:0:0:0:0:0:1", :scheme :http, :query-params &#123;&#125;, :session &#123;&#125;, :form-params &#123;&#125;, :multipart-params &#123;&#125;, :request-method :get, :query-string nil, :route-params &#123;:x "1123"&#125;, :content-type nil, :cookies &#123;"ring-session" &#123;:value "ZiCQ0rUvKHWdiS42Z6MidZci8tGKzehBcwtyJJjMBRJhDRLnEKWtpYH2OgLdA8rC--Ko2pbNbOTEUdNP3TWcULabbybHjc74hAVHX4Ddr+G9U="&#125;&#125;, :uri "/sess/1123", :session/key nil, :server-name "localhost", :params &#123;:x "1123"&#125;, :headers &#123;"accept-encoding" "gzip, deflate", "user-agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.76.4 (KHTML, like Gecko) Version/7.0.4 Safari/537.76.4", "connection" "keep-alive", "accept-language" "zh-cn", "accept" "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "host" "localhost:3000", "cookie" "ring-session=ZiCQ0rUvKHWdiS42Z6MidZci8tGKzehBcwtyJJjMBRJhDRLnEKWtpYH2OgLdA8rC--Ko2pbNbOTEUdNP3TWcULabbybHjc74hAVHX4Ddr%2BG9U%3D"&#125;, :content-length nil, :server-port 3000, :character-encoding nil, :body # <span class="tag">&lt;<span class="name">httpinput</span> <span class="attr">org.eclipse.jetty.server.httpinput</span>@<span class="attr">4decb8c1</span>=<span class="string">""</span>&gt;</span>, :flash nil&#125;</span><br></pre></td></tr></table></figure>
+<p>当server传给clinet这个字串后，client页面显示的部分仅仅是httpinput 这部分。</p>
+<h4 id="关于cookie"><a href="#关于cookie" class="headerlink" title="关于cookie"></a>关于cookie</h4><p>网上关于<a href="http://zh.wikipedia.org/wiki/Cookie" target="_blank" rel="external">cookie</a>的解释很多。t它的特点是可以dump到client端。</p>
+<h4 id="session"><a href="#session" class="headerlink" title="session"></a>session</h4><p>session是附在request和response种的一段信息。只不过他是会话级别的，也就是说仅存于request和response里。</p>
+<p>举例可见，裸用ring的session</p>
+<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name">GET</span> <span class="string">"/name"</span> [x <span class="symbol">:as</span> &#123;session <span class="symbol">:session</span>&#125; <span class="symbol">:as</span> r]</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> [count (<span class="symbol">:count</span> session <span class="number">0</span>)]</span><br><span class="line">    (<span class="name"><span class="builtin-name">do</span></span></span><br><span class="line">      (<span class="name">println</span> (<span class="symbol">:count</span> session))</span><br><span class="line">      &#123;<span class="symbol">:status</span>  (<span class="name"><span class="builtin-name">or</span></span> <span class="literal">nil</span> <span class="number">200</span>)</span><br><span class="line">       <span class="symbol">:session</span> (<span class="name"><span class="builtin-name">assoc</span></span> session <span class="symbol">:count</span> (<span class="name"><span class="builtin-name">inc</span></span> count))</span><br><span class="line">       <span class="symbol">:body</span>    (<span class="name"><span class="builtin-name">str</span></span> r)</span><br><span class="line">       &#125;</span><br><span class="line">      )))</span><br></pre></td></tr></table></figure>
+<p>从request里面取出key位session的内容，然后经过xxx操作后，再写回去。</p>
+<p>当然直接用ring的session太不方便了。直接把<a href="https://github.com/noir-clojure/lib-noir/blob/master/src/noir/session.clj" target="_blank" rel="external">lib-noir-session</a>的代码搞到自己那里，注意namespace。当然也可以加一个lib－noir的依赖，不过最新的lib－noir依赖的ring不是最新的，会比较恶心。</p>
+<p>session可以存很多地方，ring提供了sessionStore的接口<code>ring.middleware.session.store</code>，自带2中实现分别是 memeryStore（遇到爬虫岂不完蛋！）和cookieStore，第三方的<a href="https://github.com/wuzhe/clj-redis-session" target="_blank" rel="external">redis-session</a></p>
+<p>session存储原理是他会存一个sessionid 到cookie里面，然后根据此id 从自己定义的cookie的地方取出session，然后xxx。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">(defn- bare-session-request</span><br><span class="line">  [request &amp; [&#123;:keys [store cookie-name]&#125;]]</span><br><span class="line">  (let [req-key  (get-in request [:cookies cookie-name :value])</span><br><span class="line">        session  (store/read-session store req-key)</span><br><span class="line">        session-key (if session req-key)]</span><br><span class="line">    (merge request &#123;:session (or session &#123;&#125;)</span><br><span class="line">                    :session/key session-key&#125;)))</span><br><span class="line"></span><br><span class="line">(defn session-request</span><br><span class="line">  "Reads current HTTP session map and adds it to :session key of the request.</span><br><span class="line">  See: wrap-session."</span><br><span class="line">  &#123;:arglists '([request] [request options])</span><br><span class="line">   :added "1.2"&#125;</span><br><span class="line">  [request &amp; [options]]</span><br><span class="line">  (-&gt; request</span><br><span class="line">      cookies/cookies-request</span><br><span class="line">      (bare-session-request options)))</span><br></pre></td></tr></table></figure>
+<p>session一般存于server端，不过并不是说不能存在clinet，可以存到cookie里面。对于自己写的小东西，还是存cookie吧，</p>
+<p>否则如果遭遇无良crawler，每次请求每次记录一个垃圾session再server端。即使有ttl，对于洁癖者来说，岂不是很蛋疼。。。</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="/images/avatar.png" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近在玩clojure，准备用<a hr"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2014/06/01/about-http-session/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
