@@ -40,11 +40,8 @@
     <p>最近在做rcp框架的 metric 收集部分，说到metric 收集，一般第一个想到工具便是 dropwizard 的 metrics。</p>
 <p>然后，看了Hytrix 的代码后发现，他用了 <a href="https://github.com/HdrHistogram/HdrHistogram" target="_blank" rel="external">hdrhistogram</a> 来统计latency。</p>
 <p>后面将说说 这2个东东。</p>
-<h2>hdrhistogram</h2>
-<h3>作者</h3>
-<p>首先，关于 hdrhistogram 作者 Gil Tene 是 Azul System 的CTO，说 Azul 可能很多人不知道，不过如果说，RednaxelaFx 很多人都知道，具体介绍可以看<a href="http://www.zhihu.com/question/24938498" target="_blank" rel="external">这里</a></p>
-<h3>原理</h3>
-<p>首先 histogram 就是一个直方图</p>
+<h2 id="hdrhistogram"><a href="#hdrhistogram" class="headerlink" title="hdrhistogram"></a>hdrhistogram</h2><h3 id="作者"><a href="#作者" class="headerlink" title="作者"></a>作者</h3><p>首先，关于 hdrhistogram 作者 Gil Tene 是 Azul System 的CTO，说 Azul 可能很多人不知道，不过如果说，RednaxelaFx 很多人都知道，具体介绍可以看<a href="http://www.zhihu.com/question/24938498" target="_blank" rel="external">这里</a></p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>首先 histogram 就是一个直方图</p>
 <p>而一般来说我们要实现一个直方图可以用数组表示，数组的每个值表示 一个区间的大小。</p>
 <p>而分割区间一般有2种方式</p>
 <ol>
@@ -57,18 +54,15 @@
 <p>当然以上都有个缺点，需要一个可预估的最大值。超过最大值的数字将存不进来。</p>
 <p>那么 hdrhistogram 是如何解决上面的问题的呢？</p>
 <pre><code>对于分隔buckets，hdrhistogram 同时采用了 1 和 2，他内部有2个 index, bucketsIdx 和 subBucketIndex. 前者是指数的 后者是线性的，也就是说可以根据业务精度需求控制后面的线性的大小。
-</code></pre>
-<p>这也是为什么初始化时需要填写2个参数</p>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Histogram histogram2 = <span class="keyword">new</span> Histogram(<span class="number">3600000l</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure></p>
+</code></pre><p>这也是为什么初始化时需要填写2个参数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Histogram histogram2 = <span class="keyword">new</span> Histogram(<span class="number">3600000l</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
 <p>根据代码，baseBucket count 约为 $$ 2^{(baseCount+5)} $$ 至于为什么要＋5， 因为最小格的大小时从32 开始计算的 (太小的话，反倒是浪费空间)</p>
 <p>而 subBucket 的大小为 根据 文档建议的 0-5 大小分别为</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">32</span><br><span class="line">256</span><br><span class="line">2048</span><br><span class="line">32768</span><br><span class="line">262144</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">32</span><br><span class="line">256</span><br><span class="line">2048</span><br><span class="line">32768</span><br><span class="line">262144</span><br></pre></td></tr></table></figure>
 <p>一般定义在2，3左右，定义的越大，约占空间，对了，可以用 <code>histogram.getEstimatedFootprintInBytes()</code> 打出占用的空间。</p>
 <p>而对于可预估的最大值，提供了一个 autoResize 的功能，不过这个resize 和 arrayList 一样，有 arrayCopy 的成本，所以如果业务上能知道最大值，尽量不要使用autoResize，ps, 官方的autoresize 是从 min 1,  max 2 开始的，太尼玛坑爹了。</p>
-<h3>总结</h3>
-<p>hdrhistogram 底层其实就是个数组，所以保证了极快的写入速度，也因为如此，所以获取metric的话需要遍历数组统计，所以他非常适合 写多读少的 metric 业务，ps 我们用它来记录rpc 的 latency。</p>
-<h2>dropwizard's metric</h2>
-<p>dropwizard 的 metric 也同样提供了 histogram 的功能.</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>hdrhistogram 底层其实就是个数组，所以保证了极快的写入速度，也因为如此，所以获取metric的话需要遍历数组统计，所以他非常适合 写多读少的 metric 业务，ps 我们用它来记录rpc 的 latency。</p>
+<h2 id="dropwizard’s-metric"><a href="#dropwizard’s-metric" class="headerlink" title="dropwizard’s metric"></a>dropwizard’s metric</h2><p>dropwizard 的 metric 也同样提供了 histogram 的功能.</p>
 <p>他提供了 4 种收集方式</p>
 <ol>
 <li>ExponentiallyDecayingReservoir 指数级别的</li>
@@ -83,15 +77,13 @@
 <li>他用 ConcurrentSkipListMap 来做 hdrhistogram 的bucket 干的事情，虽然 skipList 很快，但肯定快不过数组。</li>
 <li>他没有 可预估最大值的概念，所以每当插入 比当前空间最大值还大的值时，它需要好多事。。请看一下 code snippet</li>
 </ol>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (newCount &lt;= size) &#123;</span><br><span class="line">    values.put(priority, sample);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    Double first = values.firstKey();</span><br><span class="line">    <span class="keyword">if</span> (first &lt; priority &amp;&amp; values.putIfAbsent(priority, sample) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// ensure we always remove an item</span></span><br><span class="line">        <span class="keyword">while</span> (values.remove(first) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            first = values.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<ol start="3">
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (newCount &lt;= size) &#123;</span><br><span class="line">    values.put(priority, sample);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    Double first = values.firstKey();</span><br><span class="line">    <span class="keyword">if</span> (first &lt; priority &amp;&amp; values.putIfAbsent(priority, sample) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// ensure we always remove an item</span></span><br><span class="line">        <span class="keyword">while</span> (values.remove(first) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            first = values.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
 <li>默认设置是每小时要rescale 一下，而 rescale 是要锁写的。</li>
 </ol>
-<h1>总结</h1>
-<p>如果你的业务，需要metric的数据无法预估, 并对写入的耗时没那么苛刻，那么 dropwizard 的 histogram 更适合你。</p>
+<h1 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h1><p>如果你的业务，需要metric的数据无法预估, 并对写入的耗时没那么苛刻，那么 dropwizard 的 histogram 更适合你。</p>
 <p>不过对于 可预估最大值的，并且希望写入代价最小的业务来说，还是 hdrhistogram 更合适。</p>
-<h1>reference</h1>
-<p>http://psy-lob-saw.blogspot.jp/2015/02/hdrhistogram-better-latency-capture.html</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://psy-lob-saw.blogspot.jp/2015/02/hdrhistogram-better-latency-capture.html" target="_blank" rel="external">http://psy-lob-saw.blogspot.jp/2015/02/hdrhistogram-better-latency-capture.html</a></p>
 
   </section>
 </article>
