@@ -38,7 +38,7 @@
 
   <section class="article-entry">
     <p>最近，为了确认家里的cow 是什么原因总有些卡顿，在看 <a href="https://github.com/cyfdecyf/cow" target="_blank" rel="external">cow</a> 的源码，顺便改下代码.</p>
-<p>由于单个文件的代码行数非常多，并且 vim-go 没有 <code>show caller of method &#39;xxx&#39;</code> </p>
+<p>由于单个文件的代码行数非常多，并且 vim-go 没有 <code>show caller of method &#39;xxx&#39;</code>, <a href="https://github.com/ggreer/the_silver_searcher" target="_blank" rel="external">ag</a> 匹配出来的太多，也不方便看</p>
 <p>然后就调研了下 <a href="https://github.com/Microsoft/vscode-go" target="_blank" rel="external">vscode-go</a>, 以及 <a href="https://github.com/go-lang-plugin-org/go-lang-idea-plugin" target="_blank" rel="external">idea-go-plugin</a></p>
 <h2 id="基本功能支持"><a href="#基本功能支持" class="headerlink" title="基本功能支持"></a>基本功能支持</h2><p>首先， auto-completeion, errorcheck 等基本功能都支持</p>
 <p>但是 vscode-go 和 idea-go-plugin 都不支持 <code>show caller of method &#39;xxx&#39;</code> 的功能, 这个功能只有 idea 支持，并且 debug 的话也是 idea 最容易使用。</p>

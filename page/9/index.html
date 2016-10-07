@@ -29,7 +29,12 @@
   <header class="app-header">
   <section class="banner">
     <!-- http://daverupert.com/2015/12/intrinsic-placeholders-with-picture/ -->
-    <div class="placeholder" style="background-image: url()" ></div>
+    <div class="placeholder" style="background-image: url(http://lelouchcrgallery.tk/rand?ratio=0.33&range=0.15&source=pixiv&redirect=true); background-size:100% 100%;" ></div>
+    <!-- <img -->
+      <!-- class="banner-small" -->
+      <!-- src="http://lelouchcrgallery.tk/rand?ratio=0.33&range=0.15&source=pixiv&redirect=true" -->
+      <!-- alt="banner" -->
+    <!-- > -->
      
   </section>
 
@@ -45,23 +50,6 @@
     
   </ul>
 </header>
-
-<script>
-    
-    function toppic(option) {
-            console.log(option);
-            document.getElementsByClassName('placeholder')[0].attributes[1].value='background-image: url('+option.p_ori+'); background-size:100% 100%;';
-            //document.getElementsByClassName('banner-small')[0].attributes[1].value=option.p_ori;
-            //document.getElementsByClassName('banner-small')[0].attributes[2].value=option.p_ori;
-    }
-
-    setTimeout(function() {
-            var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.33&range=0.15&source=pixiv&encode=jsc&func=toppic');
-            document.body.appendChild(hjs);
-        }, 0);
-
-</script>
 
 <main class="index">
   
