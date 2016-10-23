@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>继续说说下载 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2016/10/23/download/">继续说说下载</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">October 23 2016</p>
+  </section>
+
+  <section class="article-entry">
+    <p>话说昨晚 看到了以前的 <a href="https://www.v2ex.com/t/314596" target="_blank" rel="external">btsync pro版本降价的帖子</a>, 一看便宜，于是立即就买了. </p>
+<p>其实他的唯一可用的pro 功能仅仅是 仅下载想要下载的东西。</p>
+<p>买了后有点后悔了，除了下载电子书以外，其实这个优势并不大 ＝ ＝</p>
+<p>我还测试了下再vps上启动单点，下载的速度，不过log上总是说connection error，下载不能。</p>
+<p>总之挺失望的。</p>
+<p>我一般每 一两周 都会批量下载 5，6个小电影看，我目前使用 aria2 在 banwagong上下载，然后 通过 3个vps包括自己，做代理的方式把 资源拉下来。</p>
+<p>这样就可以达到3个并发，其中有一个vps 在日本，大部分时间速度很快，最快可以达到6，7mb/s 但是其他2台版瓦工 最多只能达到 1mb/s, 相当于用手动的方式尽量压榨带宽。</p>
+<p>目前的实现在<a href="https://github.com/caorong/remote-downloader" target="_blank" rel="external">这里</a>, 将就着用。</p>
+<p>但是如果我只有一个资源的话我只能选最好的，并且另外2台vps 的带宽并没发利用起来。</p>
+<p>目前想到的解决思路是</p>
+<p>先找一台机器用bt 把资源下载下来，然后自己做种，同步到另外2台vps。</p>
+<p>然后，自己机器，用bt方式同时拉取上面3台机器的资源。</p>
+<p>实现方式考虑基于 <a href="https://github.com/syncthing/syncthing" target="_blank" rel="external">syncthing</a> 修改。</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=话说昨晚 看到了以前的 <a href="
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2016/10/23/download/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
