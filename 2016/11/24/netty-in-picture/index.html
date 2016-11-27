@@ -144,6 +144,13 @@ C代码，更少GC，更少synchronized
 <p>为了让 arena 不被锁影响，则需要33 个 arena, 那么就会需要 33个 chunk， 共计  33 * 16mb 共计 528MB (默认配置)</p>
 <p>由于 ByteBufPool 默认是使用堆外内存的， 而 jdk 默认堆外内存 64 mb， 所以需要手动修改。 </p>
 <p>不然 netty 会使用 堆内存。 不经计算，贸然使用可能会造成full gc。</p>
+<p>内存分配需要根据实际情况自己计算参数:</p>
+<p>举一个例子</p>
+<p>算一台服务 2k qps的服务，每个包 2k 的话 预计需要</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In [13]: 2000 * 2000 / 1024/1024.0</span><br><span class="line">Out[13]: 3.814453125</span><br></pre></td></tr></table></figure>
+<p>ps 这是没有算上 请求包的，就算 * 2 8mb 因该够了。</p>
+<p>可以将 pageSize 调为一半，节省内存  io.netty.allocator.pageSize = 4096</p>
+<p>于是一个 chunk 8mb 可以少分配一半的内存。</p>
 <h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://www.jianshu.com/p/c4bd37a3555b" target="_blank" rel="external">http://www.jianshu.com/p/c4bd37a3555b</a></p>
 <p><a href="http://www.jianshu.com/p/d91060311437" target="_blank" rel="external">http://www.jianshu.com/p/d91060311437</a></p>
 <p><a href="http://www.jianshu.com/p/a1debfe4ff02" target="_blank" rel="external">http://www.jianshu.com/p/a1debfe4ff02</a></p>
