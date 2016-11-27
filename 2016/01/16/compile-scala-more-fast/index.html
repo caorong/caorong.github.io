@@ -39,27 +39,20 @@
   <section class="article-entry">
     <p>zinc 可以增量编译scala，因为编译scala最慢的就是他自己的library了.</p>
 <p>至于到底可以提高多少的编译速度(scala 自己的library 编译到底有多慢)，我做了个测试</p>
-<h2>使用方式</h2>
-<p>zinc -start</p>
-<h2>环境</h2>
-<p>java 7
-java/scala 混合项目
-maven</p>
-<h2>编译方式</h2>
-<p>mvn clean package (关闭除了scala-maven-plugin，compile-plugin以外所有的插件)</p>
-<h2>结果</h2>
-<p>no zinc server</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 30.615 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 59.325 s]</span><br></pre></td></tr></table></figure></p>
+<h2 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h2><p>zinc -start</p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>java 7<br>java/scala 混合项目<br>maven</p>
+<h2 id="编译方式"><a href="#编译方式" class="headerlink" title="编译方式"></a>编译方式</h2><p>mvn clean package (关闭除了scala-maven-plugin，compile-plugin以外所有的插件)</p>
+<h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><p>no zinc server</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 30.615 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 59.325 s]</span><br></pre></td></tr></table></figure>
 <p>启动zinc 后 第一次</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 51.443 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 18.390 s]</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 51.443 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 18.390 s]</span><br></pre></td></tr></table></figure>
 <p>第二次 编译，没有修改代码</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 19.443 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 17.214 s]</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 19.443 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 17.214 s]</span><br></pre></td></tr></table></figure>
 <p>第三次 编译，没有修改代码</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 17.473 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 17.113 s]</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 17.473 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 17.113 s]</span><br></pre></td></tr></table></figure>
 <p>修改几行代码后</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 22.295 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 19.668 s]</span><br></pre></td></tr></table></figure></p>
-<h2>结论</h2>
-<p>效果不错，安利下，不过<a href="http://blog.jetbrains.com/scala/2012/12/28/a-new-way-to-compile/" target="_blank" rel="external">idea用不了</a> ＝ ＝</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[INFO] news-xxxx ................................ SUCCESS [ 22.295 s]</span><br><span class="line">[INFO] news-xxx2 ................................ SUCCESS [ 19.668 s]</span><br></pre></td></tr></table></figure>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>效果不错，安利下，不过<a href="http://blog.jetbrains.com/scala/2012/12/28/a-new-way-to-compile/" target="_blank" rel="external">idea用不了</a> ＝ ＝ </p>
 
   </section>
 </article>
