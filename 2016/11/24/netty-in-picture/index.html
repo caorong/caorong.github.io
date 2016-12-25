@@ -37,37 +37,45 @@
   </section>
 
   <section class="article-entry">
-    <p>话说，最近，要在内部推广 mainstay3 所以， 需要先深度分享下 netty<br>以便让大家能放心使用 mainstay3 with netty.</p>
+    <p>话说，最近，要在内部推广 mainstay3 所以， 需要先深度分享下 netty
+以便让大家能放心使用 mainstay3 with netty.</p>
 <p>这里总结在自己blog里面, netty的版本为 4.1.xx。</p>
-<h2 id="EventloopGroup"><a href="#EventloopGroup" class="headerlink" title="EventloopGroup"></a>EventloopGroup</h2><p><img src="/post_images/2016-11-24-23-22-57.png" alt=""></p>
+<h2>EventloopGroup</h2>
+<p><img src="/post_images/2016-11-24-23-22-57.png" alt=""></p>
 <p>对于开发者来说，主要关心紫色圈出部分。其余的都已经封装完毕</p>
 <p>有几个关键点。</p>
 <ol>
 <li>Eventloopsize 建议设置为 2 的次方，dispatch 使用位移，更快。</li>
 <li>侦听一个端口，只会绑定到 BossEventLoopGroup 中的一个 Eventloop，所以， BossEventLoopGroup 配置多个也无用。</li>
 </ol>
-<h2 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h2><p>只使用 tcp 和 异步阻塞的话主要关心以下2个 EventLoop </p>
+<h2>EventLoop</h2>
+<p>只使用 tcp 和 异步阻塞的话主要关心以下2个 EventLoop</p>
 <p>NioEventLoop  - 基于java 原生nio</p>
 <pre><code>level-triggered （水平触发）
-</code></pre><p>EpollEventLoop -  native jni 直接调用 epoll, only work on linux</p>
+</code></pre>
+<p>EpollEventLoop -  native jni 直接调用 epoll, only work on linux</p>
 <pre><code>edge-triggered （边缘触发）更少的系统调用
 C代码，更少GC，更少synchronized
 暴露了更多的Socket配置参数
-</code></pre><h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><p><img src="/post_images/2016-11-25-01-23-15.png" alt=""></p>
+</code></pre>
+<h3>流程图</h3>
+<p><img src="/post_images/2016-11-25-01-23-15.png" alt=""></p>
 <p>关键点</p>
 <ol>
-<li>整个loop 干的事情就是 <code>select -&gt; processIO -&gt; runAllTask</code> </li>
+<li>整个loop 干的事情就是 <code>select -&gt; processIO -&gt; runAllTask</code></li>
 <li>这是一个死循环</li>
 <li>那么这个loop 如何自己优雅退出？ noway，只能通过外部添加 CloseTask， 比如添加到 MpscQueue</li>
 <li>deadline 为 定时任务的触发时间，避免 select 阻塞, 让 定时任务不能及时执行。</li>
-<li>在select 这一步 解决 epollbug </li>
+<li>在select 这一步 解决 epollbug</li>
 </ol>
-<p>关于解决 epoll bug的原理是 应当 “阻塞”的 select 变得不再阻塞。<br>所以只需要统计下 select 次数就行了 </p>
+<p>关于解决 epoll bug的原理是 应当 &quot;阻塞&quot;的 select 变得不再阻塞。
+所以只需要统计下 select 次数就行了</p>
 <p>部分关键代码:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(;;)&#123;</span><br><span class="line">    <span class="keyword">int</span> selectedKeys = selector.select(timeoutMillis); <span class="comment">// select with timeout</span></span><br><span class="line">    selectCnt ++;</span><br><span class="line">    <span class="comment">// 我由于 select 阻塞 而等待了 timeoutMillis 毫秒， 说明， 我阻塞了，说明没有bug</span></span><br><span class="line">    <span class="keyword">if</span> (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) &gt;= currentTimeNanos) &#123;</span><br><span class="line">        selectCnt = <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SELECTOR_AUTO_REBUILD_THRESHOLD &gt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">            selectCnt &gt;= SELECTOR_AUTO_REBUILD_THRESHOLD) &#123;</span><br><span class="line">        <span class="comment">// 在小于 timeoutMillis 毫秒的时间内 select 的次数超过了 阀值(512) 次</span></span><br><span class="line">        rebuildSelector();</span><br><span class="line">        selector = <span class="keyword">this</span>.selector;</span><br><span class="line"></span><br><span class="line">        selector.selectNow();<span class="comment">// Select again</span></span><br><span class="line">        selectCnt = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="ChannelPipeline"><a href="#ChannelPipeline" class="headerlink" title="ChannelPipeline"></a>ChannelPipeline</h2><p>读写链， 运行于 eventloop 之内, 内部是一个双向链表。</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(;;)&#123;</span><br><span class="line">    <span class="keyword">int</span> selectedKeys = selector.select(timeoutMillis); <span class="comment">// select with timeout</span></span><br><span class="line">    selectCnt ++;</span><br><span class="line">    <span class="comment">// 我由于 select 阻塞 而等待了 timeoutMillis 毫秒， 说明， 我阻塞了，说明没有bug</span></span><br><span class="line">    <span class="keyword">if</span> (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) &gt;= currentTimeNanos) &#123;</span><br><span class="line">        selectCnt = <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SELECTOR_AUTO_REBUILD_THRESHOLD &gt; <span class="number">0</span> &amp;&amp;</span><br><span class="line">            selectCnt &gt;= SELECTOR_AUTO_REBUILD_THRESHOLD) &#123;</span><br><span class="line">        <span class="comment">// 在小于 timeoutMillis 毫秒的时间内 select 的次数超过了 阀值(512) 次</span></span><br><span class="line">        rebuildSelector();</span><br><span class="line">        selector = <span class="keyword">this</span>.selector;</span><br><span class="line"></span><br><span class="line">        selector.selectNow();<span class="comment">// Select again</span></span><br><span class="line">        selectCnt = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2>ChannelPipeline</h2>
+<p>读写链， 运行于 eventloop 之内, 内部是一个双向链表。</p>
 <p>以下面的代码举例子。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">  ch.pipeline()</span><br><span class="line">      .addLast(<span class="keyword">new</span> StringDecoder())</span><br><span class="line">      .addLast(<span class="keyword">new</span> StringEncoder())</span><br><span class="line">      .addLast(<span class="keyword">new</span> EchoHandler());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">  ch.pipeline()</span><br><span class="line">      .addLast(<span class="keyword">new</span> StringDecoder())</span><br><span class="line">      .addLast(<span class="keyword">new</span> StringEncoder())</span><br><span class="line">      .addLast(<span class="keyword">new</span> EchoHandler());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p><img src="/post_images/2016-11-26-19-19-26.png" alt=""></p>
 <p>从上面可以看出几个点</p>
 <ol>
@@ -75,7 +83,8 @@ C代码，更少GC，更少synchronized
 <li>对于 <code>pipeline.write</code> (还有 <code>bind</code>, <code>connect</code>, <code>flush</code> 这种 <code>非fire</code> 开头) 的请求相反从 TailContext 开始找 链的 perv Handler 且继承了 ChannelOutboundHandler 的 Handler</li>
 <li>对于内部直接 <code>ctx.xxx</code> 自然不是从 tail ／ head 开始， 路径更短，更快</li>
 </ol>
-<h2 id="ByteBufPool"><a href="#ByteBufPool" class="headerlink" title="ByteBufPool"></a>ByteBufPool</h2><p>netty 的 ByteBufPool 是 jemelloc 的精简版，大体流程是类似的。都有一个 threadlocal 的 cache， 以及公有的 Arena。</p>
+<h2>ByteBufPool</h2>
+<p>netty 的 ByteBufPool 是 jemelloc 的精简版，大体流程是类似的。都有一个 threadlocal 的 cache， 以及公有的 Arena。</p>
 <p>从cache 取内存无锁，从 Arena取内存有锁。所以一般建议将 Arena 的数量设置为 EventLoop 数量，以达到无竞争。</p>
 <p>关系图如下:</p>
 <p><img src="/post_images/2016-11-26-23-46-26.png" alt=""></p>
@@ -88,33 +97,35 @@ C代码，更少GC，更少synchronized
 <li>所有的规格都放在一个数组里面，寻找起来 O1 的速度。</li>
 </ol>
 <p>根据默认参数的话规格如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tiny:   [16 32 48 64 80 ... 496]</span><br><span class="line">small:  [512, 1024, 2048, 4096]</span><br><span class="line">normal: [8192x2^0,  8192x2^1, 8192x2^2 .. 8192x2^11]</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tiny:   [16 32 48 64 80 ... 496]</span><br><span class="line">small:  [512, 1024, 2048, 4096]</span><br><span class="line">normal: [8192x2^0,  8192x2^1, 8192x2^2 .. 8192x2^11]</span><br></pre></td></tr></table></figure></p>
 <p>举个例子： 当申请的内存为 10个byte 则向上取整 16 ， 分配16byte， 取 <code>tiny[0]</code> 里取内存即可</p>
 <p><img src="/post_images/2016-11-27-00-09-18.png" alt=""></p>
 <p>Arena 为分配器，是预申请内存块的管理者。 jemelloc 的初衷为了减少内存碎片，那么如何减少？</p>
-<p>当申请比如 1 byte 的话就会预申请一大块内存，然后分配其中一部分给 1byte。 </p>
+<p>当申请比如 1 byte 的话就会预申请一大块内存，然后分配其中一部分给 1byte。</p>
 <p>为什么是分配 一部分？ 不然 内存管理花费的内存开销将大于内存实际的开销。。</p>
 <p>Arena 是一个分配器，内部管理的内存块 为 <code>Chunk</code>,  申请大于 <code>Chunk</code> 大小的内存将直接向系统申请。</p>
 <p><code>Chunk</code> 内部由 n 个 <code>page</code> 组成， <code>page</code> 是一个虚拟的概念，因为 <code>page</code> 还可以切分为 n 个 <code>SubPage</code></p>
-<p>他们的关系图如下: </p>
+<p>他们的关系图如下:</p>
 <p>ps: 左侧为默认参数</p>
 <p><img src="/post_images/2016-11-27-00-06-49.png" alt=""></p>
 <p>这里说一下Arena 需要做的事情</p>
 <p>首先, 一个 Arena 用 ChunkList 管理着 n 个 Chunk， 一个Chunk 默认 16mb, 当一个 Chunk 分配不了时，新建一个新的 Chunk</p>
-<h3 id="Chunk-amp-ChunkList"><a href="#Chunk-amp-ChunkList" class="headerlink" title="Chunk &amp; ChunkList"></a>Chunk &amp; ChunkList</h3><p>Arena 内部还对 Chunk 做了 使用量的 监测。</p>
+<h3>Chunk &amp; ChunkList</h3>
+<p>Arena 内部还对 Chunk 做了 使用量的 监测。</p>
 <p>Arena 新建了 6个 ChunkList 分别为 <code>qInit</code>, <code>q000</code>, <code>q025</code>, <code>q050</code>, <code>q075</code>, <code>q100</code></p>
 <p>她们依次组成一个双向链表，分别又一个 最小使用量 和 最大使用量 的阀值</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//          PoolChunkList&lt;T&gt; nextList, int minUsage, int maxUsage, int chunkSize</span></span><br><span class="line">q100 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(<span class="keyword">null</span>, <span class="number">100</span>, Integer.MAX_VALUE, chunkSize);</span><br><span class="line">q075 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q100, <span class="number">75</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q050 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q075, <span class="number">50</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q025 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q050, <span class="number">25</span>, <span class="number">75</span>, chunkSize);</span><br><span class="line">q000 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q025, <span class="number">1</span>, <span class="number">50</span>, chunkSize);</span><br><span class="line">qInit = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q000, Integer.MIN_VALUE, <span class="number">25</span>, chunkSize);</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//          PoolChunkList&lt;T&gt; nextList, int minUsage, int maxUsage, int chunkSize</span></span><br><span class="line">q100 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(<span class="keyword">null</span>, <span class="number">100</span>, Integer.MAX_VALUE, chunkSize);</span><br><span class="line">q075 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q100, <span class="number">75</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q050 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q075, <span class="number">50</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q025 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q050, <span class="number">25</span>, <span class="number">75</span>, chunkSize);</span><br><span class="line">q000 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q025, <span class="number">1</span>, <span class="number">50</span>, chunkSize);</span><br><span class="line">qInit = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q000, Integer.MIN_VALUE, <span class="number">25</span>, chunkSize);</span><br></pre></td></tr></table></figure></p>
 <p>然后在每次 allocate 和 deallocate 时判断 Chunk 是否触及 阀值，然后分别 上移/下移 到合适的 ChunkList</p>
-<p>为了减小内存碎片， 分配的优先级如下: </p>
+<p>为了减小内存碎片， 分配的优先级如下:</p>
 <p><code>q050 &gt; q025 &gt; q000 &gt; qInit &gt; q075</code></p>
 <p>代码如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">allocateNormal</span><span class="params">(PooledByteBuf&lt;T&gt; buf, <span class="keyword">int</span> reqCapacity, <span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (q050.allocate(buf, reqCapacity, normCapacity) || q025.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q000.allocate(buf, reqCapacity, normCapacity) || qInit.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q075.allocate(buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">        ++allocationsNormal;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">allocateNormal</span><span class="params">(PooledByteBuf&lt;T&gt; buf, <span class="keyword">int</span> reqCapacity, <span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (q050.allocate(buf, reqCapacity, normCapacity) || q025.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q000.allocate(buf, reqCapacity, normCapacity) || qInit.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q075.allocate(buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">        ++allocationsNormal;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br></pre></td></tr></table></figure></p>
 <p>为什么这么弄？</p>
 <p>首先, 可以分配的内存时这样的， 回到之前的规格。 对于 <code>8192x2^11</code> byte 相当于 100% 的 chunk 了。</p>
-<p>而 比他小的分别为  50%, 25%, 12.5%, 6.25%, 3.125% …</p>
-<p>所以如果将优先级 的第一第二换个位置则可能造成 大量的 75% 。。。 </p>
-<h3 id="Page-amp-SubPage"><a href="#Page-amp-SubPage" class="headerlink" title="Page &amp; SubPage"></a>Page &amp; SubPage</h3><p>Chunk 由 2048 个 Page 组成。 </p>
+<p>而 比他小的分别为  50%, 25%, 12.5%, 6.25%, 3.125% ...</p>
+<p>所以如果将优先级 的第一第二换个位置则可能造成 大量的 75% 。。。</p>
+<h3>Page &amp; SubPage</h3>
+<p>Chunk 由 2048 个 Page 组成。</p>
 <p>一个 Page 默认 8k。</p>
 <p>Chunk 里面将这 2048 个 page 用其 2 倍的空间 <code>byte[4096] memoryMap</code> 以完全二叉树管理。</p>
 <p><img src="/post_images/2016-11-27-12-48-35.png" alt=""></p>
@@ -124,39 +135,41 @@ C代码，更少GC，更少synchronized
 <p>当 page 被分配掉时， 则将自己的 value ＋ 1 也就是变成12</p>
 <p><img src="/post_images/2016-11-27-13-14-19.png" alt=""></p>
 <p>每次被分配后都要同时更新自己的 parent 的 value, parent 的 value 取 2 个 child 中小的一个。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">updateParentsAlloc</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (id &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parentId = id &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">byte</span> val1 = value(id);</span><br><span class="line">        <span class="keyword">byte</span> val2 = value(id ^ <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">byte</span> val = val1 &lt; val2 ? val1 : val2;</span><br><span class="line">        setValue(parentId, val);</span><br><span class="line">        id = parentId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">updateParentsAlloc</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (id &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parentId = id &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">byte</span> val1 = value(id);</span><br><span class="line">        <span class="keyword">byte</span> val2 = value(id ^ <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">byte</span> val = val1 &lt; val2 ? val1 : val2;</span><br><span class="line">        setValue(parentId, val);</span><br><span class="line">        id = parentId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>比如当要分配 8k 的大小时直接找 第 11 层找 第一个 val 为 11 的(unused), 找到后更新自己以及parent节点。</p>
 <p>这样当比如需要分配 8MB 内存是，立即找 depth 为 1 的2个节点， 只要她的 value 不等于 depth 就知道该节点的 child 被分配过了。</p>
-<p>然后 Subpage 的作用是用来标示分配小于一个 page 的内存块。 </p>
+<p>然后 Subpage 的作用是用来标示分配小于一个 page 的内存块。</p>
 <p>但是 Subpage 不再是用二叉树管理了。而是用更方便的方式。</p>
 <p>一个 Subpage 只能分配一种 size 大小， 然后用 3个long 共 <code>8x8x8</code> 个bit 标示是否被使用。</p>
 <p>比如 如果 page 为 8k ， 由于共 512 个标示可用，所以最小分配单元 为 16 byte.</p>
 <p>但是 如果 最小分配单元为 32 byte， 则 共只需要 256 个标示即可。(3个 long 不需要全部用完)</p>
 <p>Subpage 也是一个链表, 相同规格的subpage 链在一起。</p>
 <p>然后 PoolArena 初始化了 n 个size 的 Subpage 的链表头, 并用来维护。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] tinySubpagePools;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] smallSubpagePools;</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] tinySubpagePools;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] smallSubpagePools;</span><br></pre></td></tr></table></figure></p>
 <p>每次新创建 Subpage 会吧 subpage 链到 相应的 idx 的 PoolSubpage 内。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">long</span> <span class="title">allocateSubpage</span><span class="params">(<span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.</span></span><br><span class="line">    <span class="comment">// This is need as we may add it back and so alter the linked-list structure.</span></span><br><span class="line">    PoolSubpage&lt;T&gt; head = arena.findSubpagePoolHead(normCapacity);</span><br><span class="line">    <span class="keyword">synchronized</span> (head) &#123;</span><br><span class="line">        <span class="keyword">int</span> d = maxOrder; <span class="comment">// subpages are only be allocated from pages i.e., leaves</span></span><br><span class="line">        <span class="keyword">int</span> id = allocateNode(d);</span><br><span class="line">        <span class="keyword">if</span> (id &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> id;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] subpages = <span class="keyword">this</span>.subpages;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> pageSize = <span class="keyword">this</span>.pageSize;</span><br><span class="line"></span><br><span class="line">        freeBytes -= pageSize;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> subpageIdx = subpageIdx(id);</span><br><span class="line">        PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx];</span><br><span class="line">        <span class="keyword">if</span> (subpage == <span class="keyword">null</span>) &#123;</span><br><span class="line">            subpage = <span class="keyword">new</span> PoolSubpage&lt;T&gt;(head, <span class="keyword">this</span>, id, runOffset(id), pageSize, normCapacity);</span><br><span class="line">            subpages[subpageIdx] = subpage;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            subpage.init(head, normCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> subpage.allocate();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">long</span> <span class="title">allocateSubpage</span><span class="params">(<span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.</span></span><br><span class="line">    <span class="comment">// This is need as we may add it back and so alter the linked-list structure.</span></span><br><span class="line">    PoolSubpage&lt;T&gt; head = arena.findSubpagePoolHead(normCapacity);</span><br><span class="line">    <span class="keyword">synchronized</span> (head) &#123;</span><br><span class="line">        <span class="keyword">int</span> d = maxOrder; <span class="comment">// subpages are only be allocated from pages i.e., leaves</span></span><br><span class="line">        <span class="keyword">int</span> id = allocateNode(d);</span><br><span class="line">        <span class="keyword">if</span> (id &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> id;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] subpages = <span class="keyword">this</span>.subpages;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> pageSize = <span class="keyword">this</span>.pageSize;</span><br><span class="line"></span><br><span class="line">        freeBytes -= pageSize;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> subpageIdx = subpageIdx(id);</span><br><span class="line">        PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx];</span><br><span class="line">        <span class="keyword">if</span> (subpage == <span class="keyword">null</span>) &#123;</span><br><span class="line">            subpage = <span class="keyword">new</span> PoolSubpage&lt;T&gt;(head, <span class="keyword">this</span>, id, runOffset(id), pageSize, normCapacity);</span><br><span class="line">            subpages[subpageIdx] = subpage;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            subpage.init(head, normCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> subpage.allocate();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>图如下</p>
 <p><img src="/post_images/2016-11-27-14-27-58.png" alt=""></p>
-<h2 id="内存开销"><a href="#内存开销" class="headerlink" title="内存开销"></a>内存开销</h2><p>最后算一下开销。</p>
+<h2>内存开销</h2>
+<p>最后算一下开销。</p>
 <p>如果 一个 netty server 配置了 1 个 acceptor Thread，32个 IO Thread， 我们这里仅仅考虑默认配置。</p>
 <p>为了让 arena 不被锁影响，则需要33 个 arena, 那么就会需要 33个 chunk， 共计  33 * 16mb 共计 528MB (默认配置)</p>
-<p>由于 ByteBufPool 默认是使用堆外内存的， 而 jdk 默认堆外内存 64 mb， 所以需要手动修改。 </p>
+<p>由于 ByteBufPool 默认是使用堆外内存的， 而 jdk 默认堆外内存 64 mb， 所以需要手动修改。</p>
 <p>不然 netty 会使用 堆内存。 不经计算，贸然使用可能会造成full gc。</p>
 <p>内存分配需要根据实际情况自己计算参数:</p>
 <p>举一个例子</p>
 <p>算一台服务 2k qps的服务，每个包 2k 的话 预计需要</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In [13]: 2000 * 2000 / 1024/1024.0</span><br><span class="line">Out[13]: 3.814453125</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In [13]: 2000 * 2000 / 1024/1024.0</span><br><span class="line">Out[13]: 3.814453125</span><br></pre></td></tr></table></figure></p>
 <p>ps 这是没有算上 请求包的，就算 * 2 8mb 因该够了。</p>
 <p>可以将 pageSize 调为一半，节省内存  io.netty.allocator.pageSize = 4096</p>
 <p>于是一个 chunk 8mb 可以少分配一半的内存。</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://www.jianshu.com/p/c4bd37a3555b" target="_blank" rel="external">http://www.jianshu.com/p/c4bd37a3555b</a></p>
-<p><a href="http://www.jianshu.com/p/d91060311437" target="_blank" rel="external">http://www.jianshu.com/p/d91060311437</a></p>
-<p><a href="http://www.jianshu.com/p/a1debfe4ff02" target="_blank" rel="external">http://www.jianshu.com/p/a1debfe4ff02</a></p>
-<p><a href="http://www.jianshu.com/p/4856bd30dd56" target="_blank" rel="external">http://www.jianshu.com/p/4856bd30dd56</a></p>
-<p><a href="http://calvin1978.blogcn.com/articles/netty-performance.html" target="_blank" rel="external">http://calvin1978.blogcn.com/articles/netty-performance.html</a></p>
-<p><a href="http://calvin1978.blogcn.com/articles/netty-performance2.html" target="_blank" rel="external">http://calvin1978.blogcn.com/articles/netty-performance2.html</a></p>
+<h1>reference</h1>
+<p>http://www.jianshu.com/p/c4bd37a3555b</p>
+<p>http://www.jianshu.com/p/d91060311437</p>
+<p>http://www.jianshu.com/p/a1debfe4ff02</p>
+<p>http://www.jianshu.com/p/4856bd30dd56</p>
+<p>http://calvin1978.blogcn.com/articles/netty-performance.html</p>
+<p>http://calvin1978.blogcn.com/articles/netty-performance2.html</p>
 
   </section>
 </article>
@@ -234,7 +247,7 @@ C代码，更少GC，更少synchronized
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://lelouchcrgallery.tk/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 
