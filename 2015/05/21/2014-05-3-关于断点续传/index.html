@@ -43,11 +43,12 @@
 <p>于是，google了下断点续传原理，发现其实没我想的那么难。</p>
 <p>当然，首先需要服务器支持。有时用迅雷下载时，会提示该任务不支持断点续传，那么说明这个任务所在的server不支持。</p>
 <p>她的原理是在http header里面加一个Range，两边数字分别表示startPosition和endPosition，如果不填写endPosition，默认表示结尾</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Range: bytes=0-</span><br><span class="line">Range: bytes=0-999</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Range: bytes=0-</span><br><span class="line">Range: bytes=0-999</span><br></pre></td></tr></table></figure></p>
 <p>还有个要注意的是，如果指定了Range，那么server返回的就不再是200了，而是206</p>
 <p>以上都知道了后要写个断点续传就非常简单了，只要cache<code>IOException</code>后，记录下当前接收到的字节数，下次请求时设置下Range即可。</p>
 <p>而且，多线程下载也是这个原理。第一次请求获取他的contentlength后，然后释放该链接，重新create n个线程，分别指定他们的Range，然后就慢慢等他下完吧。</p>
-<h4 id="code-reference"><a href="#code-reference" class="headerlink" title="code reference"></a>code reference</h4><p><a href="https://github.com/caorong/crawler-analyzer/blob/master/src/main/java/com/ximalaya/crawler/analysis/utils/AbstractFetcher.java#L243" target="_blank" rel="external">爬虫断点续传</a></p>
+<h4>code reference</h4>
+<p><a href="https://github.com/caorong/crawler-analyzer/blob/master/src/main/java/com/ximalaya/crawler/analysis/utils/AbstractFetcher.java#L243" target="_blank" rel="external">爬虫断点续传</a></p>
 <p><a href="https://github.com/daimajia/java-multithread-downloader" target="_blank" rel="external">多线程下载</a></p>
 
   </section>
@@ -126,7 +127,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

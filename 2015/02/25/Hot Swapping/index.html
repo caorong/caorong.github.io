@@ -38,21 +38,27 @@
 
   <section class="article-entry">
     <p>之前有段时间一直在找 jreble 的免费替代方案。</p>
-<h3 id="用jetty自带的scan"><a href="#用jetty自带的scan" class="headerlink" title="用jetty自带的scan"></a>用jetty自带的scan</h3><p>hot swap<br><a href="https://gist.github.com/naaman/1053217" target="_blank" rel="external">https://gist.github.com/naaman/1053217</a></p>
-<h3 id="给jvm打补丁"><a href="#给jvm打补丁" class="headerlink" title="给jvm打补丁"></a>给jvm打补丁</h3><p>主要用的 <a href="https://github.com/dcevm/dcevm/releases" target="_blank" rel="external">dcevm</a> ＋ <a href="https://github.com/HotswapProjects/HotswapAgent" target="_blank" rel="external">HotswapAgent</a></p>
-<p>打补丁方法参考 <a href="http://ssw.jku.at/dcevm/binaries/" target="_blank" rel="external">http://ssw.jku.at/dcevm/binaries/</a></p>
+<h3>用jetty自带的scan</h3>
+<p>hot swap
+https://gist.github.com/naaman/1053217</p>
+<h3>给jvm打补丁</h3>
+<p>主要用的 <a href="https://github.com/dcevm/dcevm/releases" target="_blank" rel="external">dcevm</a> ＋ <a href="https://github.com/HotswapProjects/HotswapAgent" target="_blank" rel="external">HotswapAgent</a></p>
+<p>打补丁方法参考 http://ssw.jku.at/dcevm/binaries/</p>
 <p>然后再搭配hotswapAgent启动</p>
 <p>不过这个由于不能支持main方法启动的jetty server，所以放弃了，tomcat我自己没测过。</p>
-<h3 id="spring-loaded"><a href="#spring-loaded" class="headerlink" title="spring-loaded"></a><a href="https://github.com/spring-projects/spring-loaded" target="_blank" rel="external">spring-loaded</a></h3><p>spring出品，貌似grails就用的这个。不用给jvm打补丁，只要加一个agent。</p>
+<h3><a href="https://github.com/spring-projects/spring-loaded" target="_blank" rel="external">spring-loaded</a></h3>
+<p>spring出品，貌似grails就用的这个。不用给jvm打补丁，只要加一个agent。</p>
 <p>至少我目前测试了main方法启动的jetty，和tomcat。</p>
 <p>tomcat的话需要记得修改配置文件 (server.xml)，将reloadable 设置为false。</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -javaagent:/Users/xxxx/Documents/springloaded-1.2.1.RELEASE.jar -noverify SomeJavaClass</span><br></pre></td></tr></table></figure>
-<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>机器性能顶得住的话可以将 IDEA 弄成和elipse一样 ctrl＋s 就能编译 <a href="https://groups.google.com/forum/#!topic/hotswapagent/BxAK_Clniss" target="_blank" rel="external">参考这里</a></p>
-<h2 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h2><p><a href="http://javainformed.blogspot.jp/2014/01/jrebel-free-alternative.html" target="_blank" rel="external">http://javainformed.blogspot.jp/2014/01/jrebel-free-alternative.html</a></p>
-<p><a href="http://stackoverflow.com/questions/7998669/redeploy-alternatives-to-jrebel" target="_blank" rel="external">http://stackoverflow.com/questions/7998669/redeploy-alternatives-to-jrebel</a></p>
-<p><a href="http://stackoverflow.com/questions/15118681/intelij-tomcat-spring-loaded" target="_blank" rel="external">http://stackoverflow.com/questions/15118681/intelij-tomcat-spring-loaded</a></p>
-<p><a href="http://padcom13.blogspot.jp/2012/12/did-you-noticed-spring-loaded-is-here.html" target="_blank" rel="external">http://padcom13.blogspot.jp/2012/12/did-you-noticed-spring-loaded-is-here.html</a></p>
-<p><a href="http://vitalflux.com/configure-springloaded-eclipse-dynamic-web-project/" target="_blank" rel="external">http://vitalflux.com/configure-springloaded-eclipse-dynamic-web-project/</a></p>
+<p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -javaagent:/Users/xxxx/Documents/springloaded-1.2.1.RELEASE.jar -noverify SomeJavaClass</span><br></pre></td></tr></table></figure></p>
+<h2>注意事项</h2>
+<p>机器性能顶得住的话可以将 IDEA 弄成和elipse一样 ctrl＋s 就能编译 <a href="https://groups.google.com/forum/#!topic/hotswapagent/BxAK_Clniss" target="_blank" rel="external">参考这里</a></p>
+<h2>reference</h2>
+<p>http://javainformed.blogspot.jp/2014/01/jrebel-free-alternative.html</p>
+<p>http://stackoverflow.com/questions/7998669/redeploy-alternatives-to-jrebel</p>
+<p>http://stackoverflow.com/questions/15118681/intelij-tomcat-spring-loaded</p>
+<p>http://padcom13.blogspot.jp/2012/12/did-you-noticed-spring-loaded-is-here.html</p>
+<p>http://vitalflux.com/configure-springloaded-eclipse-dynamic-web-project/</p>
 
   </section>
 </article>
@@ -130,7 +136,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

@@ -39,11 +39,13 @@
   <section class="article-entry">
     <p>话说之前一段时间，一只在找为啥用了netty后性能反倒没有之前好的问题。</p>
 <p>然后就想办法找到底是哪里慢了。期间用到了如下几个工具</p>
-<h2 id="java-火焰图"><a href="#java-火焰图" class="headerlink" title="java 火焰图"></a>java 火焰图</h2><p>之前在网上看到 别人 用 <a href="http://colobu.com/2016/08/10/Java-Flame-Graphs/" target="_blank" rel="external">火焰图分析java的文章</a>, 于是就想拿来试试看。</p>
-<p>不过翻译的文章使用的还是 Brendan Gregg 使用的老方法，新方法(更方便)在 [netflix 的 blog] (<a href="http://techblog.netflix.com/2015/07/java-in-flames.html)上" target="_blank" rel="external">http://techblog.netflix.com/2015/07/java-in-flames.html)上</a>.</p>
+<h2>java 火焰图</h2>
+<p>之前在网上看到 别人 用 <a href="http://colobu.com/2016/08/10/Java-Flame-Graphs/" target="_blank" rel="external">火焰图分析java的文章</a>, 于是就想拿来试试看。</p>
+<p>不过翻译的文章使用的还是 Brendan Gregg 使用的老方法，新方法(更方便)在 [netflix 的 blog] (http://techblog.netflix.com/2015/07/java-in-flames.html)上.</p>
 <p>跟着官方教程来，中间没遇到什么坑，只不过得到的结果是 cpu 大部分用在了 encode decode 的 string.getByte上，当时就想着很正常。从这个上看不出什么。。</p>
 <p>火焰图的作用是用来查看cpu 热点在哪儿。当时我一直想是不是我在某个潜在的地方踩了坑，在哪里阻塞了。而火焰图在这方面帮不了我。</p>
-<h2 id="aspectj"><a href="#aspectj" class="headerlink" title="aspectj"></a>aspectj</h2><p>然后就在想，我想要一个工具，最要能将所有的我自己写的代码的每个方法前后都记录一个 time start, time end, 用来统计每个函数花费了多少时间。</p>
+<h2>aspectj</h2>
+<p>然后就在想，我想要一个工具，最要能将所有的我自己写的代码的每个方法前后都记录一个 time start, time end, 用来统计每个函数花费了多少时间。</p>
 <p>由于之前已经做 metric 时借鉴(copy) 了 netflix 的 hystrix 的 metric 方式，只不过将原来的filter 模型, 就想着直接用aop 改成 切面模型对 所有 自己定义的包名的child包下所有的函数 都 <code>pointcut</code> 下。</p>
 <p>再将 <code>thisJoinPoint.getSignature</code> 作为key，各自分配一个 Histogram，纪录每次的执行花费时间。</p>
 <p>代码很简单,实现在<a href="https://github.com/caorong/aj-benchmark/blob/master/src/main/java/org/cr/aspect/TimeAspect.aj" target="_blank" rel="external">这里</a></p>
@@ -54,7 +56,8 @@
 <li>不知道这么多函数内存够不够。。</li>
 </ol>
 <p>这时 意外的再微博上 发现了<a href="http://vdisk.weibo.com/s/C9LV9iVqfbYUU" target="_blank" rel="external">这个</a>, 并在地铁上看的时候意外发现好几个案例都用了叫 jmc 的工具发现内存问题。</p>
-<h2 id="jmc"><a href="#jmc" class="headerlink" title="jmc"></a>jmc</h2><p>jmc 全称 <a href="https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=0ahUKEwjei921q4XPAhUBwI8KHdlUA6gQFggeMAA&amp;url=http%3A%2F%2Fwww.oracle.com%2Ftechnetwork%2Fjava%2Fjavaseproducts%2Fmission-control%2Fjava-mission-control-1998576.html&amp;usg=AFQjCNGPqiniTtNK81k-67yazyq4XEm_Cw&amp;sig2=oDZoU1QRY4SJ227WVN9TaQ" target="_blank" rel="external">Java Mission Control</a></p>
+<h2>jmc</h2>
+<p>jmc 全称 <a href="https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=0ahUKEwjei921q4XPAhUBwI8KHdlUA6gQFggeMAA&amp;url=http%3A%2F%2Fwww.oracle.com%2Ftechnetwork%2Fjava%2Fjavaseproducts%2Fmission-control%2Fjava-mission-control-1998576.html&amp;usg=AFQjCNGPqiniTtNK81k-67yazyq4XEm_Cw&amp;sig2=oDZoU1QRY4SJ227WVN9TaQ" target="_blank" rel="external">Java Mission Control</a></p>
 <p>虽然很多人都用这个查到了内存问题啥的，但是他的功能远远不止内存。</p>
 <p>简单说下他的强大的功能</p>
 <ol>
@@ -64,16 +67,18 @@
 <li>IO， 系统， 事件 我都没用到。</li>
 </ol>
 <p>然后，瞬间发现了问题所在, 并且是个超级低级的错误</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOG.debug(<span class="string">"decode bytebuf is:\n&#123;&#125;"</span>, ByteBufUtil.prettyHexDump(buf));</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOG.debug(<span class="string">"decode bytebuf is:\n&#123;&#125;"</span>, ByteBufUtil.prettyHexDump(buf));</span><br></pre></td></tr></table></figure></p>
 <p>卧槽，每次encode，decode都执行了 ByteBufUtil.prettyHexDump，fuck！！</p>
 <p>总结 jmc 神器，在jdk7u40 后才有，java8 之后的可以少敲一个 入参，还有最好的文档在 jmc 自带的文档</p>
-<p>配置远程调试最简单的方式就是把所有安全相关的都关掉 = = </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java -Dcom.sun.management.jmxremote.port=7091</span><br><span class="line">-Dcom.sun.management.jmxremote.authenticate=false</span><br><span class="line">-Dcom.sun.management.jmxremote.ssl=false MyApp</span><br></pre></td></tr></table></figure>
-<h2 id="随想"><a href="#随想" class="headerlink" title="随想"></a>随想</h2><p>话说既然有了 jmc，并且我猜测 netflix 献上已经开始 java8 了，为啥弄哪个火焰图呢？</p>
+<p>配置远程调试最简单的方式就是把所有安全相关的都关掉 = =</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">java -Dcom.sun.management.jmxremote.port=7091</span><br><span class="line">-Dcom.sun.management.jmxremote.authenticate=false</span><br><span class="line">-Dcom.sun.management.jmxremote.ssl=false MyApp</span><br></pre></td></tr></table></figure></p>
+<h2>随想</h2>
+<p>话说既然有了 jmc，并且我猜测 netflix 献上已经开始 java8 了，为啥弄哪个火焰图呢？</p>
 <p>我在使用了火焰图后事后发现，其实火焰图也能看出上面的问题，但是太隐蔽了，因为从java层到虚拟机层 再到 system call 调用链太深了，而火焰图是根据 高度来找cpu 热点的。而热点都细的的和什么一样。。。肉眼好难分辨 谁更高一些 ＝ ＝</p>
 <p>不过，他有一个好处，也是最最重要的是对性能基本无伤，可以在线上直接使用。</p>
 <p>根据 netflix 自己说的，java 8 提供的 这个 选项 <code>-XX:+PreserveFramePointer</code> 仅仅损伤 <code>0% - 3%</code>, 线上完全可以放心大胆的开着。然后系统有问题了，直接画个火焰图看看是哪里的问题。</p>
-<h2 id="flame-in-python"><a href="#flame-in-python" class="headerlink" title="flame in python"></a>flame in python</h2><p>话说，今天去了 pycon，收获了 eleme 的 <a href="https://github.com/wooparadog" target="_blank" rel="external">大神的大开脑洞的分享</a> 他们是怎么做profiling 的</p>
+<h2>flame in python</h2>
+<p>话说，今天去了 pycon，收获了 eleme 的 <a href="https://github.com/wooparadog" target="_blank" rel="external">大神的大开脑洞的分享</a> 他们是怎么做profiling 的</p>
 <p>我们公司，java6 的古老体系，用的 aspectj 切每个关键函数的 time cost</p>
 <p>这么做确实可以做到对业务方无侵入，但是其实还是要织入很多代码的，这些代码还是会或多或少占用些资源，当然这不是关键，关键是，如果profileing的代码更新了，业务代码也要跟着更新。</p>
 <p>而他们直接用 systemtab 用来 probe c 的方法 probe python，不用侵入业务方资源，业务方也不用事先准备什么，直接可以 profile。</p>
@@ -81,20 +86,22 @@
 <p>不过，他的埋点是依赖了 redhat 或者 centos 上面的自带的python 会帮你埋点，(不然需要自己手动改python源码埋点，或者<a href="https://github.com/emfree/systemtap-python-tools" target="_blank" rel="external">用python_debug跑</a> 不过这个方式不可能在线上跑)</p>
 <p>下面基本摘自他的ppt</p>
 <p>redhat/centos/fedora 的埋点是在每个 python 函数的 entry 以及 return 得地方纪录了3个参数</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python.function.entry filename:string functname:string lineno:long</span><br><span class="line">python.function.return filename:string functname:string lineno:long</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python.function.entry filename:string functname:string lineno:long</span><br><span class="line">python.function.return filename:string functname:string lineno:long</span><br></pre></td></tr></table></figure></p>
 <p>依赖这个，于是自己写 stp 可以用到</p>
-<figure class="highlight stp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">global pystack</span><br><span class="line"></span><br><span class="line">probe ves.function.entry = </span><br><span class="line">process.library(@<span class="number">1</span>).mark(<span class="string">"function__entry"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    filename = user_string($arg1);</span><br><span class="line">    funcname = user_string($arg2);</span><br><span class="line">    lineno = $arg3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.return =</span><br><span class="line">process.library(@<span class="number">1</span>).mark(<span class="string">"function__return"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    filename = user_string($arg1);</span><br><span class="line">    funcname = user_string($arg2);</span><br><span class="line">    lineno = $arg3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe greenlet = process.library(@<span class="number">2</span>).function(<span class="string">"g_switch@greenlet.c"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    pystack = $target;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.entry</span><br><span class="line">&#123;</span><br><span class="line">    printf(<span class="string">"%d =&gt; %s =&gt; %s in %s:%d\n"</span>, pystack, gevent_indent(<span class="number">1</span>), funcname, filename, lineno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.return</span><br><span class="line">&#123;</span><br><span class="line">    printf(<span class="string">"%d =&gt; %s =&gt; %s in %s:%d\n"</span>, pystack, gevent_indent(<span class="number">-1</span>), funcname, filename, lineno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe greenlet &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">stap -x PID gevent.stp &quot;/lib64/libpython2.7.so.1.0&quot; &quot;/lib64/python2.7/site-packages/greenlet.so&quot;</span><br></pre></td></tr></table></figure>
-<p>然后就能看到 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">120133424 =&gt; 1470406350825948 gunicorn: worke(1804):  &lt;= get in /lib64/python2.7/_abcoll.py:365</span><br><span class="line"></span><br><span class="line">120133424 =&gt; 1470406350925948 gunicorn: worke(1804):  &lt;= get in /lib64/python2.7/_abcoll.py:360</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight stp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">global pystack</span><br><span class="line"></span><br><span class="line">probe ves.function.entry = </span><br><span class="line">process.library(@<span class="number">1</span>).mark(<span class="string">"function__entry"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    filename = user_string($arg1);</span><br><span class="line">    funcname = user_string($arg2);</span><br><span class="line">    lineno = $arg3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.return =</span><br><span class="line">process.library(@<span class="number">1</span>).mark(<span class="string">"function__return"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    filename = user_string($arg1);</span><br><span class="line">    funcname = user_string($arg2);</span><br><span class="line">    lineno = $arg3;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe greenlet = process.library(@<span class="number">2</span>).function(<span class="string">"g_switch@greenlet.c"</span>)</span><br><span class="line">&#123;</span><br><span class="line">    pystack = $target;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.entry</span><br><span class="line">&#123;</span><br><span class="line">    printf(<span class="string">"%d =&gt; %s =&gt; %s in %s:%d\n"</span>, pystack, gevent_indent(<span class="number">1</span>), funcname, filename, lineno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe ves.function.return</span><br><span class="line">&#123;</span><br><span class="line">    printf(<span class="string">"%d =&gt; %s =&gt; %s in %s:%d\n"</span>, pystack, gevent_indent(<span class="number">-1</span>), funcname, filename, lineno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe greenlet &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">stap -x PID gevent.stp &quot;/lib64/libpython2.7.so.1.0&quot; &quot;/lib64/python2.7/site-packages/greenlet.so&quot;</span><br></pre></td></tr></table></figure></p>
+<p>然后就能看到</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">120133424 =&gt; 1470406350825948 gunicorn: worke(1804):  &lt;= get in /lib64/python2.7/_abcoll.py:365</span><br><span class="line"></span><br><span class="line">120133424 =&gt; 1470406350925948 gunicorn: worke(1804):  &lt;= get in /lib64/python2.7/_abcoll.py:360</span><br></pre></td></tr></table></figure></p>
 <p>类似这样的log</p>
 <p>ps 为什么可以这么弄，因为 cPython 其实就是 c, 这里的 cPython 指非pypy 的官方pyhton</p>
-<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>话说，然后我将他的代码在我公司的测试环境(centos6.5) 试了下，发现不行，貌似我们的 centos 并没有给python事先埋点 orz，应该并非所有的redhat系都埋点了。 orzzzz</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@test132 python-systemtap]# stap -x 45742 gevent2.stp &quot;/usr/lib64/libpython2.6.so.1.0&quot; &quot;/usr/lib64/python2.6/site-packages/greenlet.so&quot;</span><br><span class="line">semantic error: while resolving probe point: identifier &apos;process&apos; at gevent2.stp:3:7</span><br><span class="line">        source: probe process.library(@1).mark(&quot;function__entry&quot;)</span><br></pre></td></tr></table></figure>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://techblog.netflix.com/2015/07/java-in-flames.html" target="_blank" rel="external">http://techblog.netflix.com/2015/07/java-in-flames.html</a></p>
-<p><a href="http://www.ibm.com/developerworks/cn/java/j-lo-performance-analysissy-tools3/index.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-lo-performance-analysissy-tools3/index.html</a></p>
-<p><a href="https://github.com/emfree/systemtap-python-tools" target="_blank" rel="external">https://github.com/emfree/systemtap-python-tools</a></p>
-<p><a href="https://github.com/wooparadog/python-systemtap" target="_blank" rel="external">https://github.com/wooparadog/python-systemtap</a></p>
+<h2>后记</h2>
+<p>话说，然后我将他的代码在我公司的测试环境(centos6.5) 试了下，发现不行，貌似我们的 centos 并没有给python事先埋点 orz，应该并非所有的redhat系都埋点了。 orzzzz</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@test132 python-systemtap]# stap -x 45742 gevent2.stp &quot;/usr/lib64/libpython2.6.so.1.0&quot; &quot;/usr/lib64/python2.6/site-packages/greenlet.so&quot;</span><br><span class="line">semantic error: while resolving probe point: identifier &apos;process&apos; at gevent2.stp:3:7</span><br><span class="line">        source: probe process.library(@1).mark(&quot;function__entry&quot;)</span><br></pre></td></tr></table></figure></p>
+<h1>reference</h1>
+<p>http://techblog.netflix.com/2015/07/java-in-flames.html</p>
+<p>http://www.ibm.com/developerworks/cn/java/j-lo-performance-analysissy-tools3/index.html</p>
+<p>https://github.com/emfree/systemtap-python-tools</p>
+<p>https://github.com/wooparadog/python-systemtap</p>
 
   </section>
 </article>
@@ -172,7 +179,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

@@ -46,36 +46,46 @@
 <p>理一下上面的流程(猜测):</p>
 <ol>
 <li>网卡收到数据包, 发中断</li>
-<li>cpu 将数据包放到协议栈缓存＋解析？ </li>
+<li>cpu 将数据包放到协议栈缓存＋解析？</li>
 <li>解出的 数据包就放到 TODORead 的queue？</li>
 </ol>
 <p>以下浅浅的总结了下中断，copy from 深入理解linux内核, 以及网上别人的文章</p>
-<h1 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h1><p>中断 有硬中断，软中断</p>
+<h1>中断</h1>
+<p>中断 有硬中断，软中断</p>
 <p>硬中断相对来是被动接收到的中断, 硬件发出，软中断是程序产生的，人为发出的</p>
-<h2 id="硬中断"><a href="#硬中断" class="headerlink" title="硬中断"></a>硬中断</h2><p>种类上说分两种，同步(异常)和异步(中断)</p>
+<h2>硬中断</h2>
+<p>种类上说分两种，同步(异常)和异步(中断)</p>
 <p>同步：指令执行后产生，也就是程序主动发出的，也就是异常，用于中断自己。。</p>
 <p>异步：间隔定时器 和 IO 设备产生。 比如网卡收到数据包，敲键盘。。</p>
 <p>中断到达时，cpu 会暂停当前做的事情，优先处理中断，实现方法：在内核态堆栈保存程序计数器的当前值(save 当前)，并把与中断类型相关的一个地址放入程序计数器(强行插队)</p>
-<h2 id="软中断"><a href="#软中断" class="headerlink" title="软中断"></a>软中断</h2><p>软中断， tasklet<br>软中断： 程序产生，书上定义了6种，举个例子，将数据传给IO设备，比如 写硬盘，发数据包到网卡都是。</p>
-<p>软中断中写硬盘，发数据到网卡这种IO操作优先级比较低，排在第4，5，所以是可以延迟执行的，延迟执行的方式是放到工作队列，异步之行<br><br>然后如果程序要用软中断那么内核对外提供了个好用的封装，就是 tasklet， 原理参考<a href="http://rock3.info/blog/2013/11/22/tasklet%E5%8E%9F%E7%90%86/" target="_blank" rel="external">这里</a></p>
+<h2>软中断</h2>
+<p>软中断， tasklet
+软中断： 程序产生，书上定义了6种，举个例子，将数据传给IO设备，比如 写硬盘，发数据包到网卡都是。</p>
+<p>软中断中写硬盘，发数据到网卡这种IO操作优先级比较低，排在第4，5，所以是可以延迟执行的，延迟执行的方式是放到工作队列，异步之行
+
+然后如果程序要用软中断那么内核对外提供了个好用的封装，就是 tasklet， 原理参考<a href="http://rock3.info/blog/2013/11/22/tasklet%E5%8E%9F%E7%90%86/" target="_blank" rel="external">这里</a></p>
 <p>从书上只能看出，比如网卡收到一个数据包就立即一次中断。不过发现事实上并不是这样。</p>
 <p>从知乎上看到这个<a href="https://www.zhihu.com/question/20122137" target="_blank" rel="external">答案</a>, 网卡并不是真的一个数据包就一个中断, 在高并发下会帮你做点和合并操作</p>
 <blockquote>
-<p>从kernel层面将，事件产生有可能不是由硬件中断触发的，在一定情况下kernel的确会轮询，因为响应硬件中断是一个成本比较高的操作。<br>以网卡为例，当数据量很少的时候，每来一个数据包网卡都回产生一个中断，kernel响应这个中断，从网卡缓冲区中读出数据放进协议栈处理，当满足一定条件时，kernel回调用户代码，这里的“回调”一般情况下是指从一个kernel syscall中返回(在此之前用户代码一直处于block状态)。<br>当数据量很大时，每个包都产生一个中断就划不来了，此时kernel可以启动interrupt coalescing机制，让网卡做中断合并，也就是说来足够多的数据包或者等待一个timeout才会产生一个中断，kernel在响应中断时会把所有数据一起读出来处理，这样可以有效的降低中断次数。<br>当数据量更大时，网卡缓冲区里几乎总是有未处理的数据，此时kernel干脆会禁掉网卡的中断，切换到轮询处理的模式，说白了就是跑一个忙循环不停地读网卡缓冲区里的数据，这样综合开销更低。</p>
+<p>从kernel层面将，事件产生有可能不是由硬件中断触发的，在一定情况下kernel的确会轮询，因为响应硬件中断是一个成本比较高的操作。
+以网卡为例，当数据量很少的时候，每来一个数据包网卡都回产生一个中断，kernel响应这个中断，从网卡缓冲区中读出数据放进协议栈处理，当满足一定条件时，kernel回调用户代码，这里的“回调”一般情况下是指从一个kernel syscall中返回(在此之前用户代码一直处于block状态)。
+当数据量很大时，每个包都产生一个中断就划不来了，此时kernel可以启动interrupt coalescing机制，让网卡做中断合并，也就是说来足够多的数据包或者等待一个timeout才会产生一个中断，kernel在响应中断时会把所有数据一起读出来处理，这样可以有效的降低中断次数。
+当数据量更大时，网卡缓冲区里几乎总是有未处理的数据，此时kernel干脆会禁掉网卡的中断，切换到轮询处理的模式，说白了就是跑一个忙循环不停地读网卡缓冲区里的数据，这样综合开销更低。</p>
 </blockquote>
 <p>再现代操作系统上说，其实这个模块就是 DMA (Direct Memory Access), 只不过书上是磁盘的，其实网卡也一样，<a href="http://www.cnblogs.com/gogly/archive/2012/06/10/2541573.html" target="_blank" rel="external">网上有篇文章说了这个</a>，和上面答案类似</p>
 <p>顺便再复习下 epoll 的 水平触发，边缘触发, 详细可以看 <a href="http://blog.csdn.net/dongfuye/article/details/50880251" target="_blank" rel="external">这里</a>, 感觉和本文关系不大</p>
 <p>总结下感觉，中断就是中断，和epoll应该并没有直接的关联，它应该只关联到协议栈，然后，epoll select 应该是再协议栈之上的对外封装。</p>
 <p>TODO 验证。。</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://book.douban.com/subject/1767120/" target="_blank" rel="external">深入理解linux内核</a></p>
-<p><a href="http://www.kryptosx.info/archives/1190.html" target="_blank" rel="external">http://www.kryptosx.info/archives/1190.html</a></p>
-<p><a href="https://www.zhihu.com/question/20122137" target="_blank" rel="external">https://www.zhihu.com/question/20122137</a></p>
-<p><a href="http://rock3.info/blog/2013/11/22/tasklet%E5%8E%9F%E7%90%86/" target="_blank" rel="external">http://rock3.info/blog/2013/11/22/tasklet%E5%8E%9F%E7%90%86/</a></p>
-<p><a href="http://www.cnblogs.com/yuuyuu/p/5103744.html" target="_blank" rel="external">http://www.cnblogs.com/yuuyuu/p/5103744.html</a></p>
-<p><a href="https://www.zhihu.com/question/20502870" target="_blank" rel="external">https://www.zhihu.com/question/20502870</a></p>
-<p><a href="http://blog.chinaunix.net/uid-24148050-id-1667017.html" target="_blank" rel="external">http://blog.chinaunix.net/uid-24148050-id-1667017.html</a></p>
-<p><a href="http://www.cnblogs.com/gogly/archive/2012/06/10/2541573.html" target="_blank" rel="external">http://www.cnblogs.com/gogly/archive/2012/06/10/2541573.html</a></p>
-<p><a href="http://www.pagefault.info/?p=403" target="_blank" rel="external">http://www.pagefault.info/?p=403</a></p>
+<h1>reference</h1>
+<p><a href="https://book.douban.com/subject/1767120/" target="_blank" rel="external">深入理解linux内核</a></p>
+<p>http://www.kryptosx.info/archives/1190.html</p>
+<p>https://www.zhihu.com/question/20122137</p>
+<p>http://rock3.info/blog/2013/11/22/tasklet%E5%8E%9F%E7%90%86/</p>
+<p>http://www.cnblogs.com/yuuyuu/p/5103744.html</p>
+<p>https://www.zhihu.com/question/20502870</p>
+<p>http://blog.chinaunix.net/uid-24148050-id-1667017.html</p>
+<p>http://www.cnblogs.com/gogly/archive/2012/06/10/2541573.html</p>
+<p>http://www.pagefault.info/?p=403</p>
 
   </section>
 </article>
@@ -153,7 +163,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

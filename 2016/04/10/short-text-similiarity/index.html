@@ -40,43 +40,54 @@
     <p>最近做的爬虫需要加一个功能，能够根据标题尽量的去除重复的新闻，新闻标题的长度大多在 10字 以内，一般最大不超过20字。</p>
 <p>网上找了一下，找到一下几种比较方式。</p>
 <ol>
-<li><p><a href="http://www.programcreek.com/2013/12/edit-distance-in-java/" target="_blank" rel="external">最短编辑路径</a></p>
+<li>
+<p><a href="http://www.programcreek.com/2013/12/edit-distance-in-java/" target="_blank" rel="external">最短编辑路径</a></p>
 </li>
-<li><p><a href="http://jacoxu.com/?p=344" target="_blank" rel="external">基于词袋</a></p>
+<li>
+<p><a href="http://jacoxu.com/?p=344" target="_blank" rel="external">基于词袋</a></p>
 </li>
-<li><p><a href="http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html" target="_blank" rel="external">simi hash + 海明距离</a></p>
+<li>
+<p><a href="http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html" target="_blank" rel="external">simi hash + 海明距离</a></p>
 </li>
-<li><p><a href="http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html" target="_blank" rel="external">余弦相似</a></p>
+<li>
+<p><a href="http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html" target="_blank" rel="external">余弦相似</a></p>
 </li>
 </ol>
 <p>其中 1 不需要分词，2，3，4 都需要分词的支持。以下逐一分析他们的好与不好</p>
-<h3 id="最短编辑路径"><a href="#最短编辑路径" class="headerlink" title="最短编辑路径"></a>最短编辑路径</h3><p>他的原理是: 计算从 <code>string1</code> 最少修改几个字符可以变成 <code>string2</code> 由于文本都比较短，所以当初最先想到的最简单的方式就是通过此方法。</p>
+<h3>最短编辑路径</h3>
+<p>他的原理是: 计算从 <code>string1</code> 最少修改几个字符可以变成 <code>string2</code> 由于文本都比较短，所以当初最先想到的最简单的方式就是通过此方法。</p>
 <p>然而这种方式有一定的不足。</p>
 <p>举一个极端的例子</p>
 <pre><code>[冠军欧洲]特别企划：逆转之态 欧冠小百科
 [冠军欧洲]特别企划：逆转之态 欧文小百科
-</code></pre><p>上面的 距离只有1， 但是明显是2个不同的内容。所以这种情况会被误判。</p>
-<h3 id="基于词袋"><a href="#基于词袋" class="headerlink" title="基于词袋"></a>基于词袋</h3><p>词袋 的原理是将2句句子分词，变成 2个集合 A, B，然后分别算 $$ \frac { A } {A \bigcup B} $$ 和 $$ \frac { B } {A \bigcup B} $$ 的值。</p>
+</code></pre>
+<p>上面的 距离只有1， 但是明显是2个不同的内容。所以这种情况会被误判。</p>
+<h3>基于词袋</h3>
+<p>词袋 的原理是将2句句子分词，变成 2个集合 A, B，然后分别算 $$ \frac { A } {A \bigcup B} $$ 和 $$ \frac { B } {A \bigcup B} $$ 的值。</p>
 <p>这个的值 越接近1，越相似.</p>
 <p>可以想象，只要 <code>欧冠</code> 和 <code>欧文</code> 都在字典内，则会发生和上面一样的问题。</p>
 <p><strong>所以，光分词还是不够，我们需要某种方式，给词加些权重，让<code>欧冠</code> 和 <code>欧文</code> 权重不同 是不是可以解决了？</strong></p>
-<h3 id="simi-hash-海明距离"><a href="#simi-hash-海明距离" class="headerlink" title="simi hash + 海明距离"></a>simi hash + 海明距离</h3><p>网上都说 simi hash 是Google 用来对网页去重的算法。</p>
-<p>他的原理是将字符串分词后，将每个词 变成 n 个长度的 二进制串 (1010101010)，然后将 <strong>每个 0 变成 －1</strong>， 然后根据每个词的权重，给每个词乘上权重，比如 (1 -1 1 -1)  =&gt; *4 =&gt;  (4 -4 4 -4), 然后将每个词 叠加后降维重新变成 二进制串 (1010)…</p>
+<h3>simi hash + 海明距离</h3>
+<p>网上都说 simi hash 是Google 用来对网页去重的算法。</p>
+<p>他的原理是将字符串分词后，将每个词 变成 n 个长度的 二进制串 (1010101010)，然后将 <strong>每个 0 变成 －1</strong>， 然后根据每个词的权重，给每个词乘上权重，比如 (1 -1 1 -1)  =&gt; *4 =&gt;  (4 -4 4 -4), 然后将每个词 叠加后降维重新变成 二进制串 (1010)...</p>
 <p>如果没看懂的话可以看<a href="http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html" target="_blank" rel="external">这篇文章</a> 有图，更直观.</p>
 <p>所以可以想象，他的作用是将一个网页，变成了个 n个长度的二进制串，然后比较 二进制串 比较相似。这种做法是否适合我们的场景呢？</p>
 <p>我做了如下测试</p>
 <p>用了 jieba 分词，并基于他的默认的 idf 词库打分, 取得bit长度是128。</p>
 <pre><code>String str2 = &quot;[冠军欧洲]特别企划：逆转之态 欧冠小百科&quot;; 
 String str3 = &quot;[冠军欧洲]特别企划：逆转之态 姚明小百科&quot;; 
-</code></pre><p>2 和 3 的距离是 8</p>
+</code></pre>
+<p>2 和 3 的距离是 8</p>
 <pre><code>String str5 = &quot;篮球贡献获世界肯定 姚明将入选NBA名人堂 晚间体育新闻&quot;;
 String str6 = &quot;姚明已确定入选2016届名人堂 午间体育新闻&quot;;
 String str7 = &quot;篮球贡献获世界肯定 姚明将入选NBA名人堂&quot;;
-</code></pre><p>5 和 6 的距离是36</p>
-<p>5 和 7 的距离是0 </p>
+</code></pre>
+<p>5 和 6 的距离是36</p>
+<p>5 和 7 的距离是0</p>
 <p>发现，结果有点走极端。。。只有0的才是对的，但有些确实是相似的，却无法识别。如果把 可接受距离设置成 10的话，那么 str2 和 str3 就会被误判。</p>
 <p>由于我的业务，并不考虑任何性能因素。所以最后试了一下结果更平滑的 <code>余弦相似</code></p>
-<h3 id="余弦相似"><a href="#余弦相似" class="headerlink" title="余弦相似"></a>余弦相似</h3><p>具体分析可以参考 <a href="http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html" target="_blank" rel="external">ruanyifeng 的文章</a></p>
+<h3>余弦相似</h3>
+<p>具体分析可以参考 <a href="http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html" target="_blank" rel="external">ruanyifeng 的文章</a></p>
 <p>简单来说就是 利用了余弦定理可以扩展到 <code>n维</code> 的特性，然后将加权后的分词列表 变成 2 个 n维向量代入计算。。</p>
 <p>同 simi hash， 测试了一下</p>
 <pre><code>String str1 = &quot;[冠军欧洲]特别企划：狭路相逢 球队交锋史&quot;;
@@ -90,7 +101,7 @@ String str8 = &quot;美媒：篮球明星姚明将入选美国NBA名人堂&quot;
 String str9 = &quot;姚明已确定入选2016届名人堂&quot;;
 
 
- 这里我们和上面的 `simi hash` 得出的结果坐一下对比 (带 `=` 号的是余弦相似的结果)
+这里我们和上面的 `simi hash` 得出的结果坐一下对比 (带 `=` 号的是余弦相似的结果)
 
 
 26
@@ -109,21 +120,26 @@ String str9 = &quot;姚明已确定入选2016届名人堂&quot;;
 =0.695671087790831
 36
 =0.4171801708243138
-</code></pre><p>排错率提高了不少。实测发现，他还有一些不足，举个极端的例子，如果 有2个标题</p>
+</code></pre>
+<p>排错率提高了不少。实测发现，他还有一些不足，举个极端的例子，如果 有2个标题</p>
 <pre><code>冠军/欧洲  [5,10]
 
 篮球/公园  [5,10]
-</code></pre><p>由于标题短，所以容易发生权重相同的情况。。。</p>
+</code></pre>
+<p>由于标题短，所以容易发生权重相同的情况。。。</p>
 <p>实际例子： <code>[克洛普“回家” 多特蒙德战平利物浦] - [韩国：韩军举行飞行员救援演习]</code> 这2个标题的相似度是 99%</p>
-<h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><p>通过实际的结果发现，很多这种情况的标题大都不大相似，原因和基于 <a href="http://www.ruanyifeng.com/blog/2013/03/tf-idf.html" target="_blank" rel="external">TF-IDF</a> 词库有关. </p>
+<h3>解决方法</h3>
+<p>通过实际的结果发现，很多这种情况的标题大都不大相似，原因和基于 <a href="http://www.ruanyifeng.com/blog/2013/03/tf-idf.html" target="_blank" rel="external">TF-IDF</a> 词库有关.</p>
 <p>所以我们完全可以将 余弦算出的结果 再做一次 <code>最短编辑路径</code> 将误判结果排出就行了。</p>
 <p>实际效果不错。。。</p>
-<h3 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h3><p>构造自己的 <a href="http://www.ruanyifeng.com/blog/2013/03/tf-idf.html" target="_blank" rel="external">TF-IDF 词典</a>.</p>
-<p><a href="http://www.matrix67.com/blog/archives/5044" target="_blank" rel="external">matrix67 的新词发现算法</a> </p>
-<p>实现 <a href="https://github.com/sing1ee/dict_build" target="_blank" rel="external">https://github.com/sing1ee/dict_build</a></p>
+<h3>TODO</h3>
+<p>构造自己的 <a href="http://www.ruanyifeng.com/blog/2013/03/tf-idf.html" target="_blank" rel="external">TF-IDF 词典</a>.</p>
+<p><a href="http://www.matrix67.com/blog/archives/5044" target="_blank" rel="external">matrix67 的新词发现算法</a></p>
+<p>实现 https://github.com/sing1ee/dict_build</p>
 <p>不过实际测试时用了178M 300w 条新闻标题 stackoverflow了 ＝ ＝</p>
-<h2 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h2><p><a href="http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html" target="_blank" rel="external">http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html</a></p>
-<p><a href="http://jacoxu.com/?p=344" target="_blank" rel="external">http://jacoxu.com/?p=344</a></p>
+<h2>reference</h2>
+<p>http://www.lanceyan.com/tech/arch/simhash_hamming_distance_similarity.html</p>
+<p>http://jacoxu.com/?p=344</p>
 <p><a href="https://github.com/rrice/java-string-similarity" target="_blank" rel="external">edit-distance 多种算法实现</a></p>
 <p>[edit-distance commons lang 实现] <code>StringUtils.getLevenshteinDistance</code></p>
 
@@ -203,7 +219,7 @@ String str9 = &quot;姚明已确定入选2016届名人堂&quot;;
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'http://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 
