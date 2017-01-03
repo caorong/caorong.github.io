@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /archives/
+
+Disallow: /js/
+Disallow: /css/
+Disallow: /post_images/
+
+Sitemap: https://caorong.github.io/sitemap.xml
+Sitemap: https://caorong.github.io/baidusitemap.xml
