@@ -40,15 +40,21 @@
     <p>话说最近看到 2 个消息，google 自家主页已经支持 QUIC 协议，ss-android 还看到个 changelog 开始支持kcp。</p>
 <p>于是就查了下资料看看, 发现其实 QUIC 和 kcp 这2东东其实都是为类似的目的开发的类似的东西。</p>
 <p>首先 他们 是基于 UDP 的自定义的协议。</p>
-<h3 id="那么为什么要自定并用-UDP"><a href="#那么为什么要自定并用-UDP" class="headerlink" title="那么为什么要自定并用 UDP?"></a>那么为什么要自定并用 UDP?</h3><p>他们都为了能在不修改系统层的情况下，解决 tcp 丢包重穿带来的延迟的问题。</p>
-<h3 id="用了什么策略"><a href="#用了什么策略" class="headerlink" title="用了什么策略?"></a>用了什么策略?</h3><p>策略可以参考kcp 的<a href="https://github.com/skywind3000/kcp#技术特性" target="_blank" rel="external">技术特性</a></p>
-<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>他们其实都为了改善 <code>高丢包</code> 环境的网络质量。</p>
+<h3>那么为什么要自定并用 UDP?</h3>
+<p>他们都为了能在不修改系统层的情况下，解决 tcp 丢包重穿带来的延迟的问题。</p>
+<h3>用了什么策略?</h3>
+<p>策略可以参考kcp 的<a href="https://github.com/skywind3000/kcp#%E6%8A%80%E6%9C%AF%E7%89%B9%E6%80%A7" target="_blank" rel="external">技术特性</a></p>
+<h3>结论</h3>
+<p>他们其实都为了改善 <code>高丢包</code> 环境的网络质量。</p>
 <p>QUIC 的目的是为了在2g，3g下，目前也只有google自己的网站支持。</p>
 <p>而 kcp 则是为了fq的目的，解决自己的境外vps 与 国内的网络质量。</p>
-<h3 id="坊间传闻"><a href="#坊间传闻" class="headerlink" title="坊间传闻"></a>坊间传闻</h3><p>再扯一下QQ， 貌似用 基于 udp 来自定义tcp 的事情 <a href="https://www.zhihu.com/question/20292749" target="_blank" rel="external">很早之前qq就是这么做的, 虽然初衷并不同</a></p>
-<h3 id="tcp-的简易解决方案"><a href="#tcp-的简易解决方案" class="headerlink" title="tcp 的简易解决方案"></a>tcp 的简易解决方案</h3><p>不过对于 自己的vps来说我们有能力自己sudo，所以其实很早就有类似 锐速 这种基于tcp的加速软件。还有类似原理<a href="https://github.com/snooda/net-speeder.git" target="_blank" rel="external">开源版本</a></p>
+<h3>坊间传闻</h3>
+<p>再扯一下QQ， 貌似用 基于 udp 来自定义tcp 的事情 <a href="https://www.zhihu.com/question/20292749" target="_blank" rel="external">很早之前qq就是这么做的, 虽然初衷并不同</a></p>
+<h3>tcp 的简易解决方案</h3>
+<p>不过对于 自己的vps来说我们有能力自己sudo，所以其实很早就有类似 锐速 这种基于tcp的加速软件。还有类似原理<a href="https://github.com/snooda/net-speeder.git" target="_blank" rel="external">开源版本</a></p>
 <p>不过 这种基于 tcp 的方式，原理都是靠发多倍的数据包，减小丢包的情况。不过如果人人都这么搞，会让原本已经拥塞的国际网络出口更加堵。</p>
-<h3 id="网络基础"><a href="#网络基础" class="headerlink" title="网络基础"></a>网络基础</h3><p>为了理解kcp 的配置方法，需要再复习下网络基础</p>
+<h3>网络基础</h3>
+<p>为了理解kcp 的配置方法，需要再复习下网络基础</p>
 <p>网络按照 5 层来划分的话，可以分为</p>
 <ol>
 <li>物理层</li>
@@ -57,73 +63,84 @@
 <li>运输层</li>
 <li>应用层</li>
 </ol>
-<h4 id="物理层"><a href="#物理层" class="headerlink" title="物理层"></a>物理层</h4><p>建立在物理通信介质的基础上，作为系统和通信介质的接口，用来实现数据链路实体间透明的比特 (bit) 流传输。只有该层为真实物理通信，其它各层为虚拟通信，这里并不关心</p>
-<h4 id="数据链路层"><a href="#数据链路层" class="headerlink" title="数据链路层"></a>数据链路层</h4><p>数据链路层的信道主要有两种 <code>点对点</code> 和 <code>广播</code>， 前者主要是一对一的通信，后者用于局域网通信, 不做展开</p>
+<h4>物理层</h4>
+<p>建立在物理通信介质的基础上，作为系统和通信介质的接口，用来实现数据链路实体间透明的比特 (bit) 流传输。只有该层为真实物理通信，其它各层为虚拟通信，这里并不关心</p>
+<h4>数据链路层</h4>
+<p>数据链路层的信道主要有两种 <code>点对点</code> 和 <code>广播</code>， 前者主要是一对一的通信，后者用于局域网通信, 不做展开</p>
 <p>点对点通信通过差错控制提供数据帧（Frame）在信道上无差错的传输。（帧有check sum）</p>
 <p>先说下 点对点信道 的数据链路层 的协议数据单位 － <code>帧</code>，而这层不同的协议，都有不同的 <code>最大传输单元 MTU</code>, 所谓的 MTU 就是帧的数据部分的数据大小, 也就是kcp 需要配置的 MTU。</p>
 <p>目前链路层协议一般用点对点协议 ppp (Point-to-point Protocol)，所以上层网络层的数据包将被组装成 ppp 协议的帧。</p>
 <p>ppp 协议的帧格式 可以参考<a href="http://baike.baidu.com/subview/30514/8100295.htm?fromtitle=PPP%E5%8D%8F%E8%AE%AE&amp;fromid=1988803&amp;type=syn" target="_blank" rel="external">百科</a></p>
 <p>最重要的是，一般 ppp 帧的 MTU <code>不超过 1500 字节</code>。</p>
 <p>常用MTU 情况如下:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">超通道 65535</span><br><span class="line">16Mb/s 令牌环 179144</span><br><span class="line">Mb/s 令牌环 4464</span><br><span class="line">FDDI 4352</span><br><span class="line">以太网 1500</span><br><span class="line">IEEE 802.3/802.2 1492</span><br><span class="line">X.25 576</span><br><span class="line">点对点（低时延）296</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">超通道 65535</span><br><span class="line">16Mb/s 令牌环 179144</span><br><span class="line">Mb/s 令牌环 4464</span><br><span class="line">FDDI 4352</span><br><span class="line">以太网 1500</span><br><span class="line">IEEE 802.3/802.2 1492</span><br><span class="line">X.25 576</span><br><span class="line">点对点（低时延）296</span><br></pre></td></tr></table></figure></p>
 <p>mtu 计算公式</p>
-<p>分片大小 = MTU – IP 头大小 – UDP 头大小 – 协议头大小;<br>IP 头大小 = 20 字节， UDP 头大小 = 8 字节。</p>
+<p>分片大小 = MTU – IP 头大小 – UDP 头大小 – 协议头大小;
+IP 头大小 = 20 字节， UDP 头大小 = 8 字节。</p>
 <p>所以尽量提升MTU 的大小可以减少拆包的个数，可以提升速度。</p>
 <p>mac 上可以通过  <code>ping -D -s 1414 45.63.xx.xx</code> 来测试最大的MTU 大小。</p>
 <p>我的 VPS 可接受 <code>MTU:1500</code>, 路由器 能达到 1472，不过 vps 的 MTU 实测下来 只能达到 1414, mtr下，发现因为被我的 ISP (222.72.255.206) 只能支持到1414。</p>
-<h4 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h4><p>选择合适的路由，尽最大努力使数据分组（packet）交付到目的主机，不提供服务质量。所传的包可错，可丢，可乱序，可重复。</p>
+<h4>网络层</h4>
+<p>选择合适的路由，尽最大努力使数据分组（packet）交付到目的主机，不提供服务质量。所传的包可错，可丢，可乱序，可重复。</p>
 <p>网络层决定了 ip</p>
-<h4 id="运输层"><a href="#运输层" class="headerlink" title="运输层"></a>运输层</h4><p>主要就是 tcp， udp 2个协议, 也是配置kcp 参数需要重点理解的</p>
+<h4>运输层</h4>
+<p>主要就是 tcp， udp 2个协议, 也是配置kcp 参数需要重点理解的</p>
 <pre><code>tcp： 面向连接， 可靠的流协议。
 
 udp： 只保证发了消息，别的不保证。
-</code></pre><p>运输层确定了 port</p>
-<p>也就是说，tcp 在udp 之上增加了许多功能，以保证他的可靠，所以，他的头部也比 udp 大很多，具体可以参考<a href="http://www.jianshu.com/p/8be9b3204864" target="_blank" rel="external">这里 </a> </p>
+</code></pre>
+<p>运输层确定了 port</p>
+<p>也就是说，tcp 在udp 之上增加了许多功能，以保证他的可靠，所以，他的头部也比 udp 大很多，具体可以参考<a href="http://www.jianshu.com/p/8be9b3204864" target="_blank" rel="external">这里 </a></p>
 <p>所以 QUIC 和 kcp 为了实现可靠性，顺序性，所以在udp 的数据包内，加入了很多类似tcp的功能，虽然她们的头会比tcp的小，但不会小太多。</p>
 <p>所以 kcp 也实现了 ARQ，滑动窗口等东西。</p>
 <p>所以，如果网络质量实在太差，即使 用了 kcp 减少了延迟，但还是会卡，只不过可能比tcp 好一些。</p>
-<p>kcp 具体的技术特性<a href="https://github.com/skywind3000/kcp#技术特性" target="_blank" rel="external">参考官方文档</a></p>
-<h5 id="拥塞控制"><a href="#拥塞控制" class="headerlink" title="拥塞控制"></a>拥塞控制</h5><p>对于tcp 来说 ，由于需要考虑拥塞控制和流量控制，这两方面的内容，发送端的发送窗口为min(cwnd，rwnd)，但是rwnd是由对端确定的，网络环境对其没有影响，所以在考虑拥塞的时候我们一般不考虑rwnd的值，我们暂时只讨论如何确定cwnd值的大小。</p>
+<p>kcp 具体的技术特性<a href="https://github.com/skywind3000/kcp#%E6%8A%80%E6%9C%AF%E7%89%B9%E6%80%A7" target="_blank" rel="external">参考官方文档</a></p>
+<h5>拥塞控制</h5>
+<p>对于tcp 来说 ，由于需要考虑拥塞控制和流量控制，这两方面的内容，发送端的发送窗口为min(cwnd，rwnd)，但是rwnd是由对端确定的，网络环境对其没有影响，所以在考虑拥塞的时候我们一般不考虑rwnd的值，我们暂时只讨论如何确定cwnd值的大小。</p>
 <p>在执行慢开始算法时，拥塞窗口 cwnd的初始值为 1，发送第一个报文段。当发送端收到来自接收端的ACK之后，拥塞窗口开始以1、2、4这样的指数形式增长。当拥塞窗口cwnd 增长到慢开始门限值 ssthresh 时，就改为执行拥塞避免算法，拥塞窗口按线性规律增长。</p>
 <p>拥塞避免：</p>
 <p>最初，拥塞窗口指数增长，可以很快进行大数据的发送，最大限度的利用网络宽带资源。当达到慢开始门限值，开始进入拥塞避免阶段，拥塞窗口开始加法增加。这样就可以避免增长过快导致网络拥塞，慢慢的增加调整到网络的最佳值。</p>
 <p>也就是说，tcp 的发送窗口会根据发送情况，不断的 变大变小，(丢包的话就会变小)</p>
-<p>而对于 kcp 来说，他不能自动的，需要自己设定 client rcvwnd和server sndwnd。如果过大，反而会造成人为造成的丢包，或者参考<a href="https://github.com/xtaci/kcptun#内置模式-lollipop" target="_blank" rel="external">内置模式</a> 配置流控(丢包退让，满启动等)。</p>
-<p>调整方式参考<a href="https://github.com/xtaci/kcptun#推荐参数-lollipop" target="_blank" rel="external">文档</a></p>
+<p>而对于 kcp 来说，他不能自动的，需要自己设定 client rcvwnd和server sndwnd。如果过大，反而会造成人为造成的丢包，或者参考<a href="https://github.com/xtaci/kcptun#%E5%86%85%E7%BD%AE%E6%A8%A1%E5%BC%8F-lollipop" target="_blank" rel="external">内置模式</a> 配置流控(丢包退让，满启动等)。</p>
+<p>调整方式参考<a href="https://github.com/xtaci/kcptun#%E6%8E%A8%E8%8D%90%E5%8F%82%E6%95%B0-lollipop" target="_blank" rel="external">文档</a></p>
 <p>所以，如果个人的网络质量比较好(不丢包)，比如有接入国际精品网(基本上 丢包率0%)，那还是根据情况修改tcp 的拥塞算法加速。</p>
-<h5 id="tcp-拥塞算法"><a href="#tcp-拥塞算法" class="headerlink" title="tcp 拥塞算法"></a>tcp 拥塞算法</h5><p>对于tcp 协议，还可以 修改更合适的TCP拥塞控制算法。</p>
-<p>关于tcp 拥塞算法的介绍 <a href="http://blog.csdn.net/zhangskd/article/details/6715751" target="_blank" rel="external">参考这里</a> 和 <a href="https://en.wikipedia.org/wiki/TCP_congestion_control" target="_blank" rel="external">wiki</a> </p>
+<h5>tcp 拥塞算法</h5>
+<p>对于tcp 协议，还可以 修改更合适的TCP拥塞控制算法。</p>
+<p>关于tcp 拥塞算法的介绍 <a href="http://blog.csdn.net/zhangskd/article/details/6715751" target="_blank" rel="external">参考这里</a> 和 <a href="https://en.wikipedia.org/wiki/TCP_congestion_control" target="_blank" rel="external">wiki</a></p>
 <p>这里主要说2个</p>
 <ol>
 <li>专门为卫星通讯设计的拥塞控制算法：Hybla, 适合高延迟高丢包的美国vps</li>
 <li>适合高带宽，高延迟的网络拥塞控制算法：HTCP, 比如日本vps</li>
 </ol>
 <p>通过以下命令查看本机支持的拥塞算法模块</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl net.ipv4.tcp_available_congestion_control</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl net.ipv4.tcp_available_congestion_control</span><br></pre></td></tr></table></figure></p>
 <p>如果没有 htcp， hybla 算法, 可以尝试通过modprobe启用模块</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/sbin/modprobe tcp_htcp</span><br><span class="line">/sbin/modprobe tcp_hybla</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/sbin/modprobe tcp_htcp</span><br><span class="line">/sbin/modprobe tcp_hybla</span><br></pre></td></tr></table></figure></p>
 <p>网上有很多教程都是针对高并发的，我不关注，对于高丢包高延迟的情况我们通过增大缓存来提高TCP性能</p>
 <p>/etc/sysctl.conf</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># increase TCP max buffer size settable using setsockopt()</span><br><span class="line">net.core.rmem_max = 67108864 </span><br><span class="line">net.core.wmem_max = 67108864 </span><br><span class="line"># increase Linux autotuning TCP buffer limit</span><br><span class="line">net.ipv4.tcp_rmem = 4096 87380 67108864</span><br><span class="line">net.ipv4.tcp_wmem = 4096 65536 67108864</span><br><span class="line"># increase the length of the processor input queue</span><br><span class="line">net.core.netdev_max_backlog = 250000</span><br><span class="line"># recommended for hosts with jumbo frames enabled</span><br><span class="line">net.ipv4.tcp_mtu_probing=1</span><br><span class="line"></span><br><span class="line">net.ipv4.tcp_congestion_control=hybla</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># increase TCP max buffer size settable using setsockopt()</span><br><span class="line">net.core.rmem_max = 67108864 </span><br><span class="line">net.core.wmem_max = 67108864 </span><br><span class="line"># increase Linux autotuning TCP buffer limit</span><br><span class="line">net.ipv4.tcp_rmem = 4096 87380 67108864</span><br><span class="line">net.ipv4.tcp_wmem = 4096 65536 67108864</span><br><span class="line"># increase the length of the processor input queue</span><br><span class="line">net.core.netdev_max_backlog = 250000</span><br><span class="line"># recommended for hosts with jumbo frames enabled</span><br><span class="line">net.ipv4.tcp_mtu_probing=1</span><br><span class="line"></span><br><span class="line">net.ipv4.tcp_congestion_control=hybla</span><br></pre></td></tr></table></figure></p>
 <p>对于丢包少，高延迟网络，建议使用htcp</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.tcp_congestion_control=htcp</span><br></pre></td></tr></table></figure>
-<p>记得设置完后执行 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
-<h3 id="实测结果"><a href="#实测结果" class="headerlink" title="实测结果"></a>实测结果</h3><p>由于我家是国际精品网，所以 测试下来 kcp 对我来说没什么变化。</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.tcp_congestion_control=htcp</span><br></pre></td></tr></table></figure></p>
+<p>记得设置完后执行</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl -p</span><br></pre></td></tr></table></figure></p>
+<h3>实测结果</h3>
+<p>由于我家是国际精品网，所以 测试下来 kcp 对我来说没什么变化。</p>
 <p>不过 在启用 htcp 后，下载速度能有明显的提升, 以下分别是 使用 cubic 和 htcp 的speed test 结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">[proxychains] config file found: /usr/local/Cellar/proxychains-ng/4.8.1/etc/proxychains.conf</span><br><span class="line">[proxychains] preloading /usr/local/Cellar/proxychains-ng/4.8.1/lib/libproxychains4.dylib</span><br><span class="line">[proxychains] DLL init: proxychains-ng 4.8.1</span><br><span class="line">--2016-08-14 19:19:00--  http://speedtest.singapore.linode.com/100MB-singapore.bin</span><br><span class="line">Resolving speedtest.singapore.linode.com... 224.0.0.1</span><br><span class="line">Connecting to speedtest.singapore.linode.com|224.0.0.1|:80... [proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  speedtest.singapore.linode.com:80  ...  OK</span><br><span class="line">connected.</span><br><span class="line">HTTP request sent, awaiting response... 200 OK</span><br><span class="line">Length: 104857600 (100M) [application/octet-stream]</span><br><span class="line">Saving to: &apos;100MB-singapore.bin&apos;</span><br><span class="line"></span><br><span class="line">100MB-singapore.bin                      23%[==================&gt;                                                              ]  23.66M  2.49MB/s   eta 30s   ^C</span><br><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">~ ᐅ rm 100MB-singapore.bin</span><br><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">[proxychains] config file found: /usr/local/Cellar/proxychains-ng/4.8.1/etc/proxychains.conf</span><br><span class="line">[proxychains] preloading /usr/local/Cellar/proxychains-ng/4.8.1/lib/libproxychains4.dylib</span><br><span class="line">[proxychains] DLL init: proxychains-ng 4.8.1</span><br><span class="line">--2016-08-14 19:19:24--  http://speedtest.singapore.linode.com/100MB-singapore.bin</span><br><span class="line">Resolving speedtest.singapore.linode.com... 224.0.0.1</span><br><span class="line">Connecting to speedtest.singapore.linode.com|224.0.0.1|:80... [proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  speedtest.singapore.linode.com:80  ...  OK</span><br><span class="line">connected.</span><br><span class="line">HTTP request sent, awaiting response... 200 OK</span><br><span class="line">Length: 104857600 (100M) [application/octet-stream]</span><br><span class="line">Saving to: &apos;100MB-singapore.bin&apos;</span><br><span class="line"></span><br><span class="line">100MB-singapore.bin                      30%[=======================&gt;                                                         ]  30.15M  6.78MB/s   eta 20s   ^C</span><br></pre></td></tr></table></figure>
-<h3 id="结论-1"><a href="#结论-1" class="headerlink" title="结论"></a>结论</h3><p>对于 bwg 这种 openvz 的机器，由于不能 添加tcp 算法模块，所以建议使用 <a href="https://github.com/xtaci/kcptun" target="_blank" rel="external">kcptun</a> </p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">[proxychains] config file found: /usr/local/Cellar/proxychains-ng/4.8.1/etc/proxychains.conf</span><br><span class="line">[proxychains] preloading /usr/local/Cellar/proxychains-ng/4.8.1/lib/libproxychains4.dylib</span><br><span class="line">[proxychains] DLL init: proxychains-ng 4.8.1</span><br><span class="line">--2016-08-14 19:19:00--  http://speedtest.singapore.linode.com/100MB-singapore.bin</span><br><span class="line">Resolving speedtest.singapore.linode.com... 224.0.0.1</span><br><span class="line">Connecting to speedtest.singapore.linode.com|224.0.0.1|:80... [proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  speedtest.singapore.linode.com:80  ...  OK</span><br><span class="line">connected.</span><br><span class="line">HTTP request sent, awaiting response... 200 OK</span><br><span class="line">Length: 104857600 (100M) [application/octet-stream]</span><br><span class="line">Saving to: &apos;100MB-singapore.bin&apos;</span><br><span class="line"></span><br><span class="line">100MB-singapore.bin                      23%[==================&gt;                                                              ]  23.66M  2.49MB/s   eta 30s   ^C</span><br><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">~ ᐅ rm 100MB-singapore.bin</span><br><span class="line">~ ᐅ proxychains4 wget &apos;http://speedtest.singapore.linode.com/100MB-singapore.bin&apos;</span><br><span class="line">[proxychains] config file found: /usr/local/Cellar/proxychains-ng/4.8.1/etc/proxychains.conf</span><br><span class="line">[proxychains] preloading /usr/local/Cellar/proxychains-ng/4.8.1/lib/libproxychains4.dylib</span><br><span class="line">[proxychains] DLL init: proxychains-ng 4.8.1</span><br><span class="line">--2016-08-14 19:19:24--  http://speedtest.singapore.linode.com/100MB-singapore.bin</span><br><span class="line">Resolving speedtest.singapore.linode.com... 224.0.0.1</span><br><span class="line">Connecting to speedtest.singapore.linode.com|224.0.0.1|:80... [proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  speedtest.singapore.linode.com:80  ...  OK</span><br><span class="line">connected.</span><br><span class="line">HTTP request sent, awaiting response... 200 OK</span><br><span class="line">Length: 104857600 (100M) [application/octet-stream]</span><br><span class="line">Saving to: &apos;100MB-singapore.bin&apos;</span><br><span class="line"></span><br><span class="line">100MB-singapore.bin                      30%[=======================&gt;                                                         ]  30.15M  6.78MB/s   eta 20s   ^C</span><br></pre></td></tr></table></figure></p>
+<h3>结论</h3>
+<p>对于 bwg 这种 openvz 的机器，由于不能 添加tcp 算法模块，所以建议使用 <a href="https://github.com/xtaci/kcptun" target="_blank" rel="external">kcptun</a></p>
 <p>对于 vultr 这种 日本 机器，根据丢包情况可以测试下 修改tcp 算法 或者使用 kcp 的效果，选效果更好的。</p>
 <p>对于 不丢包的情况，强烈建议 直接tcp，并使用 htcp 算法。</p>
-<h2 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h2><p><a href="https://www.zhihu.com/question/29705994" target="_blank" rel="external">https://www.zhihu.com/question/29705994</a></p>
-<p><a href="http://bobao.360.cn/news/detail/3399.html" target="_blank" rel="external">http://bobao.360.cn/news/detail/3399.html</a></p>
-<p><a href="http://www.jianshu.com/p/8be9b3204864" target="_blank" rel="external">http://www.jianshu.com/p/8be9b3204864</a></p>
-<p><a href="http://www.jianshu.com/p/eab86c0d1612" target="_blank" rel="external">http://www.jianshu.com/p/eab86c0d1612</a></p>
-<p><a href="https://hong.im/2013/04/20/linux-tcp-tuning/" target="_blank" rel="external">https://hong.im/2013/04/20/linux-tcp-tuning/</a></p>
-<p><a href="http://blog.csdn.net/zhangskd/article/details/6715751" target="_blank" rel="external">http://blog.csdn.net/zhangskd/article/details/6715751</a></p>
-<p><a href="http://www.weeiy.com/linux-tcp-hybla.html" target="_blank" rel="external">http://www.weeiy.com/linux-tcp-hybla.html</a></p>
+<h2>reference</h2>
+<p>https://www.zhihu.com/question/29705994</p>
+<p>http://bobao.360.cn/news/detail/3399.html</p>
+<p>http://www.jianshu.com/p/8be9b3204864</p>
+<p>http://www.jianshu.com/p/eab86c0d1612</p>
+<p>https://hong.im/2013/04/20/linux-tcp-tuning/</p>
+<p>http://blog.csdn.net/zhangskd/article/details/6715751</p>
+<p>http://www.weeiy.com/linux-tcp-hybla.html</p>
 <p><a href="https://book.douban.com/subject/2970300/" target="_blank" rel="external">大学时教材，计算机网络</a></p>
-<p><a href="http://coolshell.cn/articles/11609.html" target="_blank" rel="external">http://coolshell.cn/articles/11609.html</a></p>
+<p>http://coolshell.cn/articles/11609.html</p>
 
   </section>
 </article>

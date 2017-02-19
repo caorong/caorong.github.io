@@ -38,14 +38,14 @@
 
   <section class="article-entry">
     <p>话说自从禁网以来，不能继续无脑去百度网盘离线下载了，遂不得不补一些bt相关的原理，满足某些需要＝ ＝</p>
-<p><a href="http://zh.wikipedia.org/wiki/BitTorrent_(%E5%8D%8F%E8%AE%AE" target="_blank" rel="external">bt协议</a> ，传说中下载的人越多，下载速度就越快的协议。他的原理是依靠tracker server 来做中间人，将下载者们互联起来。</p>
+<p>[bt协议](http://zh.wikipedia.org/wiki/BitTorrent_(%E5%8D%8F%E8%AE%AE) ，传说中下载的人越多，下载速度就越快的协议。他的原理是依靠tracker server 来做中间人，将下载者们互联起来。</p>
 <p>而tracker server 的地址是存在torrent文件里的，那么由于一些老的种子的自带的tracker server已经挂了，或者被墙了。于是给种子加tracker server信息势在必行</p>
 <p>tracker server数据可以网上在线加，还有些客户端比如Transmission，uTorrent都可以加，Transmission只能一个一个加，uTorrent只能给一个种子批量加。都比较蛋疼。推荐用脚本批量加。<a href="https://github.com/caorong/Bencode-Torrent-Editor" target="_blank" rel="external">具体可以参考此处</a></p>
 <p>话说上周意外找到了个<a href="https://github.com/youxiachai/lifandb" target="_blank" rel="external">福利</a>。</p>
 <p>于是赶紧下了个uTorrent，下载之，发现竟然无法下载，竟然不能下载。</p>
 <p>直接磁力链不能下，那么我是否可以将magnet转换成种子呢？</p>
 <p>于是github上找啊找搜到了<a href="https://github.com/danfolkes/Magnet2Torrent" target="_blank" rel="external">这个</a>,顾名思义，磁力链转种子。很简单的代码，可是使用后发现怎么卡着不懂，看了源码，然后调试后发现，原来卡在了这里。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">print(<span class="string">"Downloading Metadata (this may take a while)"</span>)</span><br><span class="line"><span class="keyword">while</span> (<span class="keyword">not</span> handle.has_metadata()):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        sleep(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">        print(<span class="string">"Aborting..."</span>)</span><br><span class="line">        ses.pause()</span><br><span class="line">        print(<span class="string">"Cleanup dir "</span> + tempdir)</span><br><span class="line">        shutil.rmtree(tempdir)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line">ses.pause()</span><br><span class="line">print(<span class="string">"Done"</span>)</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">print(<span class="string">"Downloading Metadata (this may take a while)"</span>)</span><br><span class="line"><span class="keyword">while</span> (<span class="keyword">not</span> handle.has_metadata()):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        sleep(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">        print(<span class="string">"Aborting..."</span>)</span><br><span class="line">        ses.pause()</span><br><span class="line">        print(<span class="string">"Cleanup dir "</span> + tempdir)</span><br><span class="line">        shutil.rmtree(tempdir)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line">ses.pause()</span><br><span class="line">print(<span class="string">"Done"</span>)</span><br></pre></td></tr></table></figure></p>
 <p>while死循环着去拿metadata信息，然后我去吃饭，吃饭完，玩好游戏发现，还在那里跑。。。</p>
 <p>（话说我猜测，uTorrent不能下和此信息拿不到有关系，一定是缺了什么必须的参数）</p>
 <p>需要补一补<a href="http://zh.wikipedia.org/wiki/%E7%A3%81%E5%8A%9B%E9%93%BE%E6%8E%A5" target="_blank" rel="external">磁力链接</a>是啥。</p>
@@ -61,7 +61,7 @@
 <hr>
 <p>2014.6.29更新。。。</p>
 <p>话说原来百度离线下载种子时仅仅对种子里面的文件的文件名字做了敏感词校验。。。嗯哼，上面的都白写了</p>
-<p><a href="http://www.v2ex.com/t/118868d#reply24" target="_blank" rel="external">http://www.v2ex.com/t/118868d#reply24</a></p>
+<p>http://www.v2ex.com/t/118868d#reply24</p>
 
   </section>
 </article>

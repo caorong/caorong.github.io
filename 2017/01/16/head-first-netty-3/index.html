@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>深入浅出netty - ByteBuf 和 ByteBufPool | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2017/01/16/head-first-netty-3/">深入浅出netty - ByteBuf 和 ByteBufPool</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">January 16 2017</p>
+  </section>
+
+  <section class="article-entry">
+    <h1 id="ByteBuf"><a href="#ByteBuf" class="headerlink" title="ByteBuf"></a>ByteBuf</h1><p>首先 java 本身就有 ByteBuffer， java的 nio 中用的就是他， 然后他有2个实现， 分别是 <code>HeapByteBuffer</code> 和 <code>DirectByteBuffer</code><br>前者是基于 java 的堆实现， 后者则使用了unsafe的API进行了堆外的实现。</p>
+<p>而 ByteBuf 其实也有类似的2个实现， 至于为什么要额外设计一个 ByteBuf 则需要我们看一下他们在使用上区别。</p>
+<p>ByteBuffer 内部使用4个变量表示读写缓冲区。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">position 当前读取位置</span><br><span class="line">mark     为某一读过的位置做标记，便于某些时候回退到该位置。</span><br><span class="line">capacity 初始化时候的容量</span><br><span class="line">limit    读写上限</span><br></pre></td></tr></table></figure>
+<p>ByteBuf 内部则使用更多的变量， 主要是将 <code>position</code>, <code>mark</code> 变成 <code>reader, write</code> index 和 mark</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">readerIndex</span><br><span class="line">writerIndex</span><br><span class="line">markedReaderIndex</span><br><span class="line">markedWriterIndex</span><br><span class="line">maxCapacity</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>这样的好处则如下图所示：</p>
+<p><img src="/post_images/2017-01-16/2017-01-16-20-15-48.png" alt=""></p>
+<p>由于 ByteBuffer 只有一个 position 表示当前位置，所以在进行 <code>读</code> <code>写</code> 切换的时候需要手工调用 flip </p>
+<p>而 ByteBuf 由于有 read write 2个 index， 所以不需要， 写代码体验更好。 </p>
+<h1 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h1><p>在 linux 中传统的 IO操作是 一种 <code>缓冲IO</code> 传输数据时需要在缓冲区中进行多次的拷贝操作。</p>
+<p>数据在内核态(硬件，比如硬盘) 到用户态(内存) 各有自己的缓冲。</p>
+<p>而零拷贝可以直接将数据从 内核态(硬盘) 发给  内核态(网卡) 中间不经过用户态(ps， 当然也不能够修改数据)</p>
+<p>linux 提供2种 零拷贝的支持</p>
+<ol>
+<li>硬盘到网卡 (LinuxAPI: sendfile) (static file server)</li>
+<li>网卡到网卡 (LinuxAPI: splice) (proxy server)</li>
+</ol>
+<p>不过 java jdk 目前只支持 1的官方支持， 2 不支持</p>
+<p>而 netty 提供了一种 CompositeByteBuf 的 ByteBuf 实现， 官方把它称之为 netty 的零拷贝，<br>其实它不是零拷贝， 主要解决了如下的问题</p>
+<p>比如 <a href="http://stackoverflow.com/questions/15991173/is-the-content-length-header-required-for-a-http-1-0-response" target="_blank" rel="external">http 协议的 1.0 版本中并没有要求 response 需要带上 <code>content-length</code></a></p>
+<p>那么普通情况下 读取数据的话需要做很多次memory copy， 以便上层使用者可以使用合并后的结果</p>
+<p><img src="/post_images/2017-01-16/2017-01-16-23-00-14.png" alt=""></p>
+<p>而 netty 则不省略allocate 的部分，而仅省了 recopy 的过程， 用 CompositeByteBuf 内部的指针合并多个 ByteBuffer </p>
+<p>如图</p>
+<p><img src="/post_images/2017-01-16/2017-01-16-23-02-52.png" alt=""></p>
+<p>同样对上层来说仅仅是一个 合并的 ByteBuf， 但是其实内部可以减少 reallocate 和 copy 的过程，减少系统调用。</p>
+<h1 id="ByteBufPool"><a href="#ByteBufPool" class="headerlink" title="ByteBufPool"></a>ByteBufPool</h1><p>ByteBufPool 是 netty4 引入的新 feature。 目的在于减少内存的分配次数 (heap/direct)</p>
+<p>至于使用之后带来的性能上的提升可以看 <a href="https://blog.twitter.com/2013/netty-4-at-twitter-reduced-gc-overhead" target="_blank" rel="external">twitter 做的评测</a>， 这里不重复展开。</p>
+<p>netty 的 ByteBufPool 是 jemelloc 的精简版，大体流程是类似的。<br>都有一个 threadlocal 的 cache， 以及公有的 Arena。</p>
+<p>从cache 取内存无锁，从 Arena取内存有锁。所以一般建议将 Arena 的数量设置为 EventLoop 数量，以达到无竞争。</p>
+<p>关系图如下:</p>
+<p><img src="/post_images/2016-11-26-23-46-26.png" alt=""></p>
+<p>关于 参数的设定参看 <code>io.netty.buffer.PooledByteBufAllocator</code> 这个类.</p>
+<p>如果先不管 Arena 是什么的话，Cache 是如何缓存的？</p>
+<ol>
+<li>给每个 申请的内存块的大小 都分配一个Queue (一样大小的都recycle 都放回一个 Queue)</li>
+<li>如果给每个大小都定义个Queue 反而浪费内存了，所以 可申请的内存块大小是指定规格的。</li>
+<li>对申请的内存根据预定义的规格向上取整</li>
+<li>所有的规格都放在一个数组里面，寻找起来 O1 的速度。</li>
+</ol>
+<p>根据默认参数的话规格如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tiny:   [16 32 48 64 80 ... 496]</span><br><span class="line">small:  [512, 1024, 2048, 4096]</span><br><span class="line">normal: [8192x2^0,  8192x2^1, 8192x2^2 .. 8192x2^11]</span><br></pre></td></tr></table></figure>
+<p>举个例子： 当申请的内存为 10个byte 则向上取整 16 ， 分配16byte， 取 <code>tiny[0]</code> 里取内存即可</p>
+<p><img src="/post_images/2016-11-27-00-09-18.png" alt=""></p>
+<p>Arena 为分配器，是预申请内存块的管理者。 jemelloc 的初衷为了减少内存碎片，那么如何减少？</p>
+<p>当申请比如 1 byte 的话就会预申请一大块内存，然后分配其中一部分给 1byte。 </p>
+<p>为什么是分配 一部分？ 不然 内存管理花费的内存开销将大于内存实际的开销。。</p>
+<p>Arena 是一个分配器，内部管理的内存块 为 <code>Chunk</code>,  申请大于 <code>Chunk</code> 大小的内存将直接向系统申请。</p>
+<p><code>Chunk</code> 内部由 n 个 <code>page</code> 组成， <code>page</code> 是一个虚拟的概念，因为 <code>page</code> 还可以切分为 n 个 <code>SubPage</code></p>
+<p>他们的关系图如下: </p>
+<p>ps: 左侧为默认参数</p>
+<p><img src="/post_images/2016-11-27-00-06-49.png" alt=""></p>
+<p>这里说一下Arena 需要做的事情</p>
+<p>首先, 一个 Arena 用 ChunkList 管理着 n 个 Chunk， 一个Chunk 默认 16mb, 当一个 Chunk 分配不了时，新建一个新的 Chunk</p>
+<h3 id="Chunk-amp-ChunkList"><a href="#Chunk-amp-ChunkList" class="headerlink" title="Chunk &amp; ChunkList"></a>Chunk &amp; ChunkList</h3><p>Arena 内部还对 Chunk 做了 使用量的 监测。</p>
+<p>Arena 新建了 6个 ChunkList 分别为 <code>qInit</code>, <code>q000</code>, <code>q025</code>, <code>q050</code>, <code>q075</code>, <code>q100</code></p>
+<p>她们依次组成一个双向链表，分别又一个 最小使用量 和 最大使用量 的阀值</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//          PoolChunkList&lt;T&gt; nextList, int minUsage, int maxUsage, int chunkSize</span></span><br><span class="line">q100 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(<span class="keyword">null</span>, <span class="number">100</span>, Integer.MAX_VALUE, chunkSize);</span><br><span class="line">q075 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q100, <span class="number">75</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q050 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q075, <span class="number">50</span>, <span class="number">100</span>, chunkSize);</span><br><span class="line">q025 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q050, <span class="number">25</span>, <span class="number">75</span>, chunkSize);</span><br><span class="line">q000 = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q025, <span class="number">1</span>, <span class="number">50</span>, chunkSize);</span><br><span class="line">qInit = <span class="keyword">new</span> PoolChunkList&lt;T&gt;(q000, Integer.MIN_VALUE, <span class="number">25</span>, chunkSize);</span><br></pre></td></tr></table></figure>
+<p>然后在每次 allocate 和 deallocate 时判断 Chunk 是否触及 阀值，然后分别 上移/下移 到合适的 ChunkList</p>
+<p>为了减小内存碎片， 分配的优先级如下: </p>
+<p><code>q050 &gt; q025 &gt; q000 &gt; qInit &gt; q075</code></p>
+<p>代码如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">allocateNormal</span><span class="params">(PooledByteBuf&lt;T&gt; buf, <span class="keyword">int</span> reqCapacity, <span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (q050.allocate(buf, reqCapacity, normCapacity) || q025.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q000.allocate(buf, reqCapacity, normCapacity) || qInit.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">        q075.allocate(buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">        ++allocationsNormal;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+<p>为什么这么弄？</p>
+<p>首先, 可以分配的内存时这样的， 回到之前的规格。 对于 <code>8192x2^11</code> byte 相当于 100% 的 chunk 了。</p>
+<p>而 比他小的分别为  50%, 25%, 12.5%, 6.25%, 3.125% …</p>
+<p>所以如果将优先级 的第一第二换个位置则可能造成 大量的 75% 。。。 </p>
+<h3 id="Page-amp-SubPage"><a href="#Page-amp-SubPage" class="headerlink" title="Page &amp; SubPage"></a>Page &amp; SubPage</h3><p>Chunk 由 2048 个 Page 组成。 </p>
+<p>一个 Page 默认 8k。</p>
+<p>Chunk 里面将这 2048 个 page 用其 2 倍的空间 <code>byte[4096] memoryMap</code> 以完全二叉树管理。</p>
+<p><img src="/post_images/2016-11-27-12-48-35.png" alt=""></p>
+<p>深度为 11 的共 2048 个元素表示该 page 有没有被分配</p>
+<p>深度 1-10 的节点都是索引</p>
+<p>每个节点的 value 默认为该节点在树的深度。</p>
+<p>当 page 被分配掉时， 则将自己的 value ＋ 1 也就是变成12</p>
+<p><img src="/post_images/2016-11-27-13-14-19.png" alt=""></p>
+<p>每次被分配后都要同时更新自己的 parent 的 value, parent 的 value 取 2 个 child 中小的一个。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">updateParentsAlloc</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (id &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parentId = id &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">byte</span> val1 = value(id);</span><br><span class="line">        <span class="keyword">byte</span> val2 = value(id ^ <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">byte</span> val = val1 &lt; val2 ? val1 : val2;</span><br><span class="line">        setValue(parentId, val);</span><br><span class="line">        id = parentId;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>比如当要分配 8k 的大小时直接找 第 11 层找 第一个 val 为 11 的(unused), 找到后更新自己以及parent节点。</p>
+<p>这样当比如需要分配 8MB 内存是，立即找 depth 为 1 的2个节点， 只要她的 value 不等于 depth 就知道该节点的 child 被分配过了。</p>
+<p>然后 Subpage 的作用是用来标示分配小于一个 page 的内存块。 </p>
+<p>但是 Subpage 不再是用二叉树管理了。而是用更方便的方式。</p>
+<p>一个 Subpage 只能分配一种 size 大小， 然后用 3个long 共 <code>8x8x8</code> 个bit 标示是否被使用。</p>
+<p>比如 如果 page 为 8k ， 由于共 512 个标示可用，所以最小分配单元 为 16 byte.</p>
+<p>但是 如果 最小分配单元为 32 byte， 则 共只需要 256 个标示即可。(3个 long 不需要全部用完)</p>
+<p>Subpage 也是一个链表, 相同规格的subpage 链在一起。</p>
+<p>然后 PoolArena 初始化了 n 个size 的 Subpage 的链表头, 并用来维护。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] tinySubpagePools;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] smallSubpagePools;</span><br></pre></td></tr></table></figure>
+<p>每次新创建 Subpage 会吧 subpage 链到 相应的 idx 的 PoolSubpage 内。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">long</span> <span class="title">allocateSubpage</span><span class="params">(<span class="keyword">int</span> normCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.</span></span><br><span class="line">    <span class="comment">// This is need as we may add it back and so alter the linked-list structure.</span></span><br><span class="line">    PoolSubpage&lt;T&gt; head = arena.findSubpagePoolHead(normCapacity);</span><br><span class="line">    <span class="keyword">synchronized</span> (head) &#123;</span><br><span class="line">        <span class="keyword">int</span> d = maxOrder; <span class="comment">// subpages are only be allocated from pages i.e., leaves</span></span><br><span class="line">        <span class="keyword">int</span> id = allocateNode(d);</span><br><span class="line">        <span class="keyword">if</span> (id &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> id;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> PoolSubpage&lt;T&gt;[] subpages = <span class="keyword">this</span>.subpages;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">int</span> pageSize = <span class="keyword">this</span>.pageSize;</span><br><span class="line"></span><br><span class="line">        freeBytes -= pageSize;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> subpageIdx = subpageIdx(id);</span><br><span class="line">        PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx];</span><br><span class="line">        <span class="keyword">if</span> (subpage == <span class="keyword">null</span>) &#123;</span><br><span class="line">            subpage = <span class="keyword">new</span> PoolSubpage&lt;T&gt;(head, <span class="keyword">this</span>, id, runOffset(id), pageSize, normCapacity);</span><br><span class="line">            subpages[subpageIdx] = subpage;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            subpage.init(head, normCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> subpage.allocate();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>图如下</p>
+<p><img src="/post_images/2016-11-27-14-27-58.png" alt=""></p>
+<h2 id="内存开销"><a href="#内存开销" class="headerlink" title="内存开销"></a>内存开销</h2><p>最后算一下开销。</p>
+<p>如果 一个 netty server 配置了 1 个 acceptor Thread，32个 IO Thread， 我们这里仅仅考虑默认配置。</p>
+<p>为了让 arena 不被锁影响，则需要33 个 arena, 那么就会需要 33个 chunk， 共计  33 * 16mb 共计 528MB (默认配置)</p>
+<p>由于 ByteBufPool 默认是使用堆外内存的， 而 jdk 默认堆外内存 64 mb， 所以需要手动修改。 </p>
+<p>不然 netty 会使用 堆内存。 不经计算，贸然使用可能会造成full gc。</p>
+<p>内存分配需要根据实际情况自己计算参数:</p>
+<p>举一个例子</p>
+<p>算一台服务 2k qps的服务，每个包 2k 的话 预计需要</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In [13]: 2000 * 2000 / 1024/1024.0</span><br><span class="line">Out[13]: 3.814453125</span><br></pre></td></tr></table></figure>
+<p>ps 这是没有算上 请求包的，就算 * 2 8mb 因该够了。</p>
+<p>可以将 pageSize 调为一半，节省内存  io.netty.allocator.pageSize = 4096</p>
+<p>于是一个 chunk 8mb 可以少分配一半的内存。</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://my.oschina.net/flashsword/blog/159613" target="_blank" rel="external">https://my.oschina.net/flashsword/blog/159613</a></p>
+<p><a href="http://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy1/" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy1/</a></p>
+<p><a href="http://www.jianshu.com/p/c4bd37a3555b" target="_blank" rel="external">http://www.jianshu.com/p/c4bd37a3555b</a></p>
+<p><a href="http://www.jianshu.com/p/d91060311437" target="_blank" rel="external">http://www.jianshu.com/p/d91060311437</a></p>
+<p><a href="http://www.jianshu.com/p/a1debfe4ff02" target="_blank" rel="external">http://www.jianshu.com/p/a1debfe4ff02</a></p>
+<p><a href="http://www.jianshu.com/p/4856bd30dd56" target="_blank" rel="external">http://www.jianshu.com/p/4856bd30dd56</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="ByteBuf"><a hre"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2017/01/16/head-first-netty-3/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
