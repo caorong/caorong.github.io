@@ -47,13 +47,10 @@
 </ol>
 <p>而对于当今的互联网来说，上网的人越来越多，如果用以前的保持长链接的red5server来建集群承受并发实在是成本太高。</p>
 <p>#####如何做一个自己的hls子文件（.m3u8 + .ts）？</p>
-<p>其实网上有很多opensource项目都帮你实现了子功能。
-这里直接用<a href="http://ffmpeg.org/" target="_blank" rel="external">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter" target="_blank" rel="external">3u8segment</a></p>
-<p><code>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt=.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | \</code>
-<code>m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/</code></p>
+<p>其实网上有很多opensource项目都帮你实现了子功能。<br>这里直接用<a href="http://ffmpeg.org/" target="_blank" rel="external">ffmpeg</a>和m<a href="https://github.com/johnf/m3u8-segmenter" target="_blank" rel="external">3u8segment</a></p>
+<p><code>ffmpeg -er 4 -i mmsh://203.141.56.46:80/BAN-BAN_Radio?MSWMExt=.asf test.mp3 -f mpegts -acodec libmp3lame -ar 22050 -ab 32k -vn - | \</code><br> <code>m3u8-segmenter -i - -d 7 -p testdir/bbradio -m testdir/bb.m3u8 -u http://192.168.xx.xx/</code></p>
 <p>然后架设一个nginx，将静态文件目录指向testdir，改好-u的ip地址，然后ffplay -i 192.168.xx.xx/bb.m3u8 or 用vlc等进行test。</p>
-<h5>final</h5>
-<p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p>
+<h5 id="final"><a href="#final" class="headerlink" title="final"></a>final</h5><p>如果想做出一个类似qingtimg.fm类似的demo（一个最多相差7s的实时的广播）可以在再启一个服务，这个服务根据currenttime-configtime酸楚一个bbradio-xx的xx数字，然后分别将xx,xx+1,xx+2 ，3行写入m3u8文件，return给client。 由此便实现了个对于用户来说时间差最多相差7秒的适时online radio～</p>
 
   </section>
 </article>

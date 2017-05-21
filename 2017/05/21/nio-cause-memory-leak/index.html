@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>nio 引发的 memory leak | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2017/05/21/nio-cause-memory-leak/">nio 引发的 memory leak</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">May 21 2017</p>
+  </section>
+
+  <section class="article-entry">
+    <p>上周， 某同事报bug， 说疑似使用了公司的 rpc 框架后发生了 堆外oom 异常导致程序挂了。 </p>
+<p>仔细一想， 好像当初的老版本框架好像没有用到堆外内存呀。</p>
+<p>然后， 了解过详情后测试发现， 当把 业务线程池调小后， 发现从运行到挂的时间 可以更久些。</p>
+<p>也就是所发生了泄漏。</p>
+<p>根据错误堆栈以及 google 上的搜索， <a href="http://www.evanjones.ca/java-bytebuffer-leak.html" target="_blank" rel="external">找到前twitter 开发人写的blog</a> 发现是如果你进行网络编程并且使用 nio 时，当调用系统 api 时 (write)， 会在堆外 malloc 一块空间，将java 内存的数据写入后 进行 systemcall。</p>
+<p>然后，这块空间不会释放，而是缓存着，留给这个线程的下一次请求使用(ps， 这个大小时无限制的)。</p>
+<p>所以， 当线程老多老多时，然后线程池的 <code>coreSize</code> 也非常大时， 那么就会泄漏。</p>
+<p>那么这么严重的问题，为啥java 官方 不早早的修复呢？</p>
+<p>分析了下。</p>
+<ol>
+<li>首先，既然用了nio， 就不应当一个线程一个 nio 连接， 这个存在本身就很不合理。</li>
+<li>老框架确实存在些问题， new 出来的线程池的 coreSize 和 MaxSize 是一样的，所以在线程上， 不会自动销毁， 间接使内存泄漏跟容易出现。</li>
+</ol>
+<p>综上，出现了以上问题， 所以 java 官方也不急着修。</p>
+<p>临时解决方案就是将 线程池调小些。</p>
+<p>进阶解决方案是， 不要每个业务线程以 helloworld 的方式使用第三方依赖。 像这种内部nio的，应该封装出一个连接池什么的。</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=上周， 某同事报bug， 说疑似使用了公"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2017/05/21/nio-cause-memory-leak/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
