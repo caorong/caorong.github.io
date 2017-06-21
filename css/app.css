@@ -240,13 +240,13 @@ main.post {
     text-transform: capitalize; }
 
 .code-block, .article-entry pre, .article-entry .highlight {
-  background: #ccc;
+  background: #000;
   margin: 1.6rem 0;
   padding: 3rem 1.8rem;
   border-style: solid;
   border-width: 1px 0;
   overflow: auto;
-  color: #ccc;
+  color: #000;
   line-height: 20px; }
 
 .line-numbers, .article-entry .highlight .gutter pre {
@@ -258,7 +258,7 @@ main.post {
 
 .article-entry code {
   background: rgba(0, 0, 0, 0.07);
-  color: #EB298C;
+  color: #F18787;
   padding: 2px 3px;
   border-radius: 2px; }
 
