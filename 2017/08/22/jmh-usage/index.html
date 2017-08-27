@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JMH 使用实践 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2017/08/22/jmh-usage/">JMH 使用实践</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">August 22 2017</p>
+  </section>
+
+  <section class="article-entry">
+    <h1 id="JMH"><a href="#JMH" class="headerlink" title="JMH"></a>JMH</h1><p>jmh 是java 的微测试工具</p>
+<h2 id="运行方式"><a href="#运行方式" class="headerlink" title="运行方式"></a>运行方式</h2><p><a href="http://openjdk.java.net/projects/code-tools/jmh/" target="_blank" rel="external">官方文档</a> 建议用官方的 mvn archetypeArtifactIdb, 他内部会把 <code>你的代码</code> 以及 <code>依赖</code> 打成 <code>一个</code>  jar包(默认打的包时 benchmarks.jar)运行。</p>
+<p>这种方式如果遇到类似 依赖 spring 的项目需要注意在 shade plugin 里面添加上 spring 的schmea</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">finalName</span>&gt;</span>$&#123;uberjar.name&#125;<span class="tag">&lt;/<span class="name">finalName</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">transformers</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">transformer</span> <span class="attr">implementation</span>=<span class="string">"org.apache.maven.plugins.shade.resource.AppendingTransformer"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">resource</span>&gt;</span>META-INF/spring.handlers<span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">transformer</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">transformer</span> <span class="attr">implementation</span>=<span class="string">"org.apache.maven.plugins.shade.resource.AppendingTransformer"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">resource</span>&gt;</span>META-INF/spring.schemas<span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">transformer</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">transformers</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>不过也可以自己写main 函数运行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyBenchmark</span> </span>&#123;</span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> RunnerException </span>&#123;</span><br><span class="line">    Options opt = <span class="keyword">new</span> OptionsBuilder()</span><br><span class="line">        .include(MyBenchmark.class.getSimpleName())</span><br><span class="line">        .build();</span><br><span class="line">    <span class="keyword">new</span> Runner(opt).run();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// 配置预热, 几轮，每轮实践</span><br><span class="line">@Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.SECONDS)</span><br><span class="line">// 配置测试, 几轮，每轮实践</span><br><span class="line">@Measurement(iterations = 1, time = 20, timeUnit = TimeUnit.SECONDS)</span><br></pre></td></tr></table></figure>
+<h2 id="初始化环境"><a href="#初始化环境" class="headerlink" title="初始化环境"></a>初始化环境</h2><p>有的时候需要， 比如先启动spring， 搞到xx bean ，然后对 它做压测。</p>
+<p>这里需要定义一个 <a href="http://hg.openjdk.java.net/code-tools/jmh/file/a128fd4a5901/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_03_States.java" target="_blank" rel="external">state</a> beachmark 启动时会帮你初始化好 state， 将它作为参数传入你的 beachmark 函数。</p>
+<p>state 里面的field 可以设置默认参数 <code>@Param(&quot;6&quot;)</code>, 所有参数支持数组 <code>@Param({&quot;1&quot;, &quot;4&quot;, &quot;16&quot;, &quot;32&quot;})</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 表示全局共用一个state</span></span><br><span class="line"><span class="meta">@State</span>(Scope.Benchmark)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyState</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Param</span>(<span class="string">"6"</span>)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> clientTimeoutSec;</span><br><span class="line">    <span class="meta">@Param</span>(&#123;<span class="string">"1"</span>, <span class="string">"4"</span>, <span class="string">"16"</span>, <span class="string">"32"</span>&#125;)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> ioThread;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意， 党设置了多个参数， beachmark 运行时会根据不同参数组合， 将beachmark 跑多次</p>
+<p>比如上面的代码会运行 <code>1 x 4 ＝ 4</code> 次</p>
+<h2 id="beachmark-spring-例子"><a href="#beachmark-spring-例子" class="headerlink" title="beachmark + spring 例子"></a>beachmark + spring 例子</h2><p>下面是一个配合spring 的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@State</span>(Scope.Benchmark)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyState</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Param</span>(<span class="string">"6"</span>)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> clientTimeoutSec;</span><br><span class="line">    <span class="meta">@Param</span>(&#123;<span class="string">"1"</span>, <span class="string">"4"</span>, <span class="string">"16"</span>, <span class="string">"32"</span>&#125;)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> ioThread;</span><br><span class="line">    ApplicationContext applicationContext;</span><br><span class="line">    TDemoService.FutureIface iface;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 运行 beachmark 的前后的 前</span></span><br><span class="line">    <span class="meta">@Setup</span>(Level.Trial)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSetup</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        applicationContext = <span class="keyword">new</span> ClassPathXmlApplicationContext(</span><br><span class="line">            <span class="keyword">new</span> String[] &#123; <span class="string">"classpath*:application-context.xml"</span> &#125;);</span><br><span class="line">        iface = applicationContext.getBean(TDemoService.FutureIface.class);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">          LOG.error(e.getMessage(), e);</span><br><span class="line">          <span class="keyword">throw</span> e;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@TearDown</span>(Level.Trial)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTearDown</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      ((ClassPathXmlApplicationContext) applicationContext).close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Benchmark</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testMethod</span><span class="params">(MyState state)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    state.iface.echo(state.clientTimeoutSec, state.ioThread);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据上面的配置， beachmark 的 clientTimeoutSec 和 ioThread 分别以 <code>[6, 1]</code>, <code>[6, 4]</code>, <code>[6, 16]</code>, <code>[6, 32]</code> 4套配置 运行4次</p>
+<p>并给出相应的结果。</p>
+<h2 id="参数化运行"><a href="#参数化运行" class="headerlink" title="参数化运行"></a>参数化运行</h2><p>有时需要最好可以通过配置跑出不同结果， 这种时候建议上面的 state 全部都配置默认值， 然后通过 喂参数的方式达到运行多套配置的结果。</p>
+<p>比如 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar benchmarks.jar -p ioThread=1,2,3,4</span><br></pre></td></tr></table></figure>
+<p>运行时 命令行的 参数会 <code>覆盖</code> 代码内部的参数。</p>
+<h2 id="Profiler"><a href="#Profiler" class="headerlink" title="Profiler"></a>Profiler</h2><p>支持跑  beachmark 时， 查看对 linux perf， 查看代码的堆栈cpu 消耗比。</p>
+<p>列出所有支持的 profilers<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar beachmarks.jar -lprof</span><br></pre></td></tr></table></figure></p>
+<p>参数化的配置通过添加</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-prof stack -prof perf</span><br></pre></td></tr></table></figure>
+<p>注意， 额外的 profiler 也会纳入 beachmark的结果列表， 建议 仅仅添加需要的。</p>
+<p>通过类似如下方式将不要的 去除</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep -v &apos;:·stack&apos; benchmark_machine_result.csv</span><br></pre></td></tr></table></figure>
+<p>我只用了 stack， 可以观察具体哪些方法耗cpu 厉害</p>
+<h2 id="fork-和-thread"><a href="#fork-和-thread" class="headerlink" title="fork 和 thread"></a>fork 和 thread</h2><p><code>-f</code> 表示同样的beachmark 跑几次。</p>
+<p><code>-t</code> 表示beachmark 的并发数量。</p>
+<p>我是 -f 1 -t 40</p>
+<h2 id="结果输出"><a href="#结果输出" class="headerlink" title="结果输出"></a>结果输出</h2><p>结果能打出 2份， 一份是 <code>human-readable output</code> 另一份是 <code>machine-readable results</code></p>
+<p>其实 前者的 最后 一段就是 后者。</p>
+<p>后者支持的格式 <code>Available formats: text, csv, scsv, json, latex</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-o   设置 前者的 文件名字</span><br><span class="line">-rf  设置 format </span><br><span class="line">-rff 设置 后者的 文件名字</span><br></pre></td></tr></table></figure>
+<p>这里的输出有一个缺点，当使用了 -prof，她的 beachmark 也会被记录下来，可以通过 </p>
+<p><code>cat xxx.xx |grep -v &#39;:·stack&#39; &gt; xxx.xx2</code> 过滤掉</p>
+<h2 id="tips"><a href="#tips" class="headerlink" title="tips"></a>tips</h2><p>建议的使用方式， 如果你有多套参数要测试的话， 建议不要一次性测试多个维度。</p>
+<p>比如 ioThread 设置为 <code>{1,4,16,32}</code>, connCount 设置为 <code>{1,10,100,1000}</code></p>
+<p>这样的话 为了测试各种情况， 她的测试次数将是 一个笛卡尔集  4 * 4 = 16 次</p>
+<p>建议测试时，一个一个维度测试, 代码里写上默认配置，然后 通过 配置 <code>-p</code> 设置参数组 覆盖。</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://hg.openjdk.java.net/code-tools/jmh/file/a128fd4a5901/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_35_Profilers.java" target="_blank" rel="external">http://hg.openjdk.java.net/code-tools/jmh/file/a128fd4a5901/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_35_Profilers.java</a></p>
+<p><a href="http://openjdk.java.net/projects/code-tools/jmh/" target="_blank" rel="external">http://openjdk.java.net/projects/code-tools/jmh/</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="JMH"><a href="#"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2017/08/22/jmh-usage/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
