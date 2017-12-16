@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>2016 总结 | lelouchcr&#39;s blog</title>
+  <title>关于粘包 | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="stylesheet" href="/css/app.css">
@@ -29,20 +29,24 @@
   <main class="post">
   <article>
   <h1 class="article-title">
-    <a href="/2017/01/29/2017/">2016 总结</a>
+    <a href="/2017/12/17/stick-package/">关于粘包</a>
   </h1>
 
   <section class="article-meta">
-    <p class="article-date">January 29 2017</p>
+    <p class="article-date">December 17 2017</p>
   </section>
 
   <section class="article-entry">
-    <p>2016 过去了， 去年看了不少书， 但大多都只看了一半。</p>
-<p>年末时，面试了下， 越发觉得基础的重要性， 不再追新新事务， 感觉花太多时间在新的上面不合算， 不如补基础。</p>
-<p>去年go 很火，也尝试写了写， 写后感觉并没有别人说的那么方便，代码量并没有少多少。</p>
-<p>steam 上买了不少游戏， 但好多连装都没装。</p>
-<p>orz 时间都去哪儿了！！！</p>
-<p>明年的计划就是继续填今年的坑， 继续补基础， 看看书。</p>
+    <p>最初网络编程的时候都是blocking IO的方式，也就是同步请求， 客户端 一个请求发到服务度，等服务端返回前会一直阻塞住， 直到服务端返回。</p>
+<p>后来有了异步编程， 所谓的异步编程， 只不过吧 同步请求， 变成了写缓冲区。然后操作系统批量的发送缓冲区到服务端。</p>
+<p>那么如果 服务端 是按照最初的编程模型， 客户端 是用异步编程模型的话，也许会遇到关于粘包的坑。</p>
+<p>比如我上周遇到的 thrift 的官方java实现的坑。</p>
+<p>作为 thrift server端， 他没有考虑 粘包的情况，她的实现是将 解码和处理业务 整体作为一个任务传递给 线程池 执行。</p>
+<p>造成的结果是，如果发过来 <code>多个</code> 请求，粘包了, 粘成了一个，那么这个 &quot;大包&quot; 将在 线程池的某一个线程内 <code>串行</code> 执行。</p>
+<p>上周就遇到了这种情况， 我们自己用 netty 实现的 thrift client 调用一个后端比较慢的服务， 发现怎么qps 一高 全部都超时了, client 的写缓冲区堵了， 但是 server 像是没有接收到那么多请求，一个错误都没有, 非常坑爹。</p>
+<p>如果是 用 thrift 官方的 java client 其实是同步请求。所以不会遇到粘包。</p>
+<p>那么如果是异步的话，如何减轻这种情况。</p>
+<p>很简单，搞连接池，然后 取连接的策略变成 FIFO 就行了，连接池数量 == qps， 平均分发即可。</p>
 
   </section>
 </article>
@@ -62,7 +66,7 @@
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text=2016 过去了， 去年看了不少书， 但"
+  href="https://twitter.com/intent/tweet?text=最初网络编程的时候都是blocking "
 >
   Tweet
 </a>
@@ -102,7 +106,7 @@
 <script>
   var disqus_shortname = 'caorong';
   
-  var disqus_url = 'http://caorong.github.io/2017/01/29/2017/';
+  var disqus_url = 'http://caorong.github.io/2017/12/17/stick-package/';
   
   (function(){
     var dsq = document.createElement('script');
