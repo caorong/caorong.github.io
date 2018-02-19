@@ -37,37 +37,31 @@
   </section>
 
   <section class="article-entry">
-    <p>####缘起
-今天下午正好去办了网银，然后回家后看v2ex时正好看到搬瓦工的年付9.99刀的vps又出现了（话说之前还出了年付2.99刀的我又没有珍惜）512内存，5G硬盘，500G流量/per month。</p>
-<p>####配置vpn
-其实搬瓦工后台自带一键配置openvpn，不过考虑到之前openvpn正在被gfw各种针对的原因，还有之前听teahour讲云梯，感觉gfw应该不会对pptp下手，所以还是自己配置一个pptp的更靠谱些。</p>
+    <p>####缘起<br>今天下午正好去办了网银，然后回家后看v2ex时正好看到搬瓦工的年付9.99刀的vps又出现了（话说之前还出了年付2.99刀的我又没有珍惜）512内存，5G硬盘，500G流量/per month。</p>
+<p>####配置vpn<br>其实搬瓦工后台自带一键配置openvpn，不过考虑到之前openvpn正在被gfw各种针对的原因，还有之前听teahour讲云梯，感觉gfw应该不会对pptp下手，所以还是自己配置一个pptp的更靠谱些。</p>
 <p>搬瓦工用的是不靠谱的openvz，系统：centos6 x86</p>
 <p><code>yum -y install make libpcap iptables gcc-c++ logrotate tar cpio perl pam tcp_wrappers dkms kernel_ppp_mppe ppp</code></p>
-<p><code>uname -m</code>
-查看系统64 or 32
-然后选择合适版本的pptpd
-比如我i686的</p>
+<p><code>uname -m</code><br>查看系统64 or 32<br>然后选择合适版本的pptpd<br>比如我i686的</p>
 <p><code>wget http://poptop.sourceforge.net/yum/stable/rhel6Server/i386/pptpd-1.4.0-1.el6.i686.rpm</code></p>
 <p><code>rpm -Uvh pptpd-1.4.0-1.el6.i686.rpm</code></p>
 <p>配置iptables</p>
-<p><code>iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o venet0 -j MASQUERADE</code>
-(我的openvz出口网卡是venet0，须根据自己的机器相应修改)</p>
+<p><code>iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o venet0 -j MASQUERADE</code><br>(我的openvz出口网卡是venet0，须根据自己的机器相应修改)</p>
 <p><code>iptables -I FORWARD -s 192.168.10.0/24 -j ACCEPT</code></p>
 <p><code>iptables -I FORWARD -d 192.168.10.0/24 -j ACCEPT</code></p>
 <p><code>service iptables save</code></p>
 <p><code>service iptables restart</code></p>
 <p><code>service pptpd start</code></p>
 <p>参考</p>
-<p>https://gist.github.com/leadfast/8213224</p>
-<p>http://www.sulabs.net/?p=275</p>
-<p>http://www.centoscn.com/image-text/install/2014/0125/2402.html</p>
+<p><a href="https://gist.github.com/leadfast/8213224" target="_blank" rel="external">https://gist.github.com/leadfast/8213224</a></p>
+<p><a href="http://www.sulabs.net/?p=275" target="_blank" rel="external">http://www.sulabs.net/?p=275</a></p>
+<p><a href="http://www.centoscn.com/image-text/install/2014/0125/2402.html" target="_blank" rel="external">http://www.centoscn.com/image-text/install/2014/0125/2402.html</a></p>
 
   </section>
 </article>
 
   <div class="sharing grid">
   <section class="profile grid-item grid">
-    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
     <div class="grid-item">
       <p class="title"> lelouchcr's blog </p>
       <p class="subtitle">  </p>
@@ -80,8 +74,7 @@
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text=####缘起
-今天下午正好去办了网银，然"
+  href="https://twitter.com/intent/tweet?text=####缘起<br>今天下午正好去办了网"
 >
   Tweet
 </a>
@@ -139,7 +132,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

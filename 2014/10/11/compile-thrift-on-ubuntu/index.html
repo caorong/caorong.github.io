@@ -39,25 +39,23 @@
   <section class="article-entry">
     <p>写代码时需要生成thrift 代码，不巧最近系统刚换了ubuntu，于是便琢磨着编译了下thrift。又遇到了写坑。。。</p>
 <p>====</p>
-<p>首先，我目前编译的 thirft 只需要支持 java， ruby 和 python</p>
+<p>首先，我目前编译的 thirft 只需要支持 java， ruby 和 python </p>
 <p>debian下预先需要安装的 lib <a href="http://thrift.apache.org/docs/install/debian" target="_blank" rel="external">见官方</a></p>
 <p>cpp搞不定，去除掉 <code>./configure --without-cpp</code></p>
 <p>编译python 没什么问题</p>
-<p>编译java 需要注意的是如果是自己装的jdk 非apt装的，试试看 sudo java能否运行  参考 http://superuser.com/questions/709515/command-not-found-when-using-sudo</p>
+<p>编译java 需要注意的是如果是自己装的jdk 非apt装的，试试看 sudo java能否运行  参考 <a href="http://superuser.com/questions/709515/command-not-found-when-using-sudo" target="_blank" rel="external">http://superuser.com/questions/709515/command-not-found-when-using-sudo</a></p>
 <p>编译ruby ，先删除rbenv，然后apt-get install ruby ruby-dev</p>
 <p>然后清除 gem 中已经存在的依赖， 根据gemspec =&gt; <code>/home/xxx/tools/thrift-0.9.1/lib/rb/thrift.gemspec</code> ，以免因为半本问题，比如rspec的新版本导致make时测试过不了。</p>
-<p>&quot;~&gt;&quot; 这个符号的表明 依赖的是这个版本 或者比这个版本高一个最小版本的gem <a href="http://stackoverflow.com/questions/5170547/what-does-tilde-greater-than-mean-in-ruby-gem-dependencies" target="_blank" rel="external">参考stackoverflow</a></p>
-<p>而如果你已经有较高的版本的话，他默认用较高的版本，
-于是曾经因为 rspec 的大版本相差1，test怎么都过不了。
-（注，make 和 make install ruby都会跑一次 rspec 单元测试）</p>
-<p>最后实在不行 就装预编译好的吧 0.9.1的 http://packages.ubuntu.com/utopic/thrift-compiler</p>
+<p>“~&gt;” 这个符号的表明 依赖的是这个版本 或者比这个版本高一个最小版本的gem <a href="http://stackoverflow.com/questions/5170547/what-does-tilde-greater-than-mean-in-ruby-gem-dependencies" target="_blank" rel="external">参考stackoverflow</a></p>
+<p>而如果你已经有较高的版本的话，他默认用较高的版本，<br>于是曾经因为 rspec 的大版本相差1，test怎么都过不了。<br>（注，make 和 make install ruby都会跑一次 rspec 单元测试）</p>
+<p>最后实在不行 就装预编译好的吧 0.9.1的 <a href="http://packages.ubuntu.com/utopic/thrift-compiler" target="_blank" rel="external">http://packages.ubuntu.com/utopic/thrift-compiler</a></p>
 
   </section>
 </article>
 
   <div class="sharing grid">
   <section class="profile grid-item grid">
-    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
     <div class="grid-item">
       <p class="title"> lelouchcr's blog </p>
       <p class="subtitle">  </p>
@@ -128,7 +126,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

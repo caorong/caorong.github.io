@@ -40,33 +40,28 @@
     <p>最近在优化一个线上业务的启动后就会有大量报错的问题。</p>
 <p>总结下, 一下顺序根据问题发现的顺序来。</p>
 <p>启动后大量 timeout ，报错, 会有哪些原因</p>
-<h2>预建连接</h2>
-<p>启动后，发现报错堆栈报在redis 缓存上， 以为是redis 建连接慢，所以给 redis 预先建连接，结果发现。</p>
+<h2 id="预建连接"><a href="#预建连接" class="headerlink" title="预建连接"></a>预建连接</h2><p>启动后，发现报错堆栈报在redis 缓存上， 以为是redis 建连接慢，所以给 redis 预先建连接，结果发现。</p>
 <p>其实连接200-300个连接 在线上内网环境下，耗时不过 300ms。</p>
-<h2>缓存穿透</h2>
-<p>由于是对外接口，后面发现，其实是业务上的缓存穿透了，流量穿透到了db， 造成了以上问题</p>
+<h2 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h2><p>由于是对外接口，后面发现，其实是业务上的缓存穿透了，流量穿透到了db， 造成了以上问题</p>
 <p>解决了这个问题，启动的 timeout 数量减少大部分，单启动时仍有连接的超时。</p>
-<h2>tcp 慢启动</h2>
-<p>由于我们的缓存用的 redis， 启动时，虽然连接建立好了，但是由于 tcp 慢启动，一开始还有有点慢的</p>
+<h2 id="tcp-慢启动"><a href="#tcp-慢启动" class="headerlink" title="tcp 慢启动"></a>tcp 慢启动</h2><p>由于我们的缓存用的 redis， 启动时，虽然连接建立好了，但是由于 tcp 慢启动，一开始还有有点慢的</p>
 <ol>
 <li>通过 tcpdump，查看 windows 增长过程。</li>
 <li>对redis 连接建立好后发 一定数量的 ping(30-40个) 包让窗口变大。</li>
 </ol>
-<h2>netty 连接</h2>
-<p>上面都结局了后，发现启动时，调用 rpc 的服务还是有些 timeout。</p>
+<h2 id="netty-连接"><a href="#netty-连接" class="headerlink" title="netty 连接"></a>netty 连接</h2><p>上面都结局了后，发现启动时，调用 rpc 的服务还是有些 timeout。</p>
 <p>由于我们用了 netty4， netty4 与 3 的一大不同就是将 bytebuf 池化了。</p>
 <p>那么启动时， 池里面没有 bytebuf ，需要像系统申请， 这个申请的过程会<strong>加锁</strong> <a href="https://caorong.github.io/2017/01/16/head-first-netty-3/">具体架构可以参考这里</a>。</p>
 <p>只要<strong>并发数量</strong>超过了配置的 iosize 数量，就会锁住。</p>
-<p>所以 也预申请bytebuf 到pool内, rpc 就不会卡了, qps 也上去了。</p>
-<h2>总结</h2>
-<p>修复这种问题，一般效果最显著的是从业务上梳理，一般是缓存穿透，查db了， 修复了业务上的可以提升90%， 然后才是 其他的。</p>
+<p>所以 也预申请bytebuf 到pool内, rpc 就不会卡了, qps 也上去了。 </p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>修复这种问题，一般效果最显著的是从业务上梳理，一般是缓存穿透，查db了， 修复了业务上的可以提升90%， 然后才是 其他的。</p>
 
   </section>
 </article>
 
   <div class="sharing grid">
   <section class="profile grid-item grid">
-    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
     <div class="grid-item">
       <p class="title"> lelouchcr's blog </p>
       <p class="subtitle">  </p>
@@ -137,7 +132,7 @@
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

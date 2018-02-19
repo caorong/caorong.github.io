@@ -40,13 +40,11 @@
     <p>之前有和同事讨论，redis或者rabbitmq启动的时候的画都是怎么画出来的，比如这个<a href="https://github.com/antirez/redis/blob/unstable/src/asciilogo.h" target="_blank" rel="external">redis</a>，感觉就是手打的一样。</p>
 <p>google各种搜索后，发现些相关项目</p>
 <p>###用console画ascii text</p>
-<p><a href="http://caca.zoy.org/wiki/toilet" target="_blank" rel="external">toilet</a>虽然名字确实有点。。。
-以及他的宿主项目
-<a href="http://www.figlet.org/figlet-man.html" target="_blank" rel="external">figlet</a></p>
+<p><a href="http://caca.zoy.org/wiki/toilet" target="_blank" rel="external">toilet</a>虽然名字确实有点。。。<br>以及他的宿主项目<br><a href="http://www.figlet.org/figlet-man.html" target="_blank" rel="external">figlet</a></p>
 <p>figlet提供了一个font database，功能仅仅是将console的字体输出成该font的样子，比如</p>
-<p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">~/fonts $ toilet <span class="_">-f</span> big.flf -t crawler</span><br><span class="line">                         _</span><br><span class="line">                        | |</span><br><span class="line">  ___ _ __ __ ___      _| | ___ _ __</span><br><span class="line"> / __| <span class="string">'__/ _` \ \ /\ / / |/ _ \ '</span>__|</span><br><span class="line">| (__| | | (_| |\ V  V /| |  __/ |</span><br><span class="line"> \___|_|  \__,_| \_/\_/ |_|\___|_|</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">~/fonts $ toilet <span class="_">-f</span> big.flf -t crawler</span><br><span class="line">                         _</span><br><span class="line">                        | |</span><br><span class="line">  ___ _ __ __ ___      _| | ___ _ __</span><br><span class="line"> / __| <span class="string">'__/ _` \ \ /\ / / |/ _ \ '</span>__|</span><br><span class="line">| (__| | | (_| |\ V  V /| |  __/ |</span><br><span class="line"> \___|_|  \__,_| \_/\_/ |_|\___|_|</span><br></pre></td></tr></table></figure>
 <p>字体是从figlet下载的，装toilet时，默认也会自带一些字体库，我是用brew装的，默认字体库包含</p>
-<p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">~/fonts $ ls /usr/<span class="built_in">local</span>/Cellar/toilet/0.3/share/figlet/</span><br><span class="line">ascii12.tlf	bigascii9.tlf	circle.tlf	future.tlf	mono9.tlf	smascii9.tlf	smmono12.tlf</span><br><span class="line">ascii9.tlf	bigmono12.tlf	emboss.tlf	letter.tlf	pagga.tlf	smblock.tlf	smmono9.tlf</span><br><span class="line">bigascii12.tlf	bigmono9.tlf	emboss2.tlf	mono12.tlf	smascii12.tlf	smbraille.tlf	wideterm.tlf</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">~/fonts $ ls /usr/<span class="built_in">local</span>/Cellar/toilet/0.3/share/figlet/</span><br><span class="line">ascii12.tlf	bigascii9.tlf	circle.tlf	future.tlf	mono9.tlf	smascii9.tlf	smmono12.tlf</span><br><span class="line">ascii9.tlf	bigmono12.tlf	emboss.tlf	letter.tlf	pagga.tlf	smblock.tlf	smmono9.tlf</span><br><span class="line">bigascii12.tlf	bigmono9.tlf	emboss2.tlf	mono12.tlf	smascii12.tlf	smbraille.tlf	wideterm.tlf</span><br></pre></td></tr></table></figure>
 <p>想要别的库可以去<a href="http://www.figlet.org/examples.html" target="_blank" rel="external">filglet font database</a>挑选自己喜欢的。</p>
 <p>###用console画ascii picture</p>
 <p><a href="http://csl.name/jp2a/" target="_blank" rel="external">jp2a</a> is a small utility that converts JPG images to ASCII.</p>
@@ -54,20 +52,16 @@
 <p>当然也可以自己画，参考了<a href="https://github.com/aisk/pic2ascii/blob/master/pic2ascii.py" target="_blank" rel="external">果壳上的代码</a></p>
 <p>然后发现，python的PIL库以及4年多没更新了，甚至不能用pip来装。。。</p>
 <p>建议用这个<a href="http://python-imaging.github.io/" target="_blank" rel="external">Pillow</a>来替代PIL</p>
-<p>还有将开头的代码改掉
-<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br></pre></td></tr></table></figure></p>
-<p>mac平台xcode升级了5.1的童鞋，
-遇到<code>unused-command-line-argument-hard-error</code>的请继续<a href="http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul" target="_blank" rel="external">如此</a>。哎，恼人的5.1 !!!</p>
-<h6>reference</h6>
-<p>http://www.guokr.com/blog/43470/
-http://www.cnblogs.com/sukai/archive/2013/06/08/3127031.html</p>
+<p>还有将开头的代码改掉<br><figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br></pre></td></tr></table></figure></p>
+<p>mac平台xcode升级了5.1的童鞋，<br>遇到<code>unused-command-line-argument-hard-error</code>的请继续<a href="http://stackoverflow.com/questions/22352838/ruby-gem-install-json-fails-on-mavericks-and-xcode-5-1-unknown-argument-mul" target="_blank" rel="external">如此</a>。哎，恼人的5.1 !!!</p>
+<h6 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h6><p><a href="http://www.guokr.com/blog/43470/" target="_blank" rel="external">http://www.guokr.com/blog/43470/</a><br><a href="http://www.cnblogs.com/sukai/archive/2013/06/08/3127031.html" target="_blank" rel="external">http://www.cnblogs.com/sukai/archive/2013/06/08/3127031.html</a></p>
 
   </section>
 </article>
 
   <div class="sharing grid">
   <section class="profile grid-item grid">
-    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
     <div class="grid-item">
       <p class="title"> lelouchcr's blog </p>
       <p class="subtitle">  </p>
@@ -138,7 +132,7 @@ http://www.cnblogs.com/sukai/archive/2013/06/08/3127031.html</p>
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 

@@ -38,13 +38,11 @@
 
   <section class="article-entry">
     <p>最近玩因为工作关系被各种编码虐个半死，于是必须总结下，免得以后再才坑。</p>
-<p>####unicode
-unicode 又名国际码，万国码等，计算机领域业界标准。比如java和python3的内部的string都以unicode表示。</p>
+<p>####unicode<br>unicode 又名国际码，万国码等，计算机领域业界标准。比如java和python3的内部的string都以unicode表示。</p>
 <p>unicode 是一个符号集，仅仅规定了符号的二进制编码，并没有规定如何存储。目前常用的是2字节（16位）的Unicode 即UCS-2，理论上可以表示2^16＝65536个字符。</p>
 <p>但为了各国字符的扩展，unicode是分区的，也就是说，会划一块远大于他目前字符数量的区域给他用。比如，假设中文目前只有5k个字符，但给他留了1w个空间，这1w个空间就是中文字符区。</p>
 <p>所以2个字节的地盘很快就被抢完了，所以就只能继续扩充长度了，一些小语种比如藏文，维语等还有无比蛋疼字符比如\u200b （zero width space character），他们都是三个字节的，最多可以表示2^24个字符。目前三个字节的地盘还没抢完。。。</p>
-<p>####utf8
-utf8其实是unicode的一种实现，其实是把unicode通过某种规则编码成utf8。</p>
+<p>####utf8<br>utf8其实是unicode的一种实现，其实是把unicode通过某种规则编码成utf8。</p>
 <p>这么做有个好处,可以节省空间，unicode的话UCS-2标准的最小都要占用2个字节，而utf8是可变长的，可以使用1-4个字节表示一个符号</p>
 <p>具体编码的详细过程可以<a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="external">参考这里</a></p>
 <p>####汉字编码 GBK, GB2312, GB18030</p>
@@ -53,7 +51,7 @@ utf8其实是unicode的一种实现，其实是把unicode通过某种规则编�
 <p>GB2312于1980年制定，然后由<a href="http://zh.wikipedia.org/wiki/Unicode" target="_blank" rel="external">wiki</a>发现，Unicode 1.0标准直到1991年10月才发布。于是在这段真空期内世界各地不可能不用计算机啊，既然用的话就肯定有输入本国字符的需要啊，但是由于ASCII的坑已经被占光，（就算不占其实也根本不够用）。于是各国自定的各种编码层出不穷，我国的话就是GBxxx系列了。</p>
 <p>GB2312的编码规则：</p>
 <ul>
-<li>一个小于127的字符的意义与原来相同，但两个大于127的字符连在一起时，就表示一个汉字，前面的一个字节（他称之为高字节）从0xA1用到 0xF7，后面一个字节（低字节）从0xA1到0xFE，这样我们就可以组合出大约7000多个简体汉字了。在这些编码里，我们还把数学符号、罗马希腊的 字母、日文的假名们都编进去了，连在 ASCII 里本来就有的数字、标点、字母都统统重新编了两个字节长的编码，这就是常说的&quot;全角&quot;字符，而原来在127号以下的那些就叫&quot;半角&quot;字符了。</li>
+<li>一个小于127的字符的意义与原来相同，但两个大于127的字符连在一起时，就表示一个汉字，前面的一个字节（他称之为高字节）从0xA1用到 0xF7，后面一个字节（低字节）从0xA1到0xFE，这样我们就可以组合出大约7000多个简体汉字了。在这些编码里，我们还把数学符号、罗马希腊的 字母、日文的假名们都编进去了，连在 ASCII 里本来就有的数字、标点、字母都统统重新编了两个字节长的编码，这就是常说的”全角”字符，而原来在127号以下的那些就叫”半角”字符了。</li>
 </ul>
 <p>可是后来GB2312的字符已经不能满足需要，于是就有了GBK，它包含了GB2312的所有内容，并做了扩展（包括繁体字，符号等），方法是不再要求低字节一定是127号之后的内码，只要第一个字节是大于127就固定表示这是一个汉字的开始，不管后面跟的是不是扩展字符集里的内容。</p>
 <p>那个，其实GBK不是国家标准，而是微软标准。。。而GB18030才是国家标准。只不过因为从小用windows系统，所以。。。。</p>
@@ -69,22 +67,20 @@ utf8其实是unicode的一种实现，其实是把unicode通过某种规则编�
 <li>汉字收录范围包含繁体汉字以及日韩汉字。</li>
 </ul>
 <p>GB系列的都有很好的兼容性，旧的系列都是新的系列的子集。</p>
-<h4>总结</h4>
-<p>我觉得，其实所谓的各种字符编码其实就是定义了一套规则，一套说明如何将其字符转换成ascii表示的过程和相应的逆过程。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>我觉得，其实所谓的各种字符编码其实就是定义了一套规则，一套说明如何将其字符转换成ascii表示的过程和相应的逆过程。</p>
 <p>最后举个例子应该就能明白。</p>
-<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'gb18030'</span>)</span><br><span class="line"><span class="string">'\xce\xd2'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'gbk'</span>)</span><br><span class="line"><span class="string">'\xce\xd2'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'utf8'</span>)</span><br><span class="line"><span class="string">'\xe6\x88\x91'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'gbk'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'gb18030'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'utf8'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br></pre></td></tr></table></figure></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'gb18030'</span>)</span><br><span class="line"><span class="string">'\xce\xd2'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'gbk'</span>)</span><br><span class="line"><span class="string">'\xce\xd2'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'我'</span>).encode(<span class="string">'utf8'</span>)</span><br><span class="line"><span class="string">'\xe6\x88\x91'</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'gbk'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'gb18030'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>unicode(<span class="string">u'abc%^&amp;*()'</span>).encode(<span class="string">'utf8'</span>)</span><br><span class="line"><span class="string">'abc%^&amp;*()'</span></span><br></pre></td></tr></table></figure>
 <p>因为<code>abc%^&amp;*()</code>这些符号ascii已经有了，编码后保持不变，所以也就能兼容ascii了。</p>
-<h3>reference</h3>
-<p>http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html</p>
-<p>http://www.crifan.com/files/doc/docbook/char_encoding/release/html/char_encoding.html#enc_unicode</p>
-<p>http://www.phpweblog.net/fuyongjie/archive/2009/03/11/6374.aspx</p>
+<h3 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h3><p><a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="external">http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html</a></p>
+<p><a href="http://www.crifan.com/files/doc/docbook/char_encoding/release/html/char_encoding.html#enc_unicode" target="_blank" rel="external">http://www.crifan.com/files/doc/docbook/char_encoding/release/html/char_encoding.html#enc_unicode</a></p>
+<p><a href="http://www.phpweblog.net/fuyongjie/archive/2009/03/11/6374.aspx" target="_blank" rel="external">http://www.phpweblog.net/fuyongjie/archive/2009/03/11/6374.aspx</a></p>
 
   </section>
 </article>
 
   <div class="sharing grid">
   <section class="profile grid-item grid">
-    <img class="avatar" src="https://gravatar.css.network/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
     <div class="grid-item">
       <p class="title"> lelouchcr's blog </p>
       <p class="subtitle">  </p>
@@ -155,7 +151,7 @@ utf8其实是unicode的一种实现，其实是把unicode通过某种规则编�
 <script>
     setTimeout(function() {
             var hjs = document.createElement('script');
-            hjs.setAttribute('src', 'https://www.acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
             document.body.appendChild(hjs);
         }, 0);
 
