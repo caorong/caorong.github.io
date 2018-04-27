@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>redis 迁移 codis | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2018/04/24/redis-migrator/">redis 迁移 codis</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">April 24 2018</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近需要将一个 非常大的 redis 迁移到 codis遇到了一些问题</p>
+<p>首先说一下 redis 导数据的一些基本方法</p>
+<ol>
+<li><p>停写 bgsave， 然后 拷贝 dump文件<br><br> 远古时期做法，需要停机</p>
+</li>
+<li><p>直接将 新的redis 作为老的redis的 slave 让她自己同步。</p>
+<p> 现在主流，快, 但是对大内存的redis 不友好。</p>
+<p> 流程就是先 子进程bgsave， 然后传递全量数据， 父进程缓冲增量数据(缓冲区大小需要配置)， 子进程全量数据传完后， 传送增量数据。</p>
+<p> 全量数据传递过程中需要buffer 会占用内存空间。</p>
+<p> 版本 &lt; 2.8.18 bgsave 由于要写文件，会让 磁盘io负载变高， 数据量大时会 会阻塞 write/fsync 系统调用，会让master 不可用。</p>
+<p> 版本 &gt;= <a href="https://redis.io/topics/replication#diskless-replication" target="_blank" rel="external">2.8.18</a> 可以不落地, 减小对 master 磁盘io 压力。</p>
+</li>
+<li><p>BGREWRITEAOF 然后自己自己解析aof 发送</p>
+<p> 其实原理同上，一样先bgsave， 在子进程将全量数据以 aof 格式写磁盘， 然后父进程存增量数据到缓冲区，(哪不是一个链表， 无限制), 全量写入到 磁盘后，追加增量数据。</p>
+</li>
+</ol>
+<p>首先用codis官方的迁移工具 redis-port </p>
+<p>他的原理是，2</p>
+<p>不过实际测试发现， 如果数据量很大，<a href="https://github.com/CodisLabs/codis/issues/185" target="_blank" rel="external">则会造成 redis 缓冲区不足</a>， 强制关闭 (p)sync 连接。 有修改的方法， 但是如果写入的量依然很大， 仍旧存在风险。</p>
+<p>别的同步工具 也差不多这个原理。</p>
+<p>需要注意的是， 不管用啥方法， 都应该在 slave 上面 执行。 避免影响 master。</p>
+<p>由于我们的redis 非常大 30+G， 并且 写的量也很大，机器的内存不是瓶颈， 再加上 需要对数据做一些个性化修改， 所以 最终使用3, 然后用自己解析aof 发到 codis</p>
+<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="http://mdba.cn/2015/03/17/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%EF%BC%882%EF%BC%89-replication-buffer%E4%B8%8Ereplication-backlog/" target="_blank" rel="external">http://mdba.cn/2015/03/17/redis%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%EF%BC%882%EF%BC%89-replication-buffer%E4%B8%8Ereplication-backlog/</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近需要将一个 非常大的 redis 迁"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2018/04/24/redis-migrator/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
