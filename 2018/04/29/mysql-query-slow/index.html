@@ -57,9 +57,16 @@
 <p>原因就是 虽然你只需要100条纪录，但是 mysql 默认会 先从文件读出3100条纪录，然后 orderby, limit.</p>
 <p>解决方法就是 加一个子查询， 仅查询 过滤 索引字段， 减少从文件读取纪录条数 </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from (select x from xx order by x limit 3000, 100) o join xx on o.x=xx.x  order by o.x</span><br></pre></td></tr></table></figure>
+<h3 id="order-by-多个"><a href="#order-by-多个" class="headerlink" title="order by 多个"></a>order by 多个</h3><p>order by 多个条件的话， mysql 必须配置 联合索引， 想象一下, 每一个索引 mysql 会给他维护一个 b+ tree, 所以，对于多个条件的 orderby 不存在相应的 b+ tree 的话 则仍旧会 filesort</p>
+<h3 id="数据量过小的话，优先全表扫描"><a href="#数据量过小的话，优先全表扫描" class="headerlink" title="数据量过小的话，优先全表扫描"></a>数据量过小的话，优先全表扫描</h3><p>因为mysql 的索引也是保存到文件的， 所以如果数据量小于 mysql 的文件缓冲区 则会在缓冲区内 用 filesort 排序， 而不是 用索引排序。</p>
+<p>原因的话， 因为 使用 innoDB的话, 因为 innoDB 只有一级索引的叶子节点存放的是 row 数据， 二级索引的叶子 存放的是 主键。</p>
+<p>所以， 如果使用二级索引作为排序， 过滤依据， 则至少需要读取2次 索引文件。</p>
+<p>而 如果数据量小，还不如 直接 读表更实在。</p>
 <h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/" target="_blank" rel="external">https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/</a></p>
 <p><a href="https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by" target="_blank" rel="external">https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by</a></p>
 <p><a href="https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/" target="_blank" rel="external">https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/</a></p>
+<p><a href="https://tech.meituan.com/mysql-index.html" target="_blank" rel="external">https://tech.meituan.com/mysql-index.html</a></p>
+<p><a href="http://blog.codinglabs.org/articles/theory-of-mysql-index.html" target="_blank" rel="external">http://blog.codinglabs.org/articles/theory-of-mysql-index.html</a></p>
 
   </section>
 </article>
