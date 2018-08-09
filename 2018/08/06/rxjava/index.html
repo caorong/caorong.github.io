@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>rxjava2 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2018/08/06/rxjava/">rxjava2</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">August 06 2018</p>
+  </section>
+
+  <section class="article-entry">
+    <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><ol>
+<li>最基础的 Observable 是观察者模式</li>
+<li>生产者消费者模式的话 需要 使用 <code>Flowable</code>, 因为需要积压</li>
+</ol>
+<h1 id="流式过程"><a href="#流式过程" class="headerlink" title="流式过程"></a>流式过程</h1><ol>
+<li>起点，生产事件</li>
+<li>过程, 操作函数进行加工</li>
+<li>终点，处理事件</li>
+</ol>
+<p>例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>).map(<span class="keyword">new</span> Function&lt;Integer, Integer&gt;() &#123;</span><br><span class="line">      <span class="function"><span class="keyword">public</span> Integer <span class="title">apply</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> integer;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;).subscribe(<span class="keyword">new</span> Consumer&lt;Integer&gt;() &#123;</span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(integer);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<h1 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h1><h2 id="谁，如何触发开始执行任务？"><a href="#谁，如何触发开始执行任务？" class="headerlink" title="谁，如何触发开始执行任务？"></a>谁，如何触发开始执行任务？</h2><p>触发任务由最末端的 subscribe 触发.</p>
+<p>他内部不断让上层的 对象调用 subscribeActual </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Observer&lt;? <span class="keyword">super</span> T&gt; observer)</span> </span>&#123;</span><br><span class="line">  subscribeActual(observer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/post_images/2018-08-08-01-30-46.png" alt=""></p>
+<h2 id="哪一个线程执行的-rx-计算？"><a href="#哪一个线程执行的-rx-计算？" class="headerlink" title="哪一个线程执行的 rx 计算？"></a>哪一个线程执行的 rx 计算？</h2><p>主要是这2个 <code>subscribeOn</code> 和 <code>observeOn</code> 如何判断</p>
+<p>他们和上面一样都是 Observable 都是通过 <code>subscribeActual</code>, 触发。</p>
+<h3 id="ObservableObserveOn-关键代码"><a href="#ObservableObserveOn-关键代码" class="headerlink" title="ObservableObserveOn 关键代码"></a>ObservableObserveOn 关键代码</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">subscribeActual</span><span class="params">(Observer&lt;? <span class="keyword">super</span> T&gt; observer)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 新建一个线程</span></span><br><span class="line">  Scheduler.Worker w = scheduler.createWorker();</span><br><span class="line">  source.subscribe(<span class="keyword">new</span> ObserveOnObserver&lt;T&gt;(observer, w, delayError, bufferSize));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ObserveOnObserver</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">BasicIntQueueDisposable</span>&lt;<span class="title">T</span>&gt;</span><br><span class="line">    <span class="keyword">implements</span> <span class="title">Observer</span>&lt;<span class="title">T</span>&gt;, <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 上层任务直接push到 queue</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(T t)</span> </span>&#123;</span><br><span class="line">    queue.offer(t);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再看看 ObservableMap 的代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribeActual</span><span class="params">(Observer&lt;? <span class="keyword">super</span> U&gt; t)</span> </span>&#123;</span><br><span class="line">    source.subscribe(<span class="keyword">new</span> MapObserver&lt;T, U&gt;(t, function));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也就是 和 map 一样， 从上层取数据, 只不过 onNext 吧任务派发到queue 内。</p>
+<p>上一个例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)</span><br><span class="line">        .map(<span class="keyword">new</span> Function&lt;Integer, Integer&gt;() &#123;</span><br><span class="line">          <span class="function"><span class="keyword">public</span> Integer <span class="title">apply</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> integer;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">        .observeOn(Schedulers.io())</span><br><span class="line">        .subscribe(<span class="keyword">new</span> Consumer&lt;Integer&gt;() &#123;</span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(integer);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<p>执行图:</p>
+<p><img src="/post_images/2018-08-09-02-00-33.png" alt=""></p>
+<p>也就是说 observeOn 将后面 前面的任务 一个个的作为 自任务，派发到queue 内， 线程内将 上层的 数据源里的数据 一个一个给 后面放到 线程池内执行。</p>
+<h3 id="ObservableSubscribeOn-关键代码"><a href="#ObservableSubscribeOn-关键代码" class="headerlink" title="ObservableSubscribeOn 关键代码"></a>ObservableSubscribeOn 关键代码</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribeActual</span><span class="params">(<span class="keyword">final</span> Observer&lt;? <span class="keyword">super</span> T&gt; s)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> SubscribeOnObserver&lt;T&gt; parent = <span class="keyword">new</span> SubscribeOnObserver&lt;T&gt;(s);</span><br><span class="line">  <span class="comment">// 后来的观察者 如果被订阅了，则触发他。</span></span><br><span class="line">  s.onSubscribe(parent);</span><br><span class="line">  parent.setDisposable(scheduler.scheduleDirect(<span class="keyword">new</span> SubscribeTask(parent)));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">SubscribeTask</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 整个 subscribe 行为在 线程内执行</span></span><br><span class="line">    <span class="comment">// source 是 代码上的上一层</span></span><br><span class="line">    source.subscribe(parent);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可见他和上面的 向下执行的不同， 他是用了 <code>onSubscribe</code> 也就是说， 他将 subscribe 的行为放到线程池内执行</p>
+<p>上一个例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Observable.just(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)</span><br><span class="line">        .map(<span class="keyword">new</span> Function&lt;Integer, Integer&gt;() &#123;</span><br><span class="line">          <span class="function"><span class="keyword">public</span> Integer <span class="title">apply</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> integer;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">        .subscribeOn(Schedulers.io())</span><br><span class="line">        .subscribe(<span class="keyword">new</span> Consumer&lt;Integer&gt;() &#123;</span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">accept</span><span class="params">(Integer integer)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        System.out.println(integer);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+<p><img src="/post_images/2018-08-09-02-03-00.png" alt=""></p>
+<p>这里 map 和 just 的操作 会在 线程内执行，也就是说，代码上面的 会在线程内执行</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://zhuanlan.zhihu.com/p/23584382" target="_blank" rel="external">https://zhuanlan.zhihu.com/p/23584382</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/23585300" target="_blank" rel="external">https://zhuanlan.zhihu.com/p/23585300</a></p>
+<p><a href="https://segmentfault.com/a/1190000004856071" target="_blank" rel="external">https://segmentfault.com/a/1190000004856071</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text= id="概念"><a href="#概"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2018/08/06/rxjava/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
