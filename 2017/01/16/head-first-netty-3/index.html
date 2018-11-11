@@ -144,7 +144,8 @@
 <p>于是一个 chunk 8mb 可以少分配一半的内存。</p>
 <h2 id="最佳实践"><a href="#最佳实践" class="headerlink" title="最佳实践"></a>最佳实践</h2><p>建议不使用 heap 的bytebuf pool，减小堆内gc 压力</p>
 <p>堆外的size 量力而为，有时候 并不一定需要分配时并行，毕竟只有第一次分配时需要锁。</p>
-<p>使用时完全可以，预申请buffer，因为一申请就申请了一个chunk 16mb 可能完全就够用了。</p>
+<p>但要注意， 如果当 iosize 远大于 arena size的话， 当大流量进来的时候， 锁的影响还是很大的.</p>
+<p>关于锁的影响， 完全可以通过预申请 buffer 解决, </p>
 <h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://my.oschina.net/flashsword/blog/159613" target="_blank" rel="external">https://my.oschina.net/flashsword/blog/159613</a></p>
 <p><a href="http://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy1/" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/linux/l-cn-zerocopy1/</a></p>
 <p><a href="http://www.jianshu.com/p/c4bd37a3555b" target="_blank" rel="external">http://www.jianshu.com/p/c4bd37a3555b</a></p>
