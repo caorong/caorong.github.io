@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>guava cache 使用须知 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2019/02/22/guava-cache/">guava cache 使用须知</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">February 22 2019</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近在重构一套老代码，发现了使用 guava cache 的几个坑。这里记录一下</p>
+<p>首先 guava cache 是一个带大小限制的LRU 的 concurrentMap</p>
+<p>在Map 的基础上， 还支持限size, 限read, write expire, 以及 removeListener</p>
+<p>然而, 使用以上提供的api 并不是没有成本的.</p>
+<h2 id="size-access-write-expire-和-removalListener-的数据结构"><a href="#size-access-write-expire-和-removalListener-的数据结构" class="headerlink" title="size, access, write expire 和 removalListener 的数据结构"></a>size, access, write expire 和 removalListener 的数据结构</h2><p>内部每一个功能点都通过一个 <code>Queue</code> 来维护.</p>
+<p>access, write , LRU 的机制 和 removalListener 都通过一个 <code>链表实现的Queue</code> 实现, 名字分别为 <code>recencyQueue</code>, <code>accessQueue</code>, <code>writeQueue</code>, <code>removalNotificationQueue</code></p>
+<p>Weak,Soft Reference 则直接使用了 jdk 的 ReferenceQueue.</p>
+<p>size 则通过每一个segment自己的 int 维护，超过了则删除 上面的Queue</p>
+<p>也就是说，如果啥功能都不启用，也需要一个Queue 用来维护 LRU。</p>
+<p>但如果同时启用了 accessExpire 和 writeExpire 的话，则需要同时维护3个 Queue。</p>
+<p>而 guava 为了节省额外的线程， 维护它们的工作分别被平摊在了 <code>每一次 写操作</code> 以及 <code>每64次 读操作</code>  上</p>
+<p>内部被抽象为一个 <code>cleanUp</code> 函数</p>
+<h2 id="具体干活-和-时间复杂度"><a href="#具体干活-和-时间复杂度" class="headerlink" title="具体干活 和 时间复杂度"></a>具体干活 和 时间复杂度</h2><ol>
+<li><p>将16个被GC 的<code>弱引用对象</code> (包括 key, value) 重新加入Cache, </p>
+<p> 关键函数: <code>drainReferenceQueues</code><br> 时间复杂度 O(16 x 2)</p>
+</li>
+<li><p>循环最近的访问记录 recencyQueue 的访问纪录， 通过修改 AccessQueue， 重构LRU</p>
+<p> 关键函数: <code>drainRecencyQueue</code><br> 时间复杂度 O(n)</p>
+</li>
+<li><p>清理过期的 AccessQueue, WriteQueue, 从链表头扫描, 直至第一个不过期位置</p>
+<p> 关键函数: <code>expireEntries</code><br> 时间复杂度 O(n x 2)</p>
+</li>
+<li><p>消费所有 removalNotifaction 并在<code>用户线程</code>依次执行绑定的 listener </p>
+<p> 关键函数: <code>processPendingNotifications</code><br> 时间复杂度 O(n)<br>```</p>
+</li>
+</ol>
+<p>需要注意的是， 如果使用 removeListener 的话，由于她的执行也是在每一次读写操作中，</p>
+<p>如果干了过慢的事情，会影响到 实际使用时的 put get 操作，具体现象 就是会发生抖动</p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近在重构一套老代码，发现了使用 gua"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2019/02/22/guava-cache/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
