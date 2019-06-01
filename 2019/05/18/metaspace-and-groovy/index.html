@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>metaspace 和 groovy | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2019/05/18/metaspace-and-groovy/">metaspace 和 groovy</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">May 18 2019</p>
+  </section>
+
+  <section class="article-entry">
+    <p>最近线上遇到个问题，简单来说就是 metaspace oom。</p>
+<h1 id="现象"><a href="#现象" class="headerlink" title="现象"></a>现象</h1><p>异常日志是 metaspace oom， 堆栈阻塞在 <code>groovy classLoader loadclass</code> 的堆栈上。</p>
+<p>我们的业务上确实嵌入了 groovy 代码， 动态执行, 但是 该groovy 代码并不会被频繁更新。</p>
+<p>深入排查问题的时候遇到几个很奇怪的现象</p>
+<ol>
+<li>重现打印 jstat -gcutil, 发现 metaspace 百分比并不高 每次都不同，22+%, 50+%, 90+% 都有 </li>
+<li>抛出异常的时候 老年代也不高，说明只能是 metaspace 的原因</li>
+<li>调大 metaspace 后确实能恢复，说明 metaspace 确实不够用, 分别对metaspace 调大到 500M, 700M, 1G metaspace 的白分别都是90+%</li>
+<li>查看实际的 metaspace 空间占用后，发现，虽然高并发下，一开始会占用300多mb 的metaspace，但是在运行一段时间后，会减少，并回落到正常水平。</li>
+</ol>
+<p>下面将逐步分析<br></p>
+<h1 id="jstat-显示metaspace不正确"><a href="#jstat-显示metaspace不正确" class="headerlink" title="jstat 显示metaspace不正确"></a>jstat 显示metaspace不正确</h1><p>首先，由于已知问题一定是metaspace 溢出， 只是不清楚为啥jstat 显示不正确。</p>
+<p>由于 metaspace 属于堆外内存， jmap 查不到。</p>
+<p>然而，java8 新引入了 <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/nmt-8.html" target="_blank" rel="external">Native Memory Tracking</a> 通过jcmd 查, 确实观测到了metaspace 不断增长的现象， 并且同时，jstat 并不增长。</p>
+<p>附: 查看metaspace 方法，在运行java进程上添加参数 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-XX:NativeMemoryTracking=summary</span><br><span class="line">-XX:+UnlockDiagnosticVMOptions</span><br><span class="line">-XX:+PrintNMTStatistics</span><br></pre></td></tr></table></figure>
+<p>运行期执行 <code>jcmd {pid} VM.native_memory summary</code> 观测</p>
+<p>然后研究了 groovy 的classloader 之后便打算重现出来。</p>
+<p>由于 groovy 的classloader 是自己的classloader， 于是这里也写一个classloader， 模拟class泄漏的情况，观察 jstat 是否不变</p>
+<p>代码在<a href="https://gist.github.com/caorong/6b73ffe82c15c4570e33d648323dd1f2" target="_blank" rel="external">gist</a></p>
+<p>然后， 启动后，同时 打印jcmd 和 jstat 可以明显观察到, jstat metaspace 不变， jcmd 的 Class 区不断增大的现象， 直至oom</p>
+<p>结论: jstat 只能追踪到 AppClassLoader 和 ExtClassloader 和 Bootstrap, 其他的 自定义的 classloader load 的类，会进 metaspace， 但是jstat 无法追踪到。</p>
+<h2 id="groovy-为何占用这么多metaspce？"><a href="#groovy-为何占用这么多metaspce？" class="headerlink" title="groovy 为何占用这么多metaspce？"></a>groovy 为何占用这么多metaspce？</h2><p>首先，在研究groovy 为啥占用 metaspace 之前，先对线上的现象做了详细的观察。</p>
+<ol>
+<li>和并发有关，流量大的时候，必现oom， 流量小不会出现</li>
+<li>调大 metaspace 空间后，长期运行正常，metaspace 没有增长，而是保持在一个固定范围内，说明 我们现有的使用 groovy 的方式并没有问题，不存在内存泄漏。</li>
+</ol>
+<h4 id="猜测"><a href="#猜测" class="headerlink" title="猜测:"></a>猜测:</h4><p>groovy 一定存在一种缓存class的机制，并且，他对这个缓存 并没有线程安全的控制。</p>
+<p>首先，执行groovy 脚本需要经过以下几个<code>步骤</code></p>
+<ol>
+<li>初始化 groovy scriptEngine </li>
+<li>eval 脚本</li>
+<li>填入参数， invokeFunction</li>
+</ol>
+<p>这里主要测试了以下几种<code>情况</code></p>
+<ol>
+<li>并发执行 步骤2</li>
+<li>并发执行 步骤3</li>
+</ol>
+<h4 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h4><p>注意: 运行时， 添加jvm启动参数 <code>-verbose</code> 可见类加载日志</p>
+<p>情况1 结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[Loaded Script14 from file:/groovy/script]</span><br><span class="line">[Loaded Script15 from file:/groovy/script]</span><br><span class="line">[Loaded Script2 from file:/groovy/script]</span><br><span class="line">[Loaded Script9 from file:/groovy/script]</span><br><span class="line">[Loaded Script18 from file:/groovy/script]</span><br><span class="line">[Loaded Script20 from file:/groovy/script]</span><br><span class="line">[Loaded Script17 from file:/groovy/script]</span><br><span class="line">[Loaded sun.reflect.GeneratedConstructorAccessor5 from __JVM_DefineClass__]</span><br><span class="line">[Loaded Script8 from file:/groovy/script]</span><br><span class="line">[Loaded sun.reflect.GeneratedConstructorAccessor6 from __JVM_DefineClass__]</span><br><span class="line">[Loaded sun.reflect.GeneratedConstructorAccessor7 from __JVM_DefineClass__]</span><br><span class="line">[Loaded Script16 from file:/groovy/script]</span><br></pre></td></tr></table></figure>
+<p>情况2 结果 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[Loaded org.apache.commons.lang.StringUtils$contains$0 from file:/Users/caorong/.m2/repository/commons-lang/commons-lang/2.6/commons-lang-2.6.jar]</span><br><span class="line">[Loaded com.google.common.collect.Lists$Partition from file:/Users/caorong/.m2/repository/com/google/guava/guava/19.0/guava-19.0.jar]</span><br><span class="line">[Loaded org.apache.commons.lang.StringUtils$contains from file:/Users/caorong/.m2/repository/commons-lang/commons-lang/2.6/commons-lang-2.6.jar]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">[Loaded com.xxxx.IpConvertUtil$getIpFromString$3 from file:/Users/caorong/.m2/repository/com/xxxxx/0.0.3-SNAPSHOT/xxxxx-0.0.3-SNAPSHOT-test.jar]</span><br><span class="line">[Loaded com.xxxx.IpConvertUtil$getIpFromString$4 from file:/Users/caorong/.m2/repository/com/xxxxx/0.0.3-SNAPSHOT/xxxxx-0.0.3-SNAPSHOT-test.jar]</span><br><span class="line">[Loaded com.xxxx.IpConvertUtil$getIpFromString$1 from file:/Users/caorong/.m2/repository/com/xxxxx/0.0.3-SNAPSHOT/xxxxx-0.0.3-SNAPSHOT-test.jar]</span><br><span class="line">[Loaded com.xxxx.IpConvertUtil$getIpFromString$0 from file:/Users/caorong/.m2/repository/com/xxxxx/0.0.3-SNAPSHOT/xxxxx-0.0.3-SNAPSHOT-test.jar]</span><br><span class="line">[Loaded com.xxxx.IpConvertUtil$getIpFromString$5 from file:/Users/caorong/.m2/repository/com/xxxxx/0.0.3-SNAPSHOT/xxxxx-0.0.3-SNAPSHOT-test.jar]</span><br></pre></td></tr></table></figure>
+<p>可见， 这2种情况均会造成重复load 类</p>
+<p>groovy 均没有对重复加载类这种情况做限制。</p>
+<h4 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h4><p>注意: 以下源码版本为 groovy-all-2.4.7</p>
+<h6 id="情况1分析"><a href="#情况1分析" class="headerlink" title="情况1分析"></a>情况1分析</h6><p>源码在 GroovyScriptEngineImpl.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function">Class <span class="title">getScriptClass</span><span class="params">(String script)</span></span><br><span class="line">            <span class="keyword">throws</span> CompilationFailedException </span>&#123;</span><br><span class="line">        <span class="comment">// classMap为全局的缓存，对每一个script 缓存下他的class</span></span><br><span class="line">        Class clazz = classMap.get(script);</span><br><span class="line">        <span class="keyword">if</span> (clazz != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> clazz;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 内部真正将 script parse 为 class</span></span><br><span class="line">        clazz = loader.parseClass(script, generateScriptName());</span><br><span class="line">        classMap.put(script, clazz);</span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// parseClass 内部</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class <span class="title">parseClass</span><span class="params">(GroovyCodeSource codeSource, <span class="keyword">boolean</span> shouldCacheSource)</span> <span class="keyword">throws</span> CompilationFailedException </span>&#123;</span><br><span class="line">    <span class="comment">// 重锁， 保证一个script 的parse过程串行 </span></span><br><span class="line">        <span class="keyword">synchronized</span> (sourceCache) &#123;</span><br><span class="line">            Class answer = sourceCache.get(codeSource.getName());</span><br><span class="line">            <span class="keyword">if</span> (answer != <span class="keyword">null</span>) <span class="keyword">return</span> answer;</span><br><span class="line">            answer = doParseClass(codeSource);</span><br><span class="line">            <span class="keyword">if</span> (shouldCacheSource) sourceCache.put(codeSource.getName(), answer);</span><br><span class="line">            <span class="keyword">return</span> answer;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>首先， 将脚本动态parse为 class是一个比较慢的操作，当多线程下，会造成多个线程都进入 内部parseClass 的锁。 造成排队，并且依次parse 多个 重复class。</p>
+<h6 id="情况2分析"><a href="#情况2分析" class="headerlink" title="情况2分析"></a>情况2分析</h6><p>情况2, 代码执行的入口为 CallSiteArray </p>
+<p>这里稍微拓展以下 groovy 执行脚本的原理，具体可以参考这篇<a href="http://www.blogjava.net/johnnyjian/archive/2009/03/16/259931.html" target="_blank" rel="external">文章</a>, 也可以将 groovy 脚本 反编译后一看便知，他会把脚本都转换成 一个个 callSiteArray的静态函数。</p>
+<p>然后，eval 的时候，仅会把import 的类给事先load。但是，脚本内部的一些静态函数会在执行时动态 load，而这正是造成了脚本被并发执行时重复load 的原因。</p>
+<p>源码见 ClassInfo.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ClassInfo <span class="title">getClassInfo</span> <span class="params">(Class cls)</span> </span>&#123;</span><br><span class="line">    LocalMap map = getLocalClassInfoMap();</span><br><span class="line">    <span class="keyword">if</span> (map!=<span class="keyword">null</span>) <span class="keyword">return</span> map.get(cls);</span><br><span class="line">    <span class="keyword">return</span> (ClassInfo) globalClassValue.get(cls);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> LocalMap <span class="title">getLocalClassInfoMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    ThreadLocalMapHandler handler = localMapRef.get();</span><br><span class="line">    SoftReference&lt;LocalMap&gt; ref=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (handler!=<span class="keyword">null</span>) ref = handler.get();</span><br><span class="line">    LocalMap map=<span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (ref!=<span class="keyword">null</span>) map = ref.get();</span><br><span class="line">    <span class="keyword">return</span> map;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们知道， classloader 不能load 重复的类， 所以，如果加载了多个重复的类，她会在最后添加一个自增的数字，这也是为啥情况2的结果日志，会有很多 <code>$x</code>  </p>
+<p>代码见 ClassLoaderForClassArtifacts.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">createClassName</span><span class="params">(Method method)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> String name;</span><br><span class="line">    <span class="keyword">final</span> String clsName = klazz.get().getName();</span><br><span class="line">    <span class="keyword">if</span> (clsName.startsWith(<span class="string">"java."</span>))</span><br><span class="line">      name = clsName.replace(<span class="string">'.'</span>,<span class="string">'_'</span>) + <span class="string">"$"</span> + method.getName();</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      name = clsName + <span class="string">"$"</span> + method.getName();</span><br><span class="line">    <span class="keyword">int</span> suffix = classNamesCounter.getAndIncrement();</span><br><span class="line">    <span class="keyword">return</span> suffix == -<span class="number">1</span>? name : name + <span class="string">"$"</span> + suffix;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样的 map，和情况1一样，由于load 慢，造成了重复加载</p>
+<h2 id="groovy-为啥占用了metaspace-后，在一段时间后，会回收"><a href="#groovy-为啥占用了metaspace-后，在一段时间后，会回收" class="headerlink" title="groovy 为啥占用了metaspace 后，在一段时间后，会回收"></a>groovy 为啥占用了metaspace 后，在一段时间后，会回收</h2><p>groovy 内部存在一个缓存机制。</p>
+<p>首先，抛出一个结论，<a href="https://zhuanlan.zhihu.com/p/25279400" target="_blank" rel="external">类只有在他所属的类加载器被回收后， 才会被回收。</a></p>
+<p>而 groovy 的 class 和 她的 classloader , 都是 softReference，他直接靠jvm 的gc机制，将classloader unload 了, </p>
+<p>这也是为啥， 高并发下,  metaspace 会在一开始增高， 之后会慢慢降低到正常水平。</p>
+<p>至于 groovy 的类加载的缓存机制将在后面一片文章在深入写, 这里就不继续扩展。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>最后说一下在高并发场景下使用groovy 脚本的最佳(减少重复类)实践</p>
+<ol>
+<li>同样的script 保证只有一个 scriptEngine 操作他</li>
+<li>同样的script 在业务层在并发操作之前事先eval</li>
+<li>script里面尽量减少外部类的依赖，如果需要依赖，有条件的话最好预热调用一次(让外部类编译好)。</li>
+</ol>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=最近线上遇到个问题，简单来说就是 met"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2019/05/18/metaspace-and-groovy/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
