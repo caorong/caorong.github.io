@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://caorong.github.io/2019/06/07/java-native-quick-start/</loc>
+    
+    <lastmod>2019-06-09T08:50:27.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://caorong.github.io/2019/06/01/spinlock-clh-aqs/</loc>
     
     <lastmod>2019-06-01T16:40:24.000Z</lastmod>
@@ -380,13 +387,6 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/08/24/about-some-onlinetv/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://caorong.github.io/2015/04/04/ubuntu-win7-dual-system/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
@@ -395,6 +395,13 @@
   
   <url>
     <loc>http://caorong.github.io/2015/03/17/debug-clojure/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2015/02/22/the-little-schemer-in-clojure-chapter-7/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -415,7 +422,7 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2015/02/22/the-little-schemer-in-clojure-chapter-7/</loc>
+    <loc>http://caorong.github.io/2015/02/22/the-little-schemer-in-clojure-chapter-6/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -429,35 +436,7 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2015/02/22/the-little-schemer-in-clojure-chapter-6/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://caorong.github.io/2015/02/20/the-little-schemer-in-clojure-chapter-4/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2015/02/12/the-little-schemer-in-clojure-chapter-3/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2015/02/04/not-completely-believe-open-source-code/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2015/02/10/the-little-schemer-in-clojure-chapter-2/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -471,21 +450,21 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2015/01/28/background-pic-service/</loc>
+    <loc>http://caorong.github.io/2015/02/12/the-little-schemer-in-clojure-chapter-3/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/12/09/about-jdbc/</loc>
+    <loc>http://caorong.github.io/2015/02/10/the-little-schemer-in-clojure-chapter-2/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/10/12/bean-conflict-in-spring-application-and-web/</loc>
+    <loc>http://caorong.github.io/2015/02/04/not-completely-believe-open-source-code/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -499,7 +478,14 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/09/16/build-a-website-with-python1/</loc>
+    <loc>http://caorong.github.io/2014/10/12/bean-conflict-in-spring-application-and-web/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2015/01/28/background-pic-service/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -513,21 +499,7 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/10/11/compile-thrift-on-ubuntu/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/10/01/learning-in-japan/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/06/14/some-trap-meet-recently/</loc>
+    <loc>http://caorong.github.io/2014/12/09/about-jdbc/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -541,6 +513,13 @@
   </url>
   
   <url>
+    <loc>http://caorong.github.io/2014/10/11/compile-thrift-on-ubuntu/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://caorong.github.io/2014/09/17/build-a-website-with-python2/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
@@ -548,7 +527,7 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/07/05/build-apue-sourcecode/</loc>
+    <loc>http://caorong.github.io/2014/10/01/learning-in-japan/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -562,77 +541,14 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2014/06/01/about-http-session/</loc>
+    <loc>http://caorong.github.io/2014/09/16/build-a-website-with-python1/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2015/05/21/2014-05-3-%E5%85%B3%E4%BA%8E%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/05/11/ascllfy-your-text/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/02/02/install-pptp-on-bandwagon/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2015/03/04/the-little-schemer-in-clojure-chapter-8/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2015/05/01/use-sbt-create-play-project/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/03/29/confuse-with-character-encoding/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/02/14/switch-from-tomcat-to-jetty/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/03/22/deal-with-crossdomain-with-jsonp/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2014/02/01/summary-in-2013/</loc>
-    
-    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://caorong.github.io/2013/12/29/just-do-my-best/</loc>
+    <loc>http://caorong.github.io/2014/07/05/build-apue-sourcecode/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -646,21 +562,56 @@
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2013/12/21/compile-and-play-quack3-on-mac/</loc>
+    <loc>http://caorong.github.io/2015/05/21/2014-05-3-%E5%85%B3%E4%BA%8E%E6%96%AD%E7%82%B9%E7%BB%AD%E4%BC%A0/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2013/10/20/learning-javas-threadPoolExecutor/</loc>
+    <loc>http://caorong.github.io/2014/06/01/about-http-session/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://caorong.github.io/2013/09/23/ntr-little-town/</loc>
+    <loc>http://caorong.github.io/2014/06/14/some-trap-meet-recently/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/02/01/summary-in-2013/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/05/11/ascllfy-your-text/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/03/29/confuse-with-character-encoding/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2015/05/01/use-sbt-create-play-project/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/03/22/deal-with-crossdomain-with-jsonp/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
@@ -681,6 +632,27 @@
   </url>
   
   <url>
+    <loc>http://caorong.github.io/2014/02/14/switch-from-tomcat-to-jetty/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2015/03/04/the-little-schemer-in-clojure-chapter-8/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/02/02/install-pptp-on-bandwagon/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://caorong.github.io/2013/10/27/some-problem-when-use-Transaction-in-spring/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
@@ -688,7 +660,42 @@
   </url>
   
   <url>
+    <loc>http://caorong.github.io/2013/10/20/learning-javas-threadPoolExecutor/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2013/12/29/just-do-my-best/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2013/12/21/compile-and-play-quack3-on-mac/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://caorong.github.io/2013/09/14/conclusion-about-last-two-month/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2013/09/23/ntr-little-town/</loc>
+    
+    <lastmod>2015-05-21T14:34:30.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://caorong.github.io/2014/08/24/about-some-onlinetv/</loc>
     
     <lastmod>2015-05-21T14:34:30.000Z</lastmod>
     
