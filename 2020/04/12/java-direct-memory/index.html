@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>java 堆外内存 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2020/04/12/java-direct-memory/">java 堆外内存</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">April 12 2020</p>
+  </section>
+
+  <section class="article-entry">
+    <p>这篇文章将整理一下java 堆外内存的问题的一些常用处理方法。</p>
+<h1 id="java-内存占用盘点"><a href="#java-内存占用盘点" class="headerlink" title="java 内存占用盘点"></a>java 内存占用盘点</h1><p>java 实际会使用内存情况如下</p>
+<table>
+<thead>
+<tr>
+<th>堆内</th>
+<th>线程栈</th>
+<th>方法区</th>
+<th>二进制代码</th>
+<th>堆外</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>xmx</td>
+<td>线程数 x xss</td>
+<td>存储类定义以及常量池</td>
+<td>jit多层编译代码</td>
+<td>被netty或其他堆外缓存使用</td>
+</tr>
+</tbody>
+</table>
+<p>注意： 只有除了堆内，其他内存都占用的堆外内存, 他们都算整个java进程占用的内存，但无法被类似 jmap，mat 等堆内分析工具分析。</p>
+<h1 id="使用NMT-追踪-JVM-自用的堆外内存情况"><a href="#使用NMT-追踪-JVM-自用的堆外内存情况" class="headerlink" title="使用NMT 追踪 JVM 自用的堆外内存情况"></a>使用NMT 追踪 JVM 自用的堆外内存情况</h1><p>NMT是Java7U40引入的HotSpot新特性，可用于监控JVM原生内存的使用，但比较可惜的是，目前的NMT不能监控到JVM之外或原生库分配的内存</p>
+<p>使用方式，需要在jvm 启动时加上参数， (注意: 据<a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html" target="_blank" rel="external">官方文档</a>开启该功能会影响 5%-10% 的性能)</p>
+<p>配置方式:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-XX:NativeMemoryTracking=summary 或者 -XX:NativeMemoryTracking=detail</span><br></pre></td></tr></table></figure>
+<p>查询方式: </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jcmd &lt;pid&gt; VM.native_memory [summary | detail | baseline | summary.diff | detail.diff</span><br></pre></td></tr></table></figure>
+<p>e.g</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">jcmd 35740 VM.native_memory summary</span><br><span class="line">35740:</span><br><span class="line"></span><br><span class="line">Native Memory Tracking:</span><br><span class="line"></span><br><span class="line">Total: reserved=3516019KB, committed=244959KB</span><br><span class="line">                  堆内</span><br><span class="line">-                 Java Heap (reserved=2097152KB, committed=131072KB)</span><br><span class="line">                            (mmap: reserved=2097152KB, committed=131072KB)</span><br><span class="line"></span><br><span class="line">                      类数据</span><br><span class="line">-                     Class (reserved=1062038KB, committed=10518KB)</span><br><span class="line">                            (classes #873)</span><br><span class="line">                            (malloc=5270KB #462)</span><br><span class="line">                            (mmap: reserved=1056768KB, committed=5248KB)</span><br><span class="line"></span><br><span class="line">                     线程栈所占空间</span><br><span class="line">-                    Thread (reserved=16453KB, committed=16453KB)</span><br><span class="line">                            (thread #17)</span><br><span class="line">                            (stack: reserved=16384KB, committed=16384KB)</span><br><span class="line">                            (malloc=49KB #86)</span><br><span class="line">                            (arena=20KB #33)</span><br><span class="line">                       </span><br><span class="line">                       生成代码</span><br><span class="line">-                      Code (reserved=249803KB, committed=2739KB)</span><br><span class="line">                            (malloc=203KB #651)</span><br><span class="line">                            (mmap: reserved=249600KB, committed=2536KB)</span><br><span class="line">                         </span><br><span class="line">                         gc 占用的空间 比如 card table</span><br><span class="line">-                        GC (reserved=82395KB, committed=75999KB)</span><br><span class="line">                            (malloc=5771KB #121)</span><br><span class="line">                            (mmap: reserved=76624KB, committed=70228KB)</span><br><span class="line"></span><br><span class="line">                   编译生成代码时所占用的空间</span><br><span class="line">-                  Compiler (reserved=138KB, committed=138KB)</span><br><span class="line">                            (malloc=7KB #41)</span><br><span class="line">                            (arena=131KB #3)</span><br><span class="line"></span><br><span class="line">                   其他内部内存 command line parser, JVMTI, properties and so on</span><br><span class="line">-                  Internal (reserved=5787KB, committed=5787KB)</span><br><span class="line">                            (malloc=5755KB #2844)</span><br><span class="line">                            (mmap: reserved=32KB, committed=32KB)</span><br><span class="line"></span><br><span class="line">                     Symbol：保留字符串（Interned String）的引用与符号表引用放在这里       </span><br><span class="line">-                    Symbol (reserved=1962KB, committed=1962KB)</span><br><span class="line">                            (malloc=1250KB #2173)</span><br><span class="line">                            (arena=712KB #1)</span><br><span class="line"></span><br><span class="line">     本NMT 工具自己所需内存</span><br><span class="line">-    Native Memory Tracking (reserved=105KB, committed=105KB)</span><br><span class="line">                            (malloc=3KB #41)</span><br><span class="line">                            (tracking overhead=101KB)</span><br><span class="line"></span><br><span class="line">                文档未提及</span><br><span class="line">-               Arena Chunk (reserved=187KB, committed=187KB)</span><br><span class="line">                            (malloc=187KB)</span><br></pre></td></tr></table></figure>
+<p><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr022.html#BABHIFJC" target="_blank" rel="external">各项解释的官方文档</a></p>
+<p>保留内存（reserved）：reserved memory 是指JVM 通过mmaped PROT_NONE 申请的虚拟地址空间，在页表中已经存在了记录（entries），保证了其他进程不会被占用，且保证了逻辑地址的连续性，能简化指针运算。</p>
+<p>提交内存（commited）：committed memory 是JVM向操做系统实际分配的内存（malloc/mmap）,mmaped PROT_READ | PROT_WRITE,仍然会page faults，但是跟 reserved 不同，完全内核处理像什么也没发生一样。</p>
+<p>其他内部内存 (Internal): 注意 <code>Netty</code> 使用的 <code>ByteBuffer.allocateDirect</code> 内部调用的 <code>Unsafe.allocateMemory</code> 内部其实会被 NMT 收集为 Internal 分类。</p>
+<p>但是 MappedByteBuffers( 由 FileChannel.map 触发) 则不会被 NMT 收集到。但却会被操作系统收集。</p>
+<p>所以，对于这个堆外内存的监控，jcmd 还不够，得上后续linux 的通用进程 内存分析工具。</p>
+<p>这里需要注意的是：由于malloc/mmap的lazy allocation and paging机制，即使是commited的内存，也不一定会真正分配物理内存。</p>
+<h1 id="自用堆外内存如何追踪"><a href="#自用堆外内存如何追踪" class="headerlink" title="自用堆外内存如何追踪"></a>自用堆外内存如何追踪</h1><h2 id="使用pmap-工具查看进程内存占用"><a href="#使用pmap-工具查看进程内存占用" class="headerlink" title="使用pmap 工具查看进程内存占用"></a>使用pmap 工具查看进程内存占用</h2><p>pmap -x {pid}</p>
+<p>e.g</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@test-b12-java-3-52 ~]# pmap -x 140087</span><br><span class="line">140087:   /usr/j2sdk/jdk1.8.0_191/bin/java -Djava.util.logging.config.file=/root/apache-tomcat-xxx</span><br><span class="line">Address           Kbytes     RSS   Dirty Mode   Mapping</span><br><span class="line">0000000000400000       4       0       0 r-x--  java</span><br><span class="line">0000000000600000       4       4       4 r----  java</span><br><span class="line">0000000000601000       4       4       4 rw---  java</span><br><span class="line">00000000007d9000     580     508     508 rw---    [ anon ]</span><br><span class="line">0000000080000000 2105236 2105044 2105044 rw---    [ anon ]</span><br><span class="line">...</span><br><span class="line">00007fc21b3aa000       4       4       4 rw---    [ anon ]</span><br><span class="line">00007ffd9291e000      84      44      44 rw---    [ stack ]</span><br><span class="line">00007ffd92972000       4       4       0 r-x--    [ anon ]</span><br><span class="line">ffffffffff600000       4       0       0 r-x--    [ anon ]</span><br><span class="line">----------------  ------  ------  ------</span><br><span class="line">total kB        16462260 3103136 3096156</span><br></pre></td></tr></table></figure>
+<p>可见上述进程 实际占用内存 rss 大约3G</p>
+<p>pmap命令内部实际是读取了/proc/pid/maps和/porc/pid/smaps文件来输出。</p>
+<h2 id="使用strace-监控下内存分配和回收的系统调用"><a href="#使用strace-监控下内存分配和回收的系统调用" class="headerlink" title="使用strace 监控下内存分配和回收的系统调用"></a>使用strace 监控下内存分配和回收的系统调用</h2><p>strace -o xxx.txt -T -tt -e mmap,munmap,mprotect -fp 12</p>
+<p>e.g</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">140140 23:00:00.624788 mprotect(0x7fc21b3a5000, 4096, PROT_READ) = 0 &lt;0.000205&gt;</span><br><span class="line">140140 23:00:00.625226 mprotect(0x7fc21b3a5000, 4096, PROT_READ|PROT_WRITE) = 0 &lt;0.000168&gt;</span><br><span class="line">140140 23:00:00.625604 mprotect(0x7fc21b3a6000, 4096, PROT_NONE) = 0 &lt;0.000189&gt;</span><br><span class="line">140140 23:00:00.688019 mprotect(0x7fc21b3a6000, 4096, PROT_READ) = 0 &lt;0.000161&gt;</span><br><span class="line">140140 23:00:12.897296 mprotect(0x7fc21b3a5000, 4096, PROT_READ) = 0 &lt;0.000374&gt;</span><br><span class="line">142593 23:00:12.898044 --- SIGSEGV &#123;si_signo=SIGSEGV, si_code=SEGV_ACCERR, si_addr=0x7fc21b3a5880&#125; ---</span><br><span class="line">20726 23:00:12.898063 --- SIGSEGV &#123;si_signo=SIGSEGV, si_code=SEGV_ACCERR, si_addr=0x7fc21b3a5480&#125; ---</span><br><span class="line">140140 23:00:12.898075 mprotect(0x7fc21b3a5000, 4096, PROT_READ|PROT_WRITE) = 0 &lt;0.000266&gt;</span><br><span class="line">140140 23:00:12.899591 mprotect(0x7fc21b3a6000, 4096, PROT_NONE) = 0 &lt;0.000250&gt;</span><br><span class="line">140140 23:00:12.905392 mprotect(0x7fc21b3a6000, 4096, PROT_READ) = 0 &lt;0.000115&gt;</span><br><span class="line">140140 23:00:13.101242 mprotect(0x7fc21b3a5000, 4096, PROT_READ) = 0 &lt;0.000272&gt;</span><br><span class="line">140140 23:00:13.101815 mprotect(0x7fc21b3a5000, 4096, PROT_READ|PROT_WRITE) = 0 &lt;0.000235&gt;</span><br><span class="line">140140 23:00:13.102247 mprotect(0x7fc21b3a6000, 4096, PROT_NONE) = 0 &lt;0.000149&gt;</span><br><span class="line">140140 23:00:13.158721 mprotect(0x7fc21b3a6000, 4096, PROT_READ) = 0 &lt;0.000213&gt;</span><br><span class="line">142592 23:00:13.177198 mmap(NULL, 44793, PROT_READ, MAP_SHARED, 96, 0x84000) = 0x7fc1fc068000 &lt;0.000400&gt;</span><br><span class="line">142592 23:00:13.181533 munmap(0x7fc1fc068000, 44793) = 0 &lt;0.000445&gt;</span><br><span class="line">142592 23:00:13.246486 mmap(NULL, 44793, PROT_READ, MAP_SHARED, 96, 0x84000) = 0x7fc1fc068000 &lt;0.000381&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://blog.csdn.net/qianshangding0708/article/details/100978730" target="_blank" rel="external">https://blog.csdn.net/qianshangding0708/article/details/100978730</a></p>
+<p><a href="https://stackoverflow.com/questions/47309859/what-is-contained-in-code-internal-sections-of-jcmd" target="_blank" rel="external">https://stackoverflow.com/questions/47309859/what-is-contained-in-code-internal-sections-of-jcmd</a></p>
+<p><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html" target="_blank" rel="external">https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html</a></p>
+<p><a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr022.html#BABHIFJC" target="_blank" rel="external">https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr022.html#BABHIFJC</a></p>
+<p><a href="http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/a9b412abe617/src/share/vm/memory/allocation.hpp#l147" target="_blank" rel="external">http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/a9b412abe617/src/share/vm/memory/allocation.hpp#l147</a></p>
+<p><a href="https://www.baeldung.com/java-stack-heap" target="_blank" rel="external">https://www.baeldung.com/java-stack-heap</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=这篇文章将整理一下java 堆外内存的问"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2020/04/12/java-direct-memory/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>

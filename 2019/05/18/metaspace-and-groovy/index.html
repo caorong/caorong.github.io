@@ -47,9 +47,9 @@
 <li>调大 metaspace 后确实能恢复，说明 metaspace 确实不够用, 分别对metaspace 调大到 500M, 700M, 1G metaspace 的白分别都是90+%</li>
 <li>查看实际的 metaspace 空间占用后，发现，虽然高并发下，一开始会占用300多mb 的metaspace，但是在运行一段时间后，会减少，并回落到正常水平。</li>
 </ol>
-<p>下面将逐步分析<br></p>
+<p>下面将逐步分析</p>
 <h1 id="jstat-显示metaspace不正确"><a href="#jstat-显示metaspace不正确" class="headerlink" title="jstat 显示metaspace不正确"></a>jstat 显示metaspace不正确</h1><p>首先，由于已知问题一定是metaspace 溢出， 只是不清楚为啥jstat 显示不正确。</p>
-<p>由于 metaspace 属于堆外内存， jmap 查不到。</p>
+<p>由于 metaspace 属于堆外内存， jmap 查不到。</p>
 <p>然而，java8 新引入了 <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/vm/nmt-8.html" target="_blank" rel="external">Native Memory Tracking</a> 通过jcmd 查, 确实观测到了metaspace 不断增长的现象， 并且同时，jstat 并不增长。</p>
 <p>附: 查看metaspace 方法，在运行java进程上添加参数 </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-XX:NativeMemoryTracking=summary</span><br><span class="line">-XX:+UnlockDiagnosticVMOptions</span><br><span class="line">-XX:+PrintNMTStatistics</span><br></pre></td></tr></table></figure>
@@ -103,8 +103,8 @@
 <p>至于 groovy 的类加载的缓存机制将在后面一片文章在深入写, 这里就不继续扩展。</p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>最后说一下在高并发场景下使用groovy 脚本的最佳(减少重复类)实践</p>
 <ol>
-<li>同样的script 保证只有一个 scriptEngine 操作他</li>
-<li>同样的script 在业务层在并发操作之前事先eval</li>
+<li>同样的 script 保证只有一个 scriptEngine 操作他</li>
+<li>同样的 script 在业务层在并发操作之前事先eval</li>
 <li>script里面尽量减少外部类的依赖，如果需要依赖，有条件的话最好预热调用一次(让外部类编译好)。</li>
 </ol>
 
