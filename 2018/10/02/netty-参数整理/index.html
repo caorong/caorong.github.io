@@ -5,8 +5,6 @@
   <title>netty 参数整理 | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -39,166 +37,105 @@
   </section>
 
   <section class="article-entry">
-    <h2>buffer</h2>
-<h4>io.netty.buffer.bytebuf.checkAccessible</h4>
-<pre><code>默认值 `true`
+    <h2 id="buffer"><a href="#buffer" class="headerlink" title="buffer"></a>buffer</h2><h4 id="io-netty-buffer-bytebuf-checkAccessible"><a href="#io-netty-buffer-bytebuf-checkAccessible" class="headerlink" title="io.netty.buffer.bytebuf.checkAccessible"></a>io.netty.buffer.bytebuf.checkAccessible</h4><pre><code>默认值 `true`
 
 是否对每一次 Bytebuf 操作检查 是否使用了已被 release 的 buf
 
 AbstractByteBuf
-</code></pre>
-<h4>io.netty.leakDetection.acquireAndReleaseOnly (false)</h4>
-<pre><code>疑似是否仅对 acquire 和 release ByteBuf 启用 `ResourceLeakTracker`
+</code></pre><h4 id="io-netty-leakDetection-acquireAndReleaseOnly-false"><a href="#io-netty-leakDetection-acquireAndReleaseOnly-false" class="headerlink" title="io.netty.leakDetection.acquireAndReleaseOnly (false)"></a>io.netty.leakDetection.acquireAndReleaseOnly (false)</h4><pre><code>疑似是否仅对 acquire 和 release ByteBuf 启用 `ResourceLeakTracker`
 
 AdvancedLeakAwareByteBuf
-</code></pre>
-<p>TODO referenceQueue</p>
-<h4>io.netty.threadLocalDirectBufferSize (0)</h4>
-<p>是否启用 threadlocal 的堆外内存, size &gt; 0 则启用， 表示缓存个数, 当不启用 PooledBytebuf的时候才有效。</p>
+</code></pre><p>TODO referenceQueue</p>
+<h4 id="io-netty-threadLocalDirectBufferSize-0"><a href="#io-netty-threadLocalDirectBufferSize-0" class="headerlink" title="io.netty.threadLocalDirectBufferSize (0)"></a>io.netty.threadLocalDirectBufferSize (0)</h4><p>是否启用 threadlocal 的堆外内存, size &gt; 0 则启用， 表示缓存个数, 当不启用 PooledBytebuf的时候才有效。</p>
 <p>ByteBufUtil</p>
-<h4>io.netty.maxThreadLocalCharBufferSize (16384)</h4>
-<p>当 将bytebuf 转 string 时， 当申请大小 小于这个阈值的， 将会被 ThreadLocal 缓存。</p>
+<h4 id="io-netty-maxThreadLocalCharBufferSize-16384"><a href="#io-netty-maxThreadLocalCharBufferSize-16384" class="headerlink" title="io.netty.maxThreadLocalCharBufferSize (16384)"></a>io.netty.maxThreadLocalCharBufferSize (16384)</h4><p>当 将bytebuf 转 string 时， 当申请大小 小于这个阈值的， 将会被 ThreadLocal 缓存。</p>
 <p>ByteBufUtil</p>
-<h4>io.netty.allocator.pageSize (8k)</h4>
-<p>当使用 PooledByteBuf 时， 小于这个页的大小， 并且 大于512 的被认为是 small page,
-大于这个大小 且小于 chunksize 的被认为是 Normal page</p>
+<h4 id="io-netty-allocator-pageSize-8k"><a href="#io-netty-allocator-pageSize-8k" class="headerlink" title="io.netty.allocator.pageSize (8k)"></a>io.netty.allocator.pageSize (8k)</h4><p>当使用 PooledByteBuf 时， 小于这个页的大小， 并且 大于512 的被认为是 small page,<br>大于这个大小 且小于 chunksize 的被认为是 Normal page</p>
+<p>PooledByteBufAllocator </p>
+<h4 id="io-netty-allocator-maxOrder-11"><a href="#io-netty-allocator-maxOrder-11" class="headerlink" title="io.netty.allocator.maxOrder (11)"></a>io.netty.allocator.maxOrder (11)</h4><p>pagesize 左移 11位 即为chunk size</p>
+<p>PooledByteBufAllocator </p>
+<h4 id="io-netty-allocator-tinyCacheSize-512"><a href="#io-netty-allocator-tinyCacheSize-512" class="headerlink" title="io.netty.allocator.tinyCacheSize (512)"></a>io.netty.allocator.tinyCacheSize (512)</h4><p>每个线程中(PoolThreadCache) 缓存 tinycache 的个数, 超过的不会存入queue</p>
+<p>PooledByteBufAllocator </p>
+<h4 id="io-netty-allocator-smallCacheSize-256"><a href="#io-netty-allocator-smallCacheSize-256" class="headerlink" title="io.netty.allocator.smallCacheSize (256)"></a>io.netty.allocator.smallCacheSize (256)</h4><p>每个线程中(PoolThreadCache) 缓存 smallCache 的个数, 超过的不会存入queue</p>
+<p>PooledByteBufAllocator </p>
+<h4 id="io-netty-allocator-normalCacheSize-64"><a href="#io-netty-allocator-normalCacheSize-64" class="headerlink" title="io.netty.allocator.normalCacheSize (64)"></a>io.netty.allocator.normalCacheSize (64)</h4><p>每个线程中(PoolThreadCache) 缓存 normalCache 的个数, 超过的不会存入queue</p>
+<p>PooledByteBufAllocator </p>
+<h4 id="io-netty-allocator-maxCachedBufferCapacity-32768"><a href="#io-netty-allocator-maxCachedBufferCapacity-32768" class="headerlink" title="io.netty.allocator.maxCachedBufferCapacity (32768)"></a>io.netty.allocator.maxCachedBufferCapacity (32768)</h4><p>每个线程中(PoolThreadCache) 缓存的 normalCache 的最大大小。</p>
 <p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.maxOrder (11)</h4>
-<p>pagesize 左移 11位 即为chunk size</p>
+<h4 id="io-netty-allocator-cacheTrimInterval-8192"><a href="#io-netty-allocator-cacheTrimInterval-8192" class="headerlink" title="io.netty.allocator.cacheTrimInterval (8192)"></a>io.netty.allocator.cacheTrimInterval (8192)</h4><p>每个线程中(PoolThreadCache) 经过多久次 get 操作后， 全部清理一次</p>
 <p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.tinyCacheSize (512)</h4>
-<p>每个线程中(PoolThreadCache) 缓存 tinycache 的个数, 超过的不会存入queue</p>
+<h4 id="io-netty-allocator-useCacheForAllThreads-true"><a href="#io-netty-allocator-useCacheForAllThreads-true" class="headerlink" title="io.netty.allocator.useCacheForAllThreads (true)"></a>io.netty.allocator.useCacheForAllThreads (true)</h4><p>是否每一个线程都适用(PoolThreadCache)</p>
 <p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.smallCacheSize (256)</h4>
-<p>每个线程中(PoolThreadCache) 缓存 smallCache 的个数, 超过的不会存入queue</p>
+<h4 id="io-netty-allocator-directMemoryCacheAlignment-0"><a href="#io-netty-allocator-directMemoryCacheAlignment-0" class="headerlink" title="io.netty.allocator.directMemoryCacheAlignment (0)"></a>io.netty.allocator.directMemoryCacheAlignment (0)</h4><p>对外内存申请， 是否保证堆外内存对齐, &gt; 0 才启用。<br>directMemoryCacheAlignmentMask 为 directMemoryCacheAlignment - 1 </p>
 <p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.normalCacheSize (64)</h4>
-<p>每个线程中(PoolThreadCache) 缓存 normalCache 的个数, 超过的不会存入queue</p>
-<p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.maxCachedBufferCapacity (32768)</h4>
-<p>每个线程中(PoolThreadCache) 缓存的 normalCache 的最大大小。</p>
-<p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.cacheTrimInterval (8192)</h4>
-<p>每个线程中(PoolThreadCache) 经过多久次 get 操作后， 全部清理一次</p>
-<p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.useCacheForAllThreads (true)</h4>
-<p>是否每一个线程都适用(PoolThreadCache)</p>
-<p>PooledByteBufAllocator</p>
-<h4>io.netty.allocator.directMemoryCacheAlignment (0)</h4>
-<p>对外内存申请， 是否保证堆外内存对齐, &gt; 0 才启用。
-directMemoryCacheAlignmentMask 为 directMemoryCacheAlignment - 1</p>
-<p>PooledByteBufAllocator</p>
-<h4>io.netty.noJdkZlibDecoder(jdk&lt;7) 和 io.netty.noJdkZlibEncoder (false)</h4>
-<p>启用 jdk 自己的 zlib decoder 和 encoder</p>
+<h4 id="io-netty-noJdkZlibDecoder-jdk-lt-7-和-io-netty-noJdkZlibEncoder-false"><a href="#io-netty-noJdkZlibDecoder-jdk-lt-7-和-io-netty-noJdkZlibEncoder-false" class="headerlink" title="io.netty.noJdkZlibDecoder(jdk&lt;7) 和 io.netty.noJdkZlibEncoder (false)"></a>io.netty.noJdkZlibDecoder(jdk&lt;7) 和 io.netty.noJdkZlibEncoder (false)</h4><p>启用 jdk 自己的 zlib decoder 和 encoder</p>
 <p>ZlibCodecFactory</p>
-<h4>io.netty.http2.childrenMapSize (22)</h4>
-<p>WeightedFairQueueByteDistributor</p>
-<h4>io.netty.defaultPromise.maxListenerStackDepth (8)</h4>
-<p>控制 addlistener 的最大嵌套层数, 超过这个层数的 listener 不会跑错， 而是不会被执行</p>
+<h4 id="io-netty-http2-childrenMapSize-22"><a href="#io-netty-http2-childrenMapSize-22" class="headerlink" title="io.netty.http2.childrenMapSize (22)"></a>io.netty.http2.childrenMapSize (22)</h4><p>WeightedFairQueueByteDistributor</p>
+<h4 id="io-netty-defaultPromise-maxListenerStackDepth-8"><a href="#io-netty-defaultPromise-maxListenerStackDepth-8" class="headerlink" title="io.netty.defaultPromise.maxListenerStackDepth (8)"></a>io.netty.defaultPromise.maxListenerStackDepth (8)</h4><p>控制 addlistener 的最大嵌套层数, 超过这个层数的 listener 不会跑错， 而是不会被执行</p>
 <p>DefaultPromise</p>
-<h4>io.netty.eventexecutor.maxPendingTasks (Integer.MAX_VALUE)</h4>
-<p>netty 最大的异步任务数量， 比如 writeAndFlush 就是一个异步任务。</p>
+<h4 id="io-netty-eventexecutor-maxPendingTasks-Integer-MAX-VALUE"><a href="#io-netty-eventexecutor-maxPendingTasks-Integer-MAX-VALUE" class="headerlink" title="io.netty.eventexecutor.maxPendingTasks (Integer.MAX_VALUE)"></a>io.netty.eventexecutor.maxPendingTasks (Integer.MAX_VALUE)</h4><p>netty 最大的异步任务数量， 比如 writeAndFlush 就是一个异步任务。</p>
 <p>比如同时存在 大量的 writeAndFlush 任务则会 积压这个queue</p>
 <p>SingleThreadEventExecutor</p>
-<h4>io.netty.threadLocalMap.stringBuilder.initialSize (1024)</h4>
-<p>ThreadLocal 的 StringBuilder 的初始申请空间大小</p>
+<h4 id="io-netty-threadLocalMap-stringBuilder-initialSize-1024"><a href="#io-netty-threadLocalMap-stringBuilder-initialSize-1024" class="headerlink" title="io.netty.threadLocalMap.stringBuilder.initialSize (1024)"></a>io.netty.threadLocalMap.stringBuilder.initialSize (1024)</h4><p>ThreadLocal 的 StringBuilder 的初始申请空间大小</p>
 <p>InternalThreadLocalMap</p>
-<h4>io.netty.threadLocalMap.stringBuilder.maxSize  (4096)</h4>
-<p>ThreadLocal 的 StringBuilder 的申请空间大小的最大阈值</p>
+<h4 id="io-netty-threadLocalMap-stringBuilder-maxSize-4096"><a href="#io-netty-threadLocalMap-stringBuilder-maxSize-4096" class="headerlink" title="io.netty.threadLocalMap.stringBuilder.maxSize  (4096)"></a>io.netty.threadLocalMap.stringBuilder.maxSize  (4096)</h4><p>ThreadLocal 的 StringBuilder 的申请空间大小的最大阈值</p>
 <p>InternalThreadLocalMap</p>
-<h4>io.netty.util.internal.ObjectCleaner.refQueuePollTimeout (10000)</h4>
-<p>用于检测内存泄漏的 referenceQueue 的最大pool timeout</p>
+<h4 id="io-netty-util-internal-ObjectCleaner-refQueuePollTimeout-10000"><a href="#io-netty-util-internal-ObjectCleaner-refQueuePollTimeout-10000" class="headerlink" title="io.netty.util.internal.ObjectCleaner.refQueuePollTimeout (10000)"></a>io.netty.util.internal.ObjectCleaner.refQueuePollTimeout (10000)</h4><p>用于检测内存泄漏的 referenceQueue 的最大pool timeout</p>
 <p>ObjectCleaner</p>
-<h4>io.netty.native.deleteLibAfterLoading io.netty.native.workdir io.netty.native.tryPatchShadedId</h4>
-<p>仅当使用了 类似 EpollEventLoop 时 使用</p>
+<h4 id="io-netty-native-deleteLibAfterLoading-io-netty-native-workdir-io-netty-native-tryPatchShadedId"><a href="#io-netty-native-deleteLibAfterLoading-io-netty-native-workdir-io-netty-native-tryPatchShadedId" class="headerlink" title="io.netty.native.deleteLibAfterLoading io.netty.native.workdir io.netty.native.tryPatchShadedId"></a>io.netty.native.deleteLibAfterLoading io.netty.native.workdir io.netty.native.tryPatchShadedId</h4><p>仅当使用了 类似 EpollEventLoop 时 使用</p>
 <p>NativeLibraryLoader</p>
-<h4>io.netty.noPreferDirect (false)</h4>
-<p>是否优先使用 堆外内存</p>
+<h4 id="io-netty-noPreferDirect-false"><a href="#io-netty-noPreferDirect-false" class="headerlink" title="io.netty.noPreferDirect (false)"></a>io.netty.noPreferDirect (false)</h4><p>是否优先使用 堆外内存</p>
 <p>PlatformDependent</p>
-<h4>io.netty.maxDirectMemory</h4>
-<p>最大堆外内存策略</p>
-<p>// Here is how the system property is used:
-//
-// * &lt;  0  - Don't use cleaner, and inherit max direct memory from java. In this case the
-//           &quot;practical max direct memory&quot; would be 2 * max memory as defined by the JDK.
-// * == 0  - Use cleaner, Netty will not enforce max memory, and instead will defer to JDK.
-// * &gt;  0  - Don't use cleaner. This will limit Netty's total direct memory
-//           (note: that JDK's direct memory limit is independent of this).</p>
+<h4 id="io-netty-maxDirectMemory"><a href="#io-netty-maxDirectMemory" class="headerlink" title="io.netty.maxDirectMemory"></a>io.netty.maxDirectMemory</h4><p>最大堆外内存策略</p>
+<p>// Here is how the system property is used:<br>//<br>// <em> &lt;  0  - Don’t use cleaner, and inherit max direct memory from java. In this case the<br>//           “practical max direct memory” would be 2 </em> max memory as defined by the JDK.<br>// <em> == 0  - Use cleaner, Netty will not enforce max memory, and instead will defer to JDK.<br>// </em> &gt;  0  - Don’t use cleaner. This will limit Netty’s total direct memory<br>//           (note: that JDK’s direct memory limit is independent of this).</p>
 <p>PlatformDependent</p>
-<h4>io.netty.uninitializedArrayAllocationThreshold (-1)</h4>
-<p>初始化数组的最大阈值, 满足不了的将用 反射了的数组替换</p>
+<h4 id="io-netty-uninitializedArrayAllocationThreshold-1"><a href="#io-netty-uninitializedArrayAllocationThreshold-1" class="headerlink" title="io.netty.uninitializedArrayAllocationThreshold (-1)"></a>io.netty.uninitializedArrayAllocationThreshold (-1)</h4><p>初始化数组的最大阈值, 满足不了的将用 反射了的数组替换</p>
 <p>PlatformDependent</p>
-<h4>io.netty.noUnsafe (false)</h4>
-<p>不使用 Unsafe</p>
+<h4 id="io-netty-noUnsafe-false"><a href="#io-netty-noUnsafe-false" class="headerlink" title="io.netty.noUnsafe (false)"></a>io.netty.noUnsafe (false)</h4><p>不使用 Unsafe</p>
 <p>PlatformDependent0</p>
-<h4>io.netty.initialSeedUniquifier (0) java.util.secureRandomSeed (false)</h4>
-<p>是否使用 jdk的 secureRandom 生成随即种子(需要想native <code>/dev/random</code> 获取随机数据，较慢)</p>
+<h4 id="io-netty-initialSeedUniquifier-0-java-util-secureRandomSeed-false"><a href="#io-netty-initialSeedUniquifier-0-java-util-secureRandomSeed-false" class="headerlink" title="io.netty.initialSeedUniquifier (0) java.util.secureRandomSeed (false)"></a>io.netty.initialSeedUniquifier (0) java.util.secureRandomSeed (false)</h4><p>是否使用 jdk的 secureRandom 生成随即种子(需要想native <code>/dev/random</code> 获取随机数据，较慢)</p>
 <p>默认不启用</p>
 <p>ThreadLocalRandom</p>
-<h4>io.netty.availableProcessors (Runtime.getRuntime().availableProcessors())</h4>
-<p>系统可用的核数， 默认为系统提供的核数。</p>
+<h4 id="io-netty-availableProcessors-Runtime-getRuntime-availableProcessors"><a href="#io-netty-availableProcessors-Runtime-getRuntime-availableProcessors" class="headerlink" title="io.netty.availableProcessors (Runtime.getRuntime().availableProcessors())"></a>io.netty.availableProcessors (Runtime.getRuntime().availableProcessors())</h4><p>系统可用的核数， 默认为系统提供的核数。</p>
 <p>NettyRuntime</p>
-<h4>java.net.preferIPv4Stack (false) java.net.preferIPv6Addresses (false)</h4>
-<p>当系统多系统时， 优先使用 ipv4 / ipv6</p>
+<h4 id="java-net-preferIPv4Stack-false-java-net-preferIPv6Addresses-false"><a href="#java-net-preferIPv4Stack-false-java-net-preferIPv6Addresses-false" class="headerlink" title="java.net.preferIPv4Stack (false) java.net.preferIPv6Addresses (false)"></a>java.net.preferIPv4Stack (false) java.net.preferIPv6Addresses (false)</h4><p>当系统多系统时， 优先使用 ipv4 / ipv6 </p>
 <p>NetUtil</p>
-<h4>io.netty.net.somaxconn.trySysctl (false)</h4>
-<p>如果系统的安全设置比较严格， 仅可以通过 systemctl 方式修改 somaxconn (内核指定的最大连接数)</p>
+<h4 id="io-netty-net-somaxconn-trySysctl-false"><a href="#io-netty-net-somaxconn-trySysctl-false" class="headerlink" title="io.netty.net.somaxconn.trySysctl (false)"></a>io.netty.net.somaxconn.trySysctl (false)</h4><p>如果系统的安全设置比较严格， 仅可以通过 systemctl 方式修改 somaxconn (内核指定的最大连接数)</p>
 <p>NetUtil</p>
-<h4>io.netty.recycler.maxCapacityPerThread (io.netty.recycler.maxCapacity (4096))</h4>
-<p>使用 内部的 threadlocal 的 objectPool时， 每个线程的最大threadlocal 的容量。</p>
+<h4 id="io-netty-recycler-maxCapacityPerThread-io-netty-recycler-maxCapacity-4096"><a href="#io-netty-recycler-maxCapacityPerThread-io-netty-recycler-maxCapacity-4096" class="headerlink" title="io.netty.recycler.maxCapacityPerThread (io.netty.recycler.maxCapacity (4096))"></a>io.netty.recycler.maxCapacityPerThread (io.netty.recycler.maxCapacity (4096))</h4><p>使用 内部的 threadlocal 的 objectPool时， 每个线程的最大threadlocal 的容量。</p>
 <p>Recycler</p>
-<h4>io.netty.recycler.maxSharedCapacityFactor (2)</h4>
-<p>多线程之间共享 objectPool 数量因子 (TODO)</p>
+<h4 id="io-netty-recycler-maxSharedCapacityFactor-2"><a href="#io-netty-recycler-maxSharedCapacityFactor-2" class="headerlink" title="io.netty.recycler.maxSharedCapacityFactor (2)"></a>io.netty.recycler.maxSharedCapacityFactor (2)</h4><p>多线程之间共享 objectPool 数量因子 (TODO)</p>
 <p>Recycler</p>
-<p>https://github.com/netty/netty/blob/14158070bf8b3f831702061ffd657c84179fc639/common/src/main/java/io/netty/util/Recycler.java</p>
-<h4>io.netty.recycler.maxDelayedQueuesPerThread (NettyRuntime.availableProcessors() * 2)</h4>
-<p>最大延迟queue 数量</p>
+<p><a href="https://github.com/netty/netty/blob/14158070bf8b3f831702061ffd657c84179fc639/common/src/main/java/io/netty/util/Recycler.java" target="_blank" rel="external">https://github.com/netty/netty/blob/14158070bf8b3f831702061ffd657c84179fc639/common/src/main/java/io/netty/util/Recycler.java</a></p>
+<h4 id="io-netty-recycler-maxDelayedQueuesPerThread-NettyRuntime-availableProcessors-2"><a href="#io-netty-recycler-maxDelayedQueuesPerThread-NettyRuntime-availableProcessors-2" class="headerlink" title="io.netty.recycler.maxDelayedQueuesPerThread (NettyRuntime.availableProcessors() * 2)"></a>io.netty.recycler.maxDelayedQueuesPerThread (NettyRuntime.availableProcessors() * 2)</h4><p>最大延迟queue 数量 </p>
 <p>Recycler 跨线程的最多数量</p>
-<h4>io.netty.recycler.linkCapacity (16)</h4>
-<p>WeakOrderQueue 中线程可以缓存的对象数量</p>
+<h4 id="io-netty-recycler-linkCapacity-16"><a href="#io-netty-recycler-linkCapacity-16" class="headerlink" title="io.netty.recycler.linkCapacity (16)"></a>io.netty.recycler.linkCapacity (16)</h4><p>WeakOrderQueue 中线程可以缓存的对象数量</p>
 <p>Recycler</p>
-<h4>io.netty.recycler.ratio (8)</h4>
-<p>根据一定有概率的丢弃 缓存对象， 1/8的概率</p>
+<h4 id="io-netty-recycler-ratio-8"><a href="#io-netty-recycler-ratio-8" class="headerlink" title="io.netty.recycler.ratio (8)"></a>io.netty.recycler.ratio (8)</h4><p>根据一定有概率的丢弃 缓存对象， 1/8的概率</p>
 <p>Recycler</p>
-<h4>io.netty.customResourceLeakDetector (&quot;&quot;)</h4>
-<p>自定义的 泄漏检测模块</p>
+<h4 id="io-netty-customResourceLeakDetector-“”"><a href="#io-netty-customResourceLeakDetector-“”" class="headerlink" title="io.netty.customResourceLeakDetector (“”)"></a>io.netty.customResourceLeakDetector (“”)</h4><p>自定义的 泄漏检测模块</p>
 <p>ResourceLeakDetectorFactory</p>
-<h4>io.netty.noResourceLeakDetection (null)</h4>
-<p>无资源检测</p>
+<h4 id="io-netty-noResourceLeakDetection-null"><a href="#io-netty-noResourceLeakDetection-null" class="headerlink" title="io.netty.noResourceLeakDetection (null)"></a>io.netty.noResourceLeakDetection (null)</h4><p>无资源检测</p>
 <p>ResourceLeakDetector</p>
-<h4>io.netty.serviceThreadPrefix (&quot;&quot;)</h4>
-<p>用于检测线程是否可用的 一个 watcher, 线程从 里面 建立线程的命名配置</p>
+<h4 id="io-netty-serviceThreadPrefix-“”"><a href="#io-netty-serviceThreadPrefix-“”" class="headerlink" title="io.netty.serviceThreadPrefix (“”)"></a>io.netty.serviceThreadPrefix (“”)</h4><p>用于检测线程是否可用的 一个 watcher, 线程从 里面 建立线程的命名配置</p>
 <p>ThreadDeathWatcher</p>
-<h4>io.netty.transport.estimateSizeOnSubmit (true)</h4>
-<p>是否启用对每一次 写出包，统计她们的大小， 作为 WriteBufferHighWaterMark 的基础数据。</p>
+<h4 id="io-netty-transport-estimateSizeOnSubmit-true"><a href="#io-netty-transport-estimateSizeOnSubmit-true" class="headerlink" title="io.netty.transport.estimateSizeOnSubmit (true)"></a>io.netty.transport.estimateSizeOnSubmit (true)</h4><p>是否启用对每一次 写出包，统计她们的大小， 作为 WriteBufferHighWaterMark 的基础数据。</p>
 <p>AbstractChannelHandlerContext</p>
-<h4>io.netty.transport.writeTaskSizeOverhead (48)</h4>
-<p>内存中统计 积压的 写task 占用的内存， 默认的计算方式是基于</p>
+<h4 id="io-netty-transport-writeTaskSizeOverhead-48"><a href="#io-netty-transport-writeTaskSizeOverhead-48" class="headerlink" title="io.netty.transport.writeTaskSizeOverhead (48)"></a>io.netty.transport.writeTaskSizeOverhead (48)</h4><p>内存中统计 积压的 写task 占用的内存， 默认的计算方式是基于</p>
 <p>Assuming a 64-bit JVM, 16 bytes object header, 3 reference fields and one int field, plus alignment</p>
 <p>计算的。</p>
 <p>非 64位的 JVM 则会统计失常。</p>
 <p>AbstractChannelHandlerContext</p>
-<h4>io.netty.transport.outboundBufferEntrySizeOverhead (96)</h4>
-<p>每一个 写出的消息关联的 Entry 对象占用的 内存pending， 同上，基于64位 系统计算</p>
-<p>// Assuming a 64-bit JVM:
-//  - 16 bytes object header
-//  - 8 reference fields
-//  - 2 long fields
-//  - 2 int fields
-//  - 1 boolean field
-//  - padding</p>
+<h4 id="io-netty-transport-outboundBufferEntrySizeOverhead-96"><a href="#io-netty-transport-outboundBufferEntrySizeOverhead-96" class="headerlink" title="io.netty.transport.outboundBufferEntrySizeOverhead (96)"></a>io.netty.transport.outboundBufferEntrySizeOverhead (96)</h4><p>每一个 写出的消息关联的 Entry 对象占用的 内存pending， 同上，基于64位 系统计算</p>
+<p>// Assuming a 64-bit JVM:<br>//  - 16 bytes object header<br>//  - 8 reference fields<br>//  - 2 long fields<br>//  - 2 int fields<br>//  - 1 boolean field<br>//  - padding</p>
 <p>ChannelOutboundBuffer</p>
-<h4>io.netty.eventLoopThreads (NettyRuntime.availableProcessors() * 2)</h4>
-<p>全局默认的 eventLoop线程个数， 当配置 thread 个数位0 时，才取该配置。</p>
+<h4 id="io-netty-eventLoopThreads-NettyRuntime-availableProcessors-2"><a href="#io-netty-eventLoopThreads-NettyRuntime-availableProcessors-2" class="headerlink" title="io.netty.eventLoopThreads (NettyRuntime.availableProcessors() * 2)"></a>io.netty.eventLoopThreads (NettyRuntime.availableProcessors() * 2)</h4><p>全局默认的 eventLoop线程个数， 当配置 thread 个数位0 时，才取该配置。</p>
 <p>MultithreadEventLoopGroup</p>
-<h4>io.netty.noKeySetOptimization (false)</h4>
-<p>是否放弃优化 selector 的 keyset， 将 HashSet 优化为 数组</p>
+<h4 id="io-netty-noKeySetOptimization-false"><a href="#io-netty-noKeySetOptimization-false" class="headerlink" title="io.netty.noKeySetOptimization (false)"></a>io.netty.noKeySetOptimization (false)</h4><p>是否放弃优化 selector 的 keyset， 将 HashSet 优化为 数组</p>
 <p>NioEventLoop</p>
-<h4>io.netty.selectorAutoRebuildThreshold (512)</h4>
-<p>当发生 jvm 的空select 异常时， 至少空 select 512 轮， 才重新创建 selector 对象</p>
+<h4 id="io-netty-selectorAutoRebuildThreshold-512"><a href="#io-netty-selectorAutoRebuildThreshold-512" class="headerlink" title="io.netty.selectorAutoRebuildThreshold (512)"></a>io.netty.selectorAutoRebuildThreshold (512)</h4><p>当发生 jvm 的空select 异常时， 至少空 select 512 轮， 才重新创建 selector 对象</p>
 <p>NioEventLoop</p>
-<h4>io.netty.transport.pendingWriteSizeOverhead (64)</h4>
-<p>同上pending， 用于 写queue pending 的内存统计的  pending</p>
+<h4 id="io-netty-transport-pendingWriteSizeOverhead-64"><a href="#io-netty-transport-pendingWriteSizeOverhead-64" class="headerlink" title="io.netty.transport.pendingWriteSizeOverhead (64)"></a>io.netty.transport.pendingWriteSizeOverhead (64)</h4><p>同上pending， 用于 写queue pending 的内存统计的  pending</p>
 <p>Assuming a 64-bit JVM:</p>
 <ul>
 <li>16 bytes object header</li>
@@ -206,14 +143,10 @@ directMemoryCacheAlignmentMask 为 directMemoryCacheAlignment - 1</p>
 <li>1 long fields</li>
 </ul>
 <p>PendingWriteQueue</p>
-<h4>io.netty.eventLoop.maxPendingTasks (Integer.MAX_VALUE)</h4>
-<p>此queue 的添加部分目前还是  <code>@UnstableApi</code></p>
+<h4 id="io-netty-eventLoop-maxPendingTasks-Integer-MAX-VALUE"><a href="#io-netty-eventLoop-maxPendingTasks-Integer-MAX-VALUE" class="headerlink" title="io.netty.eventLoop.maxPendingTasks (Integer.MAX_VALUE)"></a>io.netty.eventLoop.maxPendingTasks (Integer.MAX_VALUE)</h4><p>此queue 的添加部分目前还是  <code>@UnstableApi</code></p>
 <p>SingleThreadEventLoop</p>
-<h4>io.netty.transport.noNative (false)</h4>
-<p>如果使用 Epoll 的话 不可以为 true</p>
-<p>Epoll / KQueue</p>
-<pre><code>
-</code></pre>
+<h4 id="io-netty-transport-noNative-false"><a href="#io-netty-transport-noNative-false" class="headerlink" title="io.netty.transport.noNative (false)"></a>io.netty.transport.noNative (false)</h4><p>如果使用 Epoll 的话 不可以为 true</p>
+<p>Epoll / KQueue<br>```</p>
 
   </section>
 </article>
@@ -233,8 +166,7 @@ directMemoryCacheAlignmentMask 为 directMemoryCacheAlignment - 1</p>
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text=>buffer</h2>
-<h4>io."
+  href="https://twitter.com/intent/tweet?text= id="buffer"><a href"
 >
   Tweet
 </a>

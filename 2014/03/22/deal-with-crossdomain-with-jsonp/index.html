@@ -5,8 +5,6 @@
   <title>扯一下jsonp | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -42,26 +40,20 @@
     <p>好久没有写blog了，最近实在是好忙啊。上周在研究<a href="https://github.com/zythum/youkuhtml5playerbookmark" target="_blank" rel="external">朱一的插件代码</a> 时，发现了原来可以用jsonp来解决跨域问题，而且解决方法非常巧妙，而且，优酷就是这么干的。</p>
 <p>####首先，为什么会有跨域问题？</p>
 <p>因为由浏览器的<code>同源策略</code>，所以从client端发出的ajax请求，只能请求这个网站的服务器。简单来说，就是ajax的request的前半部分是这个<code>http://www.currentsite.com/</code>。如果要请求别的域名下的服务，浏览器会弹错误信息。</p>
-<p>####那么，关于script标签
-script标签是个好东西，url里的domain是啥都行。正因如此，一些前端共用库比如jquery都会直接用cdn上的，一来提升用户的访问速度，二来节省了自己服务器的流量。比如<a href="http://developer.baidu.com/wiki/index.php?title=docs/cplat/libs" target="_blank" rel="external">百度的共用库</a></p>
-<p>####最后说说jsonp
-所谓的jsonp就是利用script标签的无跨域问题的特性实现跨域请求。但需要服务端的配合。</p>
-<p>####一个栗子
-服务端代码，用于接收ajax请求，返回一个json：</p>
-<p><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> bottle <span class="keyword">import</span> route, request</span><br><span class="line"></span><br><span class="line">json = <span class="string">"&#123;\"a\" = \"1\"&#125;"</span></span><br><span class="line">callback = <span class="string">"callback("</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@route('/data')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_data</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">if</span> len(request.query[<span class="string">'__callback'</span>]) != <span class="number">0</span>:</span><br><span class="line">		callback = request.query[<span class="string">'__callback'</span>] + <span class="string">"("</span></span><br><span class="line">	<span class="keyword">return</span> callback + json + <span class="string">")"</span></span><br></pre></td></tr></table></figure></p>
-<p>浏览器代码，
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script url =<span class="string">"http://mydomain.com/data?__callback=run_callback"</span> /&gt;</span><br></pre></td></tr></table></figure></p>
+<p>####那么，关于script标签<br>script标签是个好东西，url里的domain是啥都行。正因如此，一些前端共用库比如jquery都会直接用cdn上的，一来提升用户的访问速度，二来节省了自己服务器的流量。比如<a href="http://developer.baidu.com/wiki/index.php?title=docs/cplat/libs" target="_blank" rel="external">百度的共用库</a></p>
+<p>####最后说说jsonp<br>所谓的jsonp就是利用script标签的无跨域问题的特性实现跨域请求。但需要服务端的配合。</p>
+<p>####一个栗子<br>服务端代码，用于接收ajax请求，返回一个json：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> bottle <span class="keyword">import</span> route, request</span><br><span class="line"></span><br><span class="line">json = <span class="string">"&#123;\"a\" = \"1\"&#125;"</span></span><br><span class="line">callback = <span class="string">"callback("</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@route('/data')</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_data</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">if</span> len(request.query[<span class="string">'__callback'</span>]) != <span class="number">0</span>:</span><br><span class="line">		callback = request.query[<span class="string">'__callback'</span>] + <span class="string">"("</span></span><br><span class="line">	<span class="keyword">return</span> callback + json + <span class="string">")"</span></span><br></pre></td></tr></table></figure>
+<p>浏览器代码，<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script url =<span class="string">"http://mydomain.com/data?__callback=run_callback"</span> /&gt;</span><br></pre></td></tr></table></figure></p>
 <p>至此完结。</p>
-<p>####script得到的是什么？
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">run_callback(<span class="string">"&#123;\"a\" = \"1\"&#125;"</span>)</span><br><span class="line"><span class="comment">// 哇，竟然将json传到某function里去了</span></span><br></pre></td></tr></table></figure></p>
-<p><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run_callback</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">	<span class="built_in">console</span>.log(data[<span class="string">'a'</span>])</span><br><span class="line">	<span class="comment">// ...</span></span><br></pre></td></tr></table></figure></p>
+<p>####script得到的是什么？<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">run_callback(<span class="string">"&#123;\"a\" = \"1\"&#125;"</span>)</span><br><span class="line"><span class="comment">// 哇，竟然将json传到某function里去了</span></span><br></pre></td></tr></table></figure></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run_callback</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">	<span class="built_in">console</span>.log(data[<span class="string">'a'</span>])</span><br><span class="line">	<span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
 <p>是不是很巧妙！！！</p>
 <p>####最后来个实际的栗子</p>
 <p>话说其实优酷就是通过jsonp接口来跨域获取视频信息。</p>
 <p>try it~</p>
 <p><code>http://v.youku.com/player/getPlaylist/VideoIDS/XNjc1MjQwNTQ4/Pf/4?__callback=abcdefg</code></p>
-<p>####最后有一个邪恶的想法
-那利用这个接口+解真实地址的<a href="https://github.com/zythum/youkuhtml5playerbookmark/blob/master/2.0/source/youku.js" target="_blank" rel="external">方法</a>得到mp4格式的地址不就可以实现，无缝盗链了吗。。。</p>
+<p>####最后有一个邪恶的想法<br>那利用这个接口+解真实地址的<a href="https://github.com/zythum/youkuhtml5playerbookmark/blob/master/2.0/source/youku.js" target="_blank" rel="external">方法</a>得到mp4格式的地址不就可以实现，无缝盗链了吗。。。</p>
 <p><a href="http://jsfiddle.net/lelouchcr/QyHvX/" target="_blank" rel="external">邪恶想法实践</a>，使用的是jquery封装的jsonp，直接播放优酷的视频without ad.</p>
 
   </section>

@@ -5,8 +5,6 @@
   <title>应用层rpc 协议 需要关注的一些事 | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -41,59 +39,40 @@
   <section class="article-entry">
     <p>最近， 发现公司的 rpc 框架有些严重bug， 修复后顺便总结下使用一般的 rpc 协议时 需要注意的问题。</p>
 <ol>
-<li>
-<p>是否压缩</p>
-<p>对于protobuf 和 thrift 来说都有不压缩的，或者仅针对数字的 zigzag。</p>
-<p>而对于 string类型 来说，是不压缩的，如果你的 rpc 的参数与返回大部分的字段都是string 类型的，那么压缩的意义可能并不是很大。</p>
+<li><p>是否压缩</p>
+<p> 对于protobuf 和 thrift 来说都有不压缩的，或者仅针对数字的 zigzag。</p>
+<p> 而对于 string类型 来说，是不压缩的，如果你的 rpc 的参数与返回大部分的字段都是string 类型的，那么压缩的意义可能并不是很大。</p>
 </li>
-<li>
-<p>内存友好</p>
-<p>内存友好体现在， 当有请求过来时，我尽量只需要申请一次空间，或者不需要申请空间</p>
-<p>要实现申请一次空间的话， 那么发送的数据包上就要带上一个 frame 头，用来表示，我这段数据包的大小有多少。
-然后， 我只要申请一次空间， 只有一次 syscall。</p>
+<li><p>内存友好</p>
+<p> 内存友好体现在， 当有请求过来时，我尽量只需要申请一次空间，或者不需要申请空间</p>
+<p> 要实现申请一次空间的话， 那么发送的数据包上就要带上一个 frame 头，用来表示，我这段数据包的大小有多少。<br> 然后， 我只要申请一次空间， 只有一次 syscall。</p>
 </li>
-<li>
-<p>异常处理</p>
+<li><p>异常处理</p>
 <ol>
-<li>
-<p>保证即使自身异常也能够告知对方， 免得对方等待直至超时。</p>
-<p>这个 protobuf 和 thrift 都有类似 Exception 类型， 可以实现。</p>
+<li><p>保证即使自身异常也能够告知对方， 免得对方等待直至超时。</p>
+<p> 这个 protobuf 和 thrift 都有类似 Exception 类型， 可以实现。</p>
 </li>
-<li>
-<p>确定在什么情况下放弃链接。</p>
+<li><p>确定在什么情况下放弃链接。</p>
 </li>
 </ol>
 </li>
 </ol>
 <p>以下详细解释一些异常的可能性 以及 解决方法。</p>
 <p>下面的 <code>c</code> 表示 <code>client</code>, <code>s</code> 表示 <code>server</code></p>
-<h3>c -&gt; s</h3>
-<p>当发请求时， 会有以下可能</p>
-<h4>c 端</h4>
-<h5>c 编码失败</h5>
-<pre><code>直接结束
-</code></pre>
-<h4>s 端</h4>
-<h5>s 解码失败</h5>
-<pre><code>server decode 失败后， 应当主动关闭链接。
+<h3 id="c-gt-s"><a href="#c-gt-s" class="headerlink" title="c -&gt; s"></a>c -&gt; s</h3><p>当发请求时， 会有以下可能</p>
+<h4 id="c-端"><a href="#c-端" class="headerlink" title="c 端"></a>c 端</h4><h5 id="c-编码失败"><a href="#c-编码失败" class="headerlink" title="c 编码失败"></a>c 编码失败</h5><pre><code>直接结束
+</code></pre><h4 id="s-端"><a href="#s-端" class="headerlink" title="s 端"></a>s 端</h4><h5 id="s-解码失败"><a href="#s-解码失败" class="headerlink" title="s 解码失败"></a>s 解码失败</h5><pre><code>server decode 失败后， 应当主动关闭链接。
 
 这种情况，可能是被攻击，可能协议不一致。而且一开始就错误了，也就无法确定连接里面的数据是什么。所以 s 直接关闭链接。
 
 s 关闭连接后， c 将立即收到 connection reset 的错误。
-</code></pre>
-<h3>s -&gt; c</h3>
-<h4>s 端</h4>
-<h5>s 编码失败 或者 业务处理失败</h5>
-<pre><code>s 将response 编码后， 写回连接到 c， 但是， 这时 s 编码失败了。
+</code></pre><h3 id="s-gt-c"><a href="#s-gt-c" class="headerlink" title="s -&gt; c"></a>s -&gt; c</h3><h4 id="s-端-1"><a href="#s-端-1" class="headerlink" title="s 端"></a>s 端</h4><h5 id="s-编码失败-或者-业务处理失败"><a href="#s-编码失败-或者-业务处理失败" class="headerlink" title="s 编码失败 或者 业务处理失败"></a>s 编码失败 或者 业务处理失败</h5><pre><code>s 将response 编码后， 写回连接到 c， 但是， 这时 s 编码失败了。
 
 如果 编码的过程中没有做异常处理， s 将没有数据写会， c 会等待数据到 timeout。
 
 所以， s 对于这种错误应当捕捉， 并且包装成 一个异常结构，返回给 c， 避免 c 的超时。 （ps, 特别当c端的连接是同步的时候，将影响 c 的吞吐量）
+</code></pre><h4 id="c-端-1"><a href="#c-端-1" class="headerlink" title="c 端"></a>c 端</h4><h5 id="c-读取-s-的返回解码失败"><a href="#c-读取-s-的返回解码失败" class="headerlink" title="c 读取 s 的返回解码失败"></a>c 读取 s 的返回解码失败</h5><pre><code>同 s 解码失败，关闭连接， 理由一致
 </code></pre>
-<h4>c 端</h4>
-<h5>c 读取 s 的返回解码失败</h5>
-<pre><code>同 s 解码失败，关闭连接， 理由一致</code></pre>
-
   </section>
 </article>
 

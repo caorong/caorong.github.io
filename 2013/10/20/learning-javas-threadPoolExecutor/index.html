@@ -5,8 +5,6 @@
   <title>java原生线程池-threadPoolExecutor | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -41,9 +39,9 @@
   <section class="article-entry">
     <p>最近再看<a href="https://github.com/code4craft/webmagic" target="_blank" rel="external">webmagic</a>的源码，发现他的底层线程池也用了java collections自带的ThreadPoolExecutor。之前一直是抱着拿来主义的态度，但其实还是有有必要仔细研究一番的。</p>
 <p>ThreadPoolExecutor 是一个可定制性非常强的线程池。</p>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span><br><span class="line">                              <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">                              <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">                              TimeUnit unit,</span><br><span class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</span><br><span class="line">                              ThreadFactory threadFactory,</span><br><span class="line">                              RejectedExecutionHandler handler)</span></span></span><br></pre></td></tr></table></figure></p>
-<p>从参数可看出，可以定制
-######poolsize, 持久存在poolsize</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span><br><span class="line">                              <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">                              <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">                              TimeUnit unit,</span><br><span class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</span><br><span class="line">                              ThreadFactory threadFactory,</span><br><span class="line">                              RejectedExecutionHandler handler)</span></span></span><br></pre></td></tr></table></figure>
+<p>从参数可看出，可以定制</p>
+<p>######poolsize, 持久存在poolsize</p>
 <p>######maxPoolSize  最大可存在poolsize</p>
 <p>######keepAliveTime,unit(这2个是闲置线程延迟销毁的时间，及时间单位)</p>
 <p>######BlockingQueue 线程queue，我目前用得java6目前提供的6中实现</p>
@@ -53,37 +51,27 @@
 超过定义的size后会throw java.lang.IllegalStateException 的异常。
 
 
-DelayedWorkQueue	
+DelayedWorkQueue    
 这个queue是一个静态方法，是ScheduledThreadPoolExecutor（ThreadPoolExecutor的扩展，可让线程对象延迟执行）的内部静态类，
 专用queue。不再本篇的讨论范围之内。
 
-DelayQueue	
+DelayQueue    
 这是无界阻塞队列，队列中的对象需要继承Delayed接口，满足延迟条件才可以使用。
 
-LinkedBlockingQueue	
+LinkedBlockingQueue    
 顾名思义，用链表实现的阻塞队列，效率比较高。最大大小为Ineger.MAXVALUE
 
-PriorityBlockingQueue	
+PriorityBlockingQueue    
 同样也是个无界阻塞队列对象需要继承Comparable接口，使对象可以进行优先级比较。
 
-SynchronousQueue	
+SynchronousQueue    
 一个没有容量的队列，每个插入操作必须等待另一个线程的对应移除操作。就像一个通道一样。
 webmagic的ThreadPool的queue就用了此queue
-</code></pre>
-<p>######ThreadFactory 执行程序创建新线程时使用的工厂。（可选）
-Executors也提供了默认的ThreadFactory方法：Executors.defaultThreadFactory()
-当然也可以使用apache common lang3的BasicThreadFactory他在Executors.defaultThreadFactory的基础上做了层简单的封装</p>
-<p>######handler 超出线程范围和队列容量而使执行被阻塞时所使用的处理程序（可选）
-ThreadPoolExecutor已经默认提供了4种handler
-分别是
-ThreadPoolExecutor.CallerRunsPolicy()  将溢出task交给执行此ThreadPoolExecutor线程执行，一般是主线程。
-ThreadPoolExecutor.AbortPolicy()  顾名思义，将任务抛弃,会抛出一个RejectedExecutionException 错误。
-ThreadPoolExecutor.DiscardOldestPolicy()  抛弃旧任务
-ThreadPoolExecutor.DiscardPolicy() 同AbortPolicy，但不会抛错</p>
+</code></pre><p>######ThreadFactory 执行程序创建新线程时使用的工厂。（可选）<br>Executors也提供了默认的ThreadFactory方法：Executors.defaultThreadFactory()<br>当然也可以使用apache common lang3的BasicThreadFactory他在Executors.defaultThreadFactory的基础上做了层简单的封装</p>
+<p>######handler 超出线程范围和队列容量而使执行被阻塞时所使用的处理程序（可选）<br>ThreadPoolExecutor已经默认提供了4种handler<br>分别是<br>ThreadPoolExecutor.CallerRunsPolicy()  将溢出task交给执行此ThreadPoolExecutor线程执行，一般是主线程。<br>ThreadPoolExecutor.AbortPolicy()  顾名思义，将任务抛弃,会抛出一个RejectedExecutionException 错误。<br>ThreadPoolExecutor.DiscardOldestPolicy()  抛弃旧任务<br>ThreadPoolExecutor.DiscardPolicy() 同AbortPolicy，但不会抛错</p>
 <p>webmagic创建的线程池的代码</p>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> threadSize)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (threadSize &lt;= <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"ThreadSize must be greater than 1!"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(threadSize - <span class="number">1</span>, threadSize - <span class="number">1</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">				<span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;(), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
-<p>使用作为通道的SynchronousQueue，当所需线程超过规定的线程后，将超过线程池size的当前任务交给主线程执行。（CallerRunsPolicy）
-因为webmagic的主循环为一个Thread，里面起一个ThreadPool，所以超出size的task将有Thread执行，不会影响main函数，（其实main也就起了个Thread）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> threadSize)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (threadSize &lt;= <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"ThreadSize must be greater than 1!"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(threadSize - <span class="number">1</span>, threadSize - <span class="number">1</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">				<span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;(), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>使用作为通道的SynchronousQueue，当所需线程超过规定的线程后，将超过线程池size的当前任务交给主线程执行。（CallerRunsPolicy）<br>因为webmagic的主循环为一个Thread，里面起一个ThreadPool，所以超出size的task将有Thread执行，不会影响main函数，（其实main也就起了个Thread）</p>
 
   </section>
 </article>

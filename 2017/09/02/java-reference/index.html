@@ -5,8 +5,6 @@
   <title>java reference | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -41,7 +39,7 @@
   <section class="article-entry">
     <p>最近整理校招题目， 看到一个如何 利用 weak reference 和 referenceQueue 检测内存泄漏的题目， 顿时发现自己也不会。 于是查了下资料补习补习。</p>
 <p>首先明确下 java 里， 对象被创建后，不管啥引用， 当对象没有人强引用时 并且 gc 发生时，对象会被清除(最终会被清除)。</p>
-<p>然后，java 引用有</p>
+<p>然后，java 引用有 </p>
 <ul>
 <li>strong reference</li>
 </ul>
@@ -59,16 +57,14 @@
 <p>网上查了下， 基本都是 weakhashmap 的例子，它可以帮你当 key 被清除时， 把对应的 value 也去除。 但是大多数情况下 我们不会这么使用, 因为他要手动代码 将key 置为null。 才能让 value 清除, 比较蛋疼。</p>
 <p>后来<a href="http://souly.cn/%E6%8A%80%E6%9C%AF%E5%8D%9A%E6%96%87/2015/10/13/java%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8/" target="_blank" rel="external">网上查到个例子</a>很有意义：</p>
 <ul>
-<li>
-<p>Activity具有自身的生命周期，Activity中新开启的线程运行过程中，可能此时用户按下了Back键，或系统内存不足等希望回收此Activity， 由于Activity中新起的线程并不会遵循Activity本身的什么周期，也就是说，当Activity执行了onDestroy,由于线程以及Handler 的HandleMessage的存在， 使得系统本希望进行此Activity内存回收不能实现，因为非静态内部类中隐性的持有对外部类的引用，导致可能存在的内存泄露问题。</p>
+<li><p>Activity具有自身的生命周期，Activity中新开启的线程运行过程中，可能此时用户按下了Back键，或系统内存不足等希望回收此Activity， 由于Activity中新起的线程并不会遵循Activity本身的什么周期，也就是说，当Activity执行了onDestroy,由于线程以及Handler 的HandleMessage的存在， 使得系统本希望进行此Activity内存回收不能实现，因为非静态内部类中隐性的持有对外部类的引用，导致可能存在的内存泄露问题。</p>
 </li>
-<li>
-<p>因此，在Activity中使用Handler时，一方面需要将其定义为静态内部类形式，这样可以使其与外部类（Activity）解耦，不再持有外部类的引用， 同时由于Handler中的handlerMessage一般都会多少需要访问或修改Activity的属性，此时，需要在Handler内部定义指向此Activity的WeakReference， 使其不会影响到Activity的内存回收同时，可以在正常情况下访问到Activity的属性。</p>
+<li><p>因此，在Activity中使用Handler时，一方面需要将其定义为静态内部类形式，这样可以使其与外部类（Activity）解耦，不再持有外部类的引用， 同时由于Handler中的handlerMessage一般都会多少需要访问或修改Activity的属性，此时，需要在Handler内部定义指向此Activity的WeakReference， 使其不会影响到Activity的内存回收同时，可以在正常情况下访问到Activity的属性。</p>
 </li>
 </ul>
 <p>那么 WeakReference 和 SoftReference 的区别？</p>
 <ul>
-<li>被 SoftReference 修饰的的对象只要内存足够，垃圾回收器就不会回收。 这也是为啥上面写 &quot;最终&quot; 会被清除。</li>
+<li>被 SoftReference 修饰的的对象只要内存足够，垃圾回收器就不会回收。 这也是为啥上面写 “最终” 会被清除。</li>
 </ul>
 <p>SoftReference 可以用来实现缓存。</p>
 <p>PhantomReference ?</p>
@@ -79,47 +75,46 @@
 <p>weakReference 只要被标记为 null 了，然后 gc 后， jvm 知道后，就会 通知到 referenceHandler, 写入reference 对象到 referendceQueue  (不管是否真的gc掉)</p>
 <p>PhantomReference 必须要对象被 gc掉之后， referenceQueue 才会收到对象。</p>
 <p>这里举一个例子</p>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Object obj1 = <span class="keyword">new</span> Object();</span><br><span class="line">ReferenceQueue&lt;Object&gt; referenceQueue1 = <span class="keyword">new</span> ReferenceQueue&lt;&gt;();</span><br><span class="line">PhantomReference&lt;Object&gt; phantomReference = <span class="keyword">new</span> PhantomReference&lt;&gt;(obj1, referenceQueue1);</span><br><span class="line"></span><br><span class="line">Object obj2 = <span class="keyword">new</span> Object();</span><br><span class="line">ReferenceQueue&lt;Object&gt; referenceQueue2 = <span class="keyword">new</span> ReferenceQueue&lt;&gt;();</span><br><span class="line">WeakReference&lt;Object&gt; weakReference = <span class="keyword">new</span> WeakReference&lt;Object&gt;(obj2, referenceQueue2);</span><br><span class="line"></span><br><span class="line">obj1 = <span class="keyword">null</span>;</span><br><span class="line">obj2 = <span class="keyword">null</span>;</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br><span class="line">System.gc();</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br></pre></td></tr></table></figure></p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">null</span><br><span class="line">null</span><br><span class="line">null</span><br><span class="line">java.lang.ref.WeakReference@30a3107a</span><br><span class="line">java.lang.ref.PhantomReference@33c7e1bb</span><br><span class="line">null</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Object obj1 = <span class="keyword">new</span> Object();</span><br><span class="line">ReferenceQueue&lt;Object&gt; referenceQueue1 = <span class="keyword">new</span> ReferenceQueue&lt;&gt;();</span><br><span class="line">PhantomReference&lt;Object&gt; phantomReference = <span class="keyword">new</span> PhantomReference&lt;&gt;(obj1, referenceQueue1);</span><br><span class="line"></span><br><span class="line">Object obj2 = <span class="keyword">new</span> Object();</span><br><span class="line">ReferenceQueue&lt;Object&gt; referenceQueue2 = <span class="keyword">new</span> ReferenceQueue&lt;&gt;();</span><br><span class="line">WeakReference&lt;Object&gt; weakReference = <span class="keyword">new</span> WeakReference&lt;Object&gt;(obj2, referenceQueue2);</span><br><span class="line"></span><br><span class="line">obj1 = <span class="keyword">null</span>;</span><br><span class="line">obj2 = <span class="keyword">null</span>;</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br><span class="line">System.gc();</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">System.out.println(referenceQueue1.poll());</span><br><span class="line">System.out.println(referenceQueue2.poll());</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">null</span><br><span class="line">null</span><br><span class="line">null</span><br><span class="line">java.lang.ref.WeakReference@30a3107a</span><br><span class="line">java.lang.ref.PhantomReference@33c7e1bb</span><br><span class="line">null</span><br></pre></td></tr></table></figure>
 <p>当然多次跑下来会发现，还会发生以下结果</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">null</span><br><span class="line">null</span><br><span class="line">java.lang.ref.PhantomReference@30a3107a</span><br><span class="line">java.lang.ref.WeakReference@33c7e1bb</span><br><span class="line">null</span><br><span class="line">null</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">null</span><br><span class="line">null</span><br><span class="line">java.lang.ref.PhantomReference@30a3107a</span><br><span class="line">java.lang.ref.WeakReference@33c7e1bb</span><br><span class="line">null</span><br><span class="line">null</span><br></pre></td></tr></table></figure>
 <p>猜测， 因为 如果 gc 的快， 则会发生后面的情况， gc 慢则会发生前面的情况。</p>
 <p>最后是 FinalReference， 这个用于什么地方？</p>
 <p>网上找到了 <a href="http://lovestblog.cn/blog/2015/07/09/final-reference/" target="_blank" rel="external">你假笨分析的文章</a></p>
 <p>简单来说， 就是 jvm 会对那些实现了 <code>finalize</code> 方法的对象标记为 FinalReference.</p>
 <p>然后利用和上面几个Reference 一样的 ReferenceQueue 的对象方式，接受通知，调用 finalize 方法。</p>
-<p>至于什么时候 jvm 触发事件，是在 <code>gc开始时</code> 发现某个对象仅被 Finalizer 类引用，则就会发出通知，让 其执行 finalize 方法，(这时 对象还未被回收)</p>
+<p>至于什么时候 jvm 触发事件，是在 <code>gc开始时</code> 发现某个对象仅被 Finalizer 类引用，则就会发出通知，让 其执行 finalize 方法，(这时 对象还未被回收)  </p>
 <p>finalize 完成后会将 FinalReference 设置为 null， 让 gc 回收。</p>
-<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">runFinalizer</span><span class="params">(JavaLangAccess jla)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (hasBeenFinalized()) <span class="keyword">return</span>;</span><br><span class="line">        remove();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Object finalizee = <span class="keyword">this</span>.get();</span><br><span class="line">        <span class="keyword">if</span> (finalizee != <span class="keyword">null</span> &amp;&amp; !(finalizee <span class="keyword">instanceof</span> java.lang.Enum)) &#123;</span><br><span class="line">            jla.invokeFinalize(finalizee);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Clear stack slot containing this variable, to decrease</span><br><span class="line">               the chances of false retention with a conservative GC */</span></span><br><span class="line">            finalizee = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable x) &#123; &#125;</span><br><span class="line">    <span class="keyword">super</span>.clear();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">runFinalizer</span><span class="params">(JavaLangAccess jla)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (hasBeenFinalized()) <span class="keyword">return</span>;</span><br><span class="line">        remove();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Object finalizee = <span class="keyword">this</span>.get();</span><br><span class="line">        <span class="keyword">if</span> (finalizee != <span class="keyword">null</span> &amp;&amp; !(finalizee <span class="keyword">instanceof</span> java.lang.Enum)) &#123;</span><br><span class="line">            jla.invokeFinalize(finalizee);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Clear stack slot containing this variable, to decrease</span><br><span class="line">               the chances of false retention with a conservative GC */</span></span><br><span class="line">            finalizee = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable x) &#123; &#125;</span><br><span class="line">    <span class="keyword">super</span>.clear();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>FinalReference 其实相当于一个强引用， 确保执行 finalize 方法，所以不能立即回收掉， 但是呢， 执行 finalize 方法的线程有且只有一个， 而且优先级比较低，如果cpu 资源紧张的话，会导致 大量 finalize 对象挤压， 漫漫进入老年带。</p>
 <p>也就是说， 尽量不要使用 finalize， 或者 即使使用了，也不要做一些非常耗时的操作， 避免对 gc 不友好。</p>
 <p>了解过一遍后， 会过来看 检测垃圾回收的问题，</p>
 <p>先看了网上的开源项目, 看看业界是怎么用的。</p>
-<p><strong>netty</strong></p>
+<p><strong>netty</strong> </p>
 <p>netty 使用 PhantomReference 来检测内存泄漏，</p>
 <p>原理就是 因为内部使用自己实现的 bytebufPool , 所以申请一个 ByteBuf 后， 如果不用了需要自己手动 release。</p>
-<p>如果没有调用 release， 那么就可以认为是泄漏了。</p>
+<p>如果没有调用 release， 那么就可以认为是泄漏了。 </p>
 <p>然后 netty 定义了个 <code>DefaultResourceLeak</code> 的类， 他继承自 <code>PhantomReference</code> 让他附属在每一个 申请的 ByteBuf 对象上面。</p>
-<p>并且申请时，记录下这个对象 存在 一个 map里面。</p>
+<p>并且申请时，记录下这个对象 存在 一个 map里面。 </p>
 <p>判断泄漏的逻辑就是， 如果调用了 release， 那么release 会把map里面的 对象清除。</p>
-<p>如果没有调用， 那么 Bytebuf 被 gc 后(没调 release)， 则会受到 referenceQueue 的通知， 看看 map 有没有， 有的话说明 泄漏了。</p>
-<p><strong>leakcanary</strong></p>
+<p>如果没有调用， 那么 Bytebuf 被 gc 后(没调 release)， 则会受到 referenceQueue 的通知， 看看 map 有没有， 有的话说明 泄漏了。 </p>
+<p><strong>leakcanary</strong> </p>
 <p>这个是android 的开源内存泄漏组件</p>
 <p>看了个大概， 主要是用了 WeakReference ， 自己实现了个叫 KeyedWeakReference 的类。</p>
 <p>所有要检查的对象 注册到 RefWatcher 中， 里面又一个 Set 存 对象，</p>
 <p>然后 她会暴力的 gc 下，然后查看 referenceQueue 有没有受到，没受到的话，说明还有人引这，说明泄漏了。</p>
-<h4>最后有个问题，她们选择 reference 的选型问题</h4>
-<ul>
-<li><code>leakcanary</code> 能用 phantomReference 吗？</li>
+<h4 id="最后有个问题，她们选择-reference-的选型问题"><a href="#最后有个问题，她们选择-reference-的选型问题" class="headerlink" title="最后有个问题，她们选择 reference 的选型问题"></a>最后有个问题，她们选择 reference 的选型问题</h4><ul>
+<li><code>leakcanary</code> 能用 phantomReference 吗？ </li>
 </ul>
-<p>不行，因为 phantomReferece 要真正gc 掉之后， referenceQueue 才会收到通知，而异步 gc 的话并不保证 一定gc 完成。</p>
+<p>不行，因为 phantomReferece 要真正gc 掉之后， referenceQueue 才会收到通知，而异步 gc 的话并不保证 一定gc 完成。 </p>
 <ul>
 <li>那么 <code>netty</code> 能不能把 PhantomReference 替换成 WeakReference ?</li>
 </ul>
 <p>我觉得可以, 他并不在乎是否真正gc 掉，只要对不上 就是泄漏了。</p>
-<p>http://hongjiang.info/java-referencequeue/</p>
-<p>http://souly.cn/%E6%8A%80%E6%9C%AF%E5%8D%9A%E6%96%87/2015/10/13/java%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8/</p>
-<p>http://lovestblog.cn/blog/2015/07/09/final-reference/</p>
+<p><a href="http://hongjiang.info/java-referencequeue/" target="_blank" rel="external">http://hongjiang.info/java-referencequeue/</a></p>
+<p><a href="http://souly.cn/%E6%8A%80%E6%9C%AF%E5%8D%9A%E6%96%87/2015/10/13/java%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8/" target="_blank" rel="external">http://souly.cn/%E6%8A%80%E6%9C%AF%E5%8D%9A%E6%96%87/2015/10/13/java%E7%9A%84%E5%9B%9B%E7%A7%8D%E5%BC%95%E7%94%A8/</a></p>
+<p><a href="http://lovestblog.cn/blog/2015/07/09/final-reference/" target="_blank" rel="external">http://lovestblog.cn/blog/2015/07/09/final-reference/</a></p>
 
   </section>
 </article>

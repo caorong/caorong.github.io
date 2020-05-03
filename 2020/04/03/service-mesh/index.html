@@ -5,8 +5,6 @@
   <title>service mesh | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -40,8 +38,7 @@
 
   <section class="article-entry">
     <p>目前在微服务领域最火的莫过于 service mesh，这篇文章主要说说 service mesh 是什么，他的价值是什么，别人都怎么使用它。</p>
-<h1>什么是service mesh?</h1>
-<p>简单来说，service mesh 就是一个微服务里面的一个代理层</p>
+<h1 id="什么是service-mesh"><a href="#什么是service-mesh" class="headerlink" title="什么是service mesh?"></a>什么是service mesh?</h1><p>简单来说，service mesh 就是一个微服务里面的一个代理层</p>
 <ol>
 <li>rpc 的 downstream 和 upstream 都需要经过他。</li>
 <li>他完成一些通用的监控，trace，服务发现等功能</li>
@@ -49,8 +46,7 @@
 </ol>
 <p>这里盗链一张图</p>
 <p><img src="https://jimmysong.io/blog/what-is-a-service-mesh/service-mesh-arch.png" alt=""></p>
-<h1>service mesh 的价值</h1>
-<p>这里列举一张表，对于不同阶段的业务使用 service mesh 的价值。</p>
+<h1 id="service-mesh-的价值"><a href="#service-mesh-的价值" class="headerlink" title="service mesh 的价值"></a>service mesh 的价值</h1><p>这里列举一张表，对于不同阶段的业务使用 service mesh 的价值。</p>
 <table>
 <thead>
 <tr>
@@ -79,10 +75,8 @@
 </table>
 <p>对于刚接入微服务，并且处于上升期的小公司来说，价值很大。</p>
 <p>但对于比较成熟的，配套比较完善的阶段来说，收益就并不大了。一般做mesh化的改造，是为了某些目的的。</p>
-<h1>别人都怎么使用 service mesh</h1>
-<p>这里总结一下几个大厂的 service mesh 的设计，以及原因。</p>
-<h3>weibo mesh</h3>
-<p><a href="https://github.com/servicemesher/meetup-slides/blob/master/2018/07/beijing/%E4%B8%81%E6%8C%AF%E5%87%AF-%E6%96%B0%E6%B5%AA%E5%BE%AE%E5%8D%9A-service-mesh%E5%AE%9E%E8%B7%B5-weibo-mesh.pdf" target="_blank" rel="external">官方ppt地址</a></p>
+<h1 id="别人都怎么使用-service-mesh"><a href="#别人都怎么使用-service-mesh" class="headerlink" title="别人都怎么使用 service mesh"></a>别人都怎么使用 service mesh</h1><p>这里总结一下几个大厂的 service mesh 的设计，以及原因。</p>
+<h3 id="weibo-mesh"><a href="#weibo-mesh" class="headerlink" title="weibo mesh"></a>weibo mesh</h3><p><a href="https://github.com/servicemesher/meetup-slides/blob/master/2018/07/beijing/%E4%B8%81%E6%8C%AF%E5%87%AF-%E6%96%B0%E6%B5%AA%E5%BE%AE%E5%8D%9A-service-mesh%E5%AE%9E%E8%B7%B5-weibo-mesh.pdf" target="_blank" rel="external">官方ppt地址</a></p>
 <p><a href="https://www.infoq.cn/article/5srPTJlm_7cUcrLzVaF4" target="_blank" rel="external">官方文章</a></p>
 <p>对比 istio，主要支持了</p>
 <ol>
@@ -95,21 +89,17 @@
 <li>支持内部的小语言的治理</li>
 <li>通用的 http 转 motan 协议</li>
 </ol>
-<h3>sofa mesh</h3>
-<p>蚂蚁的 sofa 在他们的官网文章很多，但只有这篇才是最贴近他们内部的真实情况。</p>
+<h3 id="sofa-mesh"><a href="#sofa-mesh" class="headerlink" title="sofa mesh"></a>sofa mesh</h3><p>蚂蚁的 sofa 在他们的官网文章很多，但只有这篇才是最贴近他们内部的真实情况。</p>
 <p><a href="https://www.sofastack.tech/blog/service-mesh-practice-in-production-at-ant-financial-wushi/" target="_blank" rel="external">官方文章</a></p>
 <p>他们和 istio 本质上区别不大。自研的目的是为了最大限度复用现有的基础设置(注册中心/配置中心)，并能平滑迁移。</p>
 <p>proxy做了特别的协议扩展，便于支持他们的<a href="https://juejin.im/post/5e1e8dd7f265da3e220a8a72" target="_blank" rel="external">去中心化网关</a></p>
-<h3>唯品会 mesh</h3>
-<p>他们的代码没有开源，相关资料如下。</p>
+<h3 id="唯品会-mesh"><a href="#唯品会-mesh" class="headerlink" title="唯品会 mesh"></a>唯品会 mesh</h3><p>他们的代码没有开源，相关资料如下。</p>
 <p><a href="http://www.liuhaihua.cn/archives/532723.html" target="_blank" rel="external">相关资料</a></p>
 <p>从资料来看和istio大不相同。核心目的是为了支持小语言</p>
 <p>比起sidecar 的模式，更像是一个代理模式。</p>
 <p>主要特色</p>
-<p>支持一个协议转换，能将http转为 thrift 协议。
-ps：内部应该是将接口的schema也存储到注册中心了</p>
-<h3>美团 octo mesh</h3>
-<p>美团内部的mesh化方案。</p>
+<p>支持一个协议转换，能将http转为 thrift 协议。<br>ps：内部应该是将接口的schema也存储到注册中心了</p>
+<h3 id="美团-octo-mesh"><a href="#美团-octo-mesh" class="headerlink" title="美团 octo mesh"></a>美团 octo mesh</h3><p>美团内部的mesh化方案。</p>
 <p><a href="https://tech.meituan.com/2019/12/12/meituan-octo.html" target="_blank" rel="external">相关资料</a></p>
 <p>从资料来看，他尽可能的贴近istio的方式进行改造。</p>
 <p>特点就是复杂，非常复杂。</p>

@@ -5,8 +5,6 @@
   <title>newsql | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -40,25 +38,18 @@
 
   <section class="article-entry">
     <p>这篇文章主要整理了比如 tidb 这种 newsql 是如何用 rocksdb 支撑的，并根据 rocksdb 的特性分析他适合支撑的业务特性。</p>
-<h1>rocksdb的特性</h1>
-<p>首先总结一下 rocksdb的特性。</p>
+<h1 id="rocksdb的特性"><a href="#rocksdb的特性" class="headerlink" title="rocksdb的特性"></a>rocksdb的特性</h1><p>首先总结一下 rocksdb的特性。</p>
 <p>详细文章可以参考文档1，以下仅为总结</p>
 <ol>
 <li>rocksdb 只提供最基础的kv 操作</li>
-<li>rocksdb 底层基于leveldb，所以每个ssfile 都是按照key <code>顺序</code>排序的。
-2.1 所以, 在rocksdb 检索一个key的时间复杂度为 O(lgn) （二分查找）
-2.2 所以, 在rocksdb 中进行迭代操作(e.g scan)成本很低</li>
-<li>rocksdb 每一个 ssfile 都带一个 bloomfilter 用来快速定位key是否存在本ssfile
-3.1 由于blooomfilter的存在，check 一个ssfile 是否存在key 的时间复杂度为O(1)</li>
-<li>rocksdb 由于level 的关系，越老的数据会存在越level 越大的ssfile中。检索速度会被放大。
-4.1 所以，很多时序数据库以rocksdb 作为底层存储，他的业务特性和rocksdb 非常契合。
-4.2 所以，有些数据是随着时间增长而增长，但查询时却需要全量过滤的数据，用rocksdb查询，其效率会随着时间区间的增长而降低。</li>
+<li>rocksdb 底层基于leveldb，所以每个ssfile 都是按照key <code>顺序</code>排序的。<br> 2.1 所以, 在rocksdb 检索一个key的时间复杂度为 O(lgn) （二分查找）<br> 2.2 所以, 在rocksdb 中进行迭代操作(e.g scan)成本很低</li>
+<li>rocksdb 每一个 ssfile 都带一个 bloomfilter 用来快速定位key是否存在本ssfile<br> 3.1 由于blooomfilter的存在，check 一个ssfile 是否存在key 的时间复杂度为O(1)</li>
+<li>rocksdb 由于level 的关系，越老的数据会存在越level 越大的ssfile中。检索速度会被放大。<br> 4.1 所以，很多时序数据库以rocksdb 作为底层存储，他的业务特性和rocksdb 非常契合。<br> 4.2 所以，有些数据是随着时间增长而增长，但查询时却需要全量过滤的数据，用rocksdb查询，其效率会随着时间区间的增长而降低。</li>
 </ol>
-<h1>tidb 中 sql 2 kv 的转换</h1>
-<p>首先，tidb 在上层提供了sql查询的支持，底层则用只支持 kv 操作的rocksdb做实际存储。</p>
+<h1 id="tidb-中-sql-2-kv-的转换"><a href="#tidb-中-sql-2-kv-的转换" class="headerlink" title="tidb 中 sql 2 kv 的转换"></a>tidb 中 sql 2 kv 的转换</h1><p>首先，tidb 在上层提供了sql查询的支持，底层则用只支持 kv 操作的rocksdb做实际存储。</p>
 <p>以下则是实际存储的方案。</p>
 <p>对于一张table e.g</p>
-<p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">User</span> &#123;</span><br><span class="line">	<span class="keyword">ID</span> <span class="built_in">int</span>,</span><br><span class="line">	<span class="keyword">Name</span> <span class="built_in">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	Age <span class="built_in">int</span>,</span><br><span class="line"></span><br><span class="line">	PRIMARY <span class="keyword">KEY</span> (<span class="keyword">ID</span>),</span><br><span class="line">	<span class="keyword">Key</span> idxAge (age)</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">User</span> &#123;</span><br><span class="line">	<span class="keyword">ID</span> <span class="built_in">int</span>,</span><br><span class="line">	<span class="keyword">Name</span> <span class="built_in">varchar</span>(<span class="number">20</span>),</span><br><span class="line">	Age <span class="built_in">int</span>,</span><br><span class="line"></span><br><span class="line">	PRIMARY <span class="keyword">KEY</span> (<span class="keyword">ID</span>),</span><br><span class="line">	<span class="keyword">Key</span> idxAge (age)</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p>需要存储的数据包括三部分：</p>
 <ol>
 <li>表的元信息</li>
@@ -67,14 +58,14 @@
 </ol>
 <p>TiDB 对每个表分配一个 TableID，每一个索引都会分配一个 IndexID，每一行分配一个 RowID（如果表有整数型的 Primary Key，那么会用 Primary Key 的值当做 RowID），其中 TableID 在整个集群内唯一，IndexID/RowID 在表内唯一，这些 ID 都是 int64 类型。</p>
 <p>每行数据按照如下规则进行编码成 Key-Value pair：</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_recordPrefixSep&#123;rowID&#125;</span><br><span class="line">Value: [col1, col2, col3, col4]</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_recordPrefixSep&#123;rowID&#125;</span><br><span class="line">Value: [col1, col2, col3, col4]</span><br></pre></td></tr></table></figure>
 <p>注意：以上相当于是mysql 的聚集索引。可以通过聚集索引快速定位到一行数据</p>
 <p>对于 uniq index ，会按照如下规则编码成 Key-Value pair：</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_indexPrefixSep&#123;indexID&#125;_indexedColumnsValue</span><br><span class="line">Value: rowID</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_indexPrefixSep&#123;indexID&#125;_indexedColumnsValue</span><br><span class="line">Value: rowID</span><br></pre></td></tr></table></figure>
 <p>对于 非 uniq index(因为可能会重复)，会按照如下规则编码成 Key-Value pair：</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_indexPrefixSep&#123;indexID&#125;_indexedColumnsValue_rowID</span><br><span class="line">Value: null</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Key: tablePrefix&#123;tableID&#125;_indexPrefixSep&#123;indexID&#125;_indexedColumnsValue_rowID</span><br><span class="line">Value: null</span><br></pre></td></tr></table></figure>
 <p>在tikv中，实际的prefix 如下</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var(</span><br><span class="line">	tablePrefix     = []byte&#123;&apos;t&apos;&#125;</span><br><span class="line">	recordPrefixSep = []byte(&quot;_r&quot;)</span><br><span class="line">	indexPrefixSep  = []byte(&quot;_i&quot;)</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var(</span><br><span class="line">	tablePrefix     = []byte&#123;&apos;t&apos;&#125;</span><br><span class="line">	recordPrefixSep = []byte(&quot;_r&quot;)</span><br><span class="line">	indexPrefixSep  = []byte(&quot;_i&quot;)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 <p>假设 <code>tableID</code> 为 <code>1</code></p>
 <p>最终存储方式如下图所示</p>
 <p><img src="http://assets.processon.com/chart_image/5e9c06b37d9c0842ab45f729.png" alt=""></p>
@@ -82,8 +73,7 @@
 <ol>
 <li>tidb 对于没有建索引的数据，查询速度是极慢的，因为需要遍历整张表。</li>
 </ol>
-<h1>滴滴的 sql 2 redis 的转换</h1>
-<p>原文在参考文档2，这里简述一下。</p>
+<h1 id="滴滴的-sql-2-redis-的转换"><a href="#滴滴的-sql-2-redis-的转换" class="headerlink" title="滴滴的 sql 2 redis 的转换"></a>滴滴的 sql 2 redis 的转换</h1><p>原文在参考文档2，这里简述一下。</p>
 <p>滴滴自己做了一套类似tidb 的 newSql，架构上的区别就是，将tidb 的 rift 干掉了。</p>
 <p>还有就是，他底层不是直接基于 rocksdb， 而是基于 redis 的数据结构搞得(底层其实还是rocksdb)。</p>
 <p>这里我们先看一下他的sql 2 kv 的设计</p>
@@ -91,24 +81,22 @@
 <p><img src="https://mmbiz.qpic.cn/mmbiz_png/jE5bOw22iaBseKJJk3fNlo4tPV2c6djjglkBX4TCIsC7OfnA5yjiarzh4weoIsvWsPic0fWGEuZb35NuYVjCq1rFg/640?wx_fmt=png&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1" alt=""></p>
 <p>索引的结构和 tidb 一模一样, 直接用kv存储</p>
 <p>唯一索引：</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Key: </span><br><span class="line">table_indexname_indexColumnsValue </span><br><span class="line">Value: Rowkey</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Key: </span><br><span class="line">table_indexname_indexColumnsValue </span><br><span class="line">Value: Rowkey</span><br></pre></td></tr></table></figure>
 <p>非唯一索引：</p>
-<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Key: </span><br><span class="line">table_indexname_indexColumnsValue_Rowkey </span><br><span class="line">Value：null</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Key: </span><br><span class="line">table_indexname_indexColumnsValue_Rowkey </span><br><span class="line">Value：null</span><br></pre></td></tr></table></figure>
 <p>索引查询方式，文章说是根据 scan 查询，根据rocksdb 的api，大概率是直接 iterator。</p>
 <p>然后我们再来看下hashmap的实际实现，这里我们可以参考pika的实现</p>
 <p>一个hash 其实由多个kv 组成</p>
 <p>然后，每一个field, value 对应了 rocksdb 的 一对kv</p>
 <p>那滴滴这个全量数据为啥要用hash的方式，而不是类似 tidb 的kv方式呢？</p>
 <p>个人感觉是参考率列式存储的概念，减少查询不必要的字段，减少因大value导致的内存抖动。</p>
-<h1>总结</h1>
-<p>由于目前newsql的底层一般都用的rocksdb。而rocksdb本质上还是按level划分的。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>由于目前newsql的底层一般都用的rocksdb。而rocksdb本质上还是按level划分的。</p>
 <p>所以很显然，现在的newsql将会受到时间的影响。如果数据存入的时间跨度越大，然后业务查询时却又需要查询类似大跨度的范围时，查询效率显然会很低。</p>
 <p>上面总结了最近调研的 newsql 到kv 的转换过程，我们实际业务场景在选型是否引入类似tidb的时候，可以先考虑一下自己的业务场景，评估一下 newsql 是否会提升性能，再作决定。</p>
-<h1>参考文档</h1>
-<ol>
-<li>https://pingcap.com/blog-cn/tidb-internal-2/</li>
-<li>https://mp.weixin.qq.com/s/_fWbnaTZ5D9Qg0MljdHknA</li>
-<li>https://github.com/Qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F</li>
+<h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><ol>
+<li><a href="https://pingcap.com/blog-cn/tidb-internal-2/" target="_blank" rel="external">https://pingcap.com/blog-cn/tidb-internal-2/</a></li>
+<li><a href="https://mp.weixin.qq.com/s/_fWbnaTZ5D9Qg0MljdHknA" target="_blank" rel="external">https://mp.weixin.qq.com/s/_fWbnaTZ5D9Qg0MljdHknA</a></li>
+<li><a href="https://github.com/Qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F" target="_blank" rel="external">https://github.com/Qihoo360/pika/wiki/pika-blackwidow%E5%BC%95%E6%93%8E%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F</a></li>
 </ol>
 
   </section>

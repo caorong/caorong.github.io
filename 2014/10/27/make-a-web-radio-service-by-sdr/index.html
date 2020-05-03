@@ -5,8 +5,6 @@
   <title>如何用 sdr 做一个在线收音机服务 | lelouchcr&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <meta name="referrer" content="same-origin">
-  <meta name="referrer" content="no-referrer" />
   <link rel="stylesheet" href="/css/app.css">
   <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
 </head>
@@ -47,23 +45,23 @@
 <p>那么如何控制想要接受的频段，以及如何将raw audio 输出？</p>
 <p>用 gnuradio 写代码，拖控件。</p>
 <p><a href="">gnuradio 的安装</a></p>
-<p>步骤如下</p>
+<p>步骤如下 </p>
 <ol>
 <li>实现能够接收fm</li>
 </ol>
-<p>具体参考 hackrf官方 tutorial 1 https://greatscottgadgets.com/sdr/1/</p>
-<ol start="2">
-<li>实现一个程序能同时接收多个频道</li>
+<p>具体参考 hackrf官方 tutorial 1 <a href="https://greatscottgadgets.com/sdr/1/" target="_blank" rel="external">https://greatscottgadgets.com/sdr/1/</a></p>
+<ol>
+<li>实现一个程序能同时接收多个频道 </li>
 </ol>
-<p>参考 tutorial 1的课后习题 https://greatscottgadgets.com/sdr/2/  <a href="https://greatscottgadgets.com/sdr/grc/lesson2.grc" target="_blank" rel="external">flowgraph for lesson 2 homework</a></p>
-<ol start="3">
+<p>参考 tutorial 1的课后习题 <a href="https://greatscottgadgets.com/sdr/2/" target="_blank" rel="external">https://greatscottgadgets.com/sdr/2/</a>  <a href="https://greatscottgadgets.com/sdr/grc/lesson2.grc" target="_blank" rel="external">flowgraph for lesson 2 homework</a></p>
+<ol>
 <li>实现对外将多个频道通过udp 或者 tcp 传出去</li>
 </ol>
 <p>路线图</p>
 <p>hackrfSDR -&gt; computer -&gt; wav</p>
 <p>computer 主要做了修改采样频率，最后， 将模拟信号强转成short（16bit）然后将raw audio 通过 udp 发出去， 然后ffmpeg 爬</p>
 <p><a href="https://github.com/caorong/testgrc" target="_blank" rel="external">grc代码</a></p>
-<p>参考里面的 multifm_noGUI.grc</p>
+<p>参考里面的 multifm_noGUI.grc </p>
 <hr>
 <p>15.1.30</p>
 <p>最后直播没有选择这个备选方案 ＝ ＝</p>
