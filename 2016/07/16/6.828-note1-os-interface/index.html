@@ -196,6 +196,7 @@ system是调用shell执行你的命令，system=fork+exec+waitpid,执行完毕�
             bgimg.setAttribute('src', option.p_ori);
             bgimg.setAttribute('id', 'bkImg');
             bgimg.setAttribute('onmousedown', 'return false');
+            bgimg.setAttribute('referrerpolicy', 'no-referrer')
             document.body.appendChild(bgimg);
         }
 
