@@ -40,52 +40,59 @@
 
   <section class="article-entry">
     <p>做了快3年多开发，结合最近的情况，总结下，一些可以提升生产力的正确使用姿势。</p>
-<h2 id="private-key"><a href="#private-key" class="headerlink" title="private key"></a>private key</h2><p>很多时候 我们都是通过 <code>ssh root@xx.xx.xx.xx</code> 登陆服务器，然后手输密码。</p>
+<h2>private key</h2>
+<p>很多时候 我们都是通过 <code>ssh root@xx.xx.xx.xx</code> 登陆服务器，然后手输密码。</p>
 <p>但其实不论从方便性或者从安全性来说，用公私钥登录服务器更好。</p>
 <p>ubuntu 的话 自带 <code>ssh-copy-id</code> 的工具可以帮助在远程 server 里添上自己的公钥，只要在这次输一次密码，以后都不用输密码。</p>
 <p>mac的话 默认没有，可以自己弄一个简化版的</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">~ ᐅ cat /usr/local/bin/ssh-copy-id</span><br><span class="line">#!/bin/bash</span><br><span class="line"></span><br><span class="line">cat ~/.ssh/id_rsa.pub | ssh $1 &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys&quot;</span><br></pre></td></tr></table></figure>
-<h2 id="ssh-configfile"><a href="#ssh-configfile" class="headerlink" title="ssh configfile"></a>ssh configfile</h2><p>如果每次登录都要输入ip，那么如果你要登录的服务器超过100的话很难想象如何记住这么多ip.</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">~ ᐅ cat /usr/local/bin/ssh-copy-id</span><br><span class="line">#!/bin/bash</span><br><span class="line"></span><br><span class="line">cat ~/.ssh/id_rsa.pub | ssh $1 &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys&quot;</span><br></pre></td></tr></table></figure></p>
+<h2>ssh configfile</h2>
+<p>如果每次登录都要输入ip，那么如果你要登录的服务器超过100的话很难想象如何记住这么多ip.</p>
 <p>但其实可以通过 ssh config file 帮助给你的服务器添加别名</p>
 <p>man的官方解释</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-F configfile</span><br><span class="line">       Specifies an alternative per-user configuration file.  If a configuration file is given on the command line, the system-</span><br><span class="line">       wide configuration file (/etc/ssh/ssh_config) will be ignored.  The default for the per-user configuration file is</span><br><span class="line">       ~/.ssh/config.</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-F configfile</span><br><span class="line">       Specifies an alternative per-user configuration file.  If a configuration file is given on the command line, the system-</span><br><span class="line">       wide configuration file (/etc/ssh/ssh_config) will be ignored.  The default for the per-user configuration file is</span><br><span class="line">       ~/.ssh/config.</span><br></pre></td></tr></table></figure></p>
 <p>根据man 可以知道 *nux 在 /etc/ssh/ssh_config 有一份默认配置, cp 到 自己的 ~/.ssh/config 下作为自己的配置</p>
 <p>然后 添加方式如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Host vps5</span><br><span class="line">HostName 1xx.xx.xx.xx</span><br><span class="line">Port 22</span><br><span class="line">IdentityFile ~/.ssh/id_rsa</span><br><span class="line">User root</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Host vps5</span><br><span class="line">HostName 1xx.xx.xx.xx</span><br><span class="line">Port 22</span><br><span class="line">IdentityFile ~/.ssh/id_rsa</span><br><span class="line">User root</span><br></pre></td></tr></table></figure></p>
 <p>然后可以通过 <code>ssh vps5</code> 登录服务器</p>
-<h2 id="proxy-jump-hosts"><a href="#proxy-jump-hosts" class="headerlink" title="proxy jump hosts"></a>proxy jump hosts</h2><p>一般公司的线上环境都是一个独立的内网环境，需要先登录 一台跳转机，然后跳转到内部机器。</p>
+<h2>proxy jump hosts</h2>
+<p>一般公司的线上环境都是一个独立的内网环境，需要先登录 一台跳转机，然后跳转到内部机器。</p>
 <p>我们自然也是可以 一键 直接进入内部机器。</p>
 <p>下面是将vps3 作为gateway，访问vps5。</p>
 <p>注： 需要在vps3 上 可以用默认privatekey 登录vps5</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -o ProxyCommand=&quot;ssh -W %h:%p vps3&quot; vps5</span><br><span class="line"></span><br><span class="line">ssh -o ProxyCommand=&quot;ssh -W %h:%p vps3&quot; dev@192.168.3.xx // 内网ip</span><br></pre></td></tr></table></figure>
-<p>或者 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -tt vps3 ssh -tt vps5</span><br><span class="line"></span><br><span class="line">ssh -tt vps3 ssh -tt 192.168.3.xx // 内网ip</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -o ProxyCommand=&quot;ssh -W %h:%p vps3&quot; vps5</span><br><span class="line"></span><br><span class="line">ssh -o ProxyCommand=&quot;ssh -W %h:%p vps3&quot; dev@192.168.3.xx // 内网ip</span><br></pre></td></tr></table></figure></p>
+<p>或者</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh -tt vps3 ssh -tt vps5</span><br><span class="line"></span><br><span class="line">ssh -tt vps3 ssh -tt 192.168.3.xx // 内网ip</span><br></pre></td></tr></table></figure></p>
 <p>Openssh 不同的版本支持可能不同，具体可以参考 下面referer 的wiki</p>
 <p>这个不仅仅用于跳转机。我自己的vps3 在日本，vps5在美国，通过vps3 做代理可以让我访问更顺畅。</p>
-<h2 id="proxy-transport-file"><a href="#proxy-transport-file" class="headerlink" title="proxy transport file"></a>proxy transport file</h2><p>既然可以代理登录，那就可以代理传文件了。</p>
+<h2>proxy transport file</h2>
+<p>既然可以代理登录，那就可以代理传文件了。</p>
 <p>scp 是一个基于ssh 的 remote copy program (from man)</p>
 <p>所以 可以沿用 ssh config <code>~/.ssh/id_rsa</code></p>
 <p>由于文件比较大，所以需要选择更合适的 加密方式，以及压缩，以便提高效率，举个例子</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Host proxyed_vps5</span><br><span class="line">HostName vps5IP</span><br><span class="line"># setisify gateway private key position for connect remote %h %p</span><br><span class="line">ProxyCommand ssh -C -c blowfish -l root -i ~/.ssh/vps3_id_rsa vps3IP -W %h:%p</span><br><span class="line"># this is private key for destination on local machine</span><br><span class="line">IdentityFile ~/.ssh/vps5_id_rsa</span><br><span class="line">Compression yes</span><br><span class="line">Cipher blowfish</span><br><span class="line">Port 28030</span><br><span class="line">User root</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Host proxyed_vps5</span><br><span class="line">HostName vps5IP</span><br><span class="line"># setisify gateway private key position for connect remote %h %p</span><br><span class="line">ProxyCommand ssh -C -c blowfish -l root -i ~/.ssh/vps3_id_rsa vps3IP -W %h:%p</span><br><span class="line"># this is private key for destination on local machine</span><br><span class="line">IdentityFile ~/.ssh/vps5_id_rsa</span><br><span class="line">Compression yes</span><br><span class="line">Cipher blowfish</span><br><span class="line">Port 28030</span><br><span class="line">User root</span><br></pre></td></tr></table></figure></p>
 <p>当然也可以先配置一个 <code>vps3</code> 再配置一个 <code>vps5</code> 然后 ProxyCommand 里面就不用 -c -C -i 这种了</p>
 <p>这里我配置了一个 vps5的代理，将vps3 作为 网关。</p>
 <p>在 <code>ProxyCommand</code> 里面 配置gateway 的选项: 表示通过 root 和 本地 秘钥 通过 <code>-C</code> 启用压缩 <code>-c blowfish</code> <a href="http://www.hypexr.org/linux_scp_help.php" target="_blank" rel="external">blowfish 加密效率更高</a> (ps: 压缩挺费cpu的)</p>
 <p>在 ssh_options 里面 用 Compression Cipher 代替。</p>
-<p><code>-W</code> 官方解释 </p>
-<pre><code>stdio forwarding (-W) mode to &quot;bounce&quot; the connection through an intermediate host.
-</code></pre><p><code>%h</code> <code>%p</code> 分别是 <code>HostName</code> 和 <code>Port</code></p>
-<p>上面的2个 IdentityFile 都在本机。 </p>
+<p><code>-W</code> 官方解释</p>
+<pre><code> stdio forwarding (-W) mode to &quot;bounce&quot; the connection through an intermediate host.
+</code></pre>
+<p><code>%h</code> <code>%p</code> 分别是 <code>HostName</code> 和 <code>Port</code></p>
+<p>上面的2个 IdentityFile 都在本机。</p>
 <p>看一下效果:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">~/Documents/xxx ᐅ scp  -r proxyed_vps5:download/xxx-319 ./</span><br><span class="line">xxx-319.mp4                                                                                                    1%   38MB   2.3MB/s   21:52 ETA^CKilled by signal 2.</span><br><span class="line">Killed by signal 2.</span><br><span class="line">~/Documents/xxx ᐅ scp  -r vps5:download/xxx-319 ./</span><br><span class="line">xxx-319.mp4                                                                                                    0% 6768KB 374.0KB/s 2:16:04 ETA^CKilled by signal 2.</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">~/Documents/xxx ᐅ scp  -r proxyed_vps5:download/xxx-319 ./</span><br><span class="line">xxx-319.mp4                                                                                                    1%   38MB   2.3MB/s   21:52 ETA^CKilled by signal 2.</span><br><span class="line">Killed by signal 2.</span><br><span class="line">~/Documents/xxx ᐅ scp  -r vps5:download/xxx-319 ./</span><br><span class="line">xxx-319.mp4                                                                                                    0% 6768KB 374.0KB/s 2:16:04 ETA^CKilled by signal 2.</span><br></pre></td></tr></table></figure></p>
 <p>还有 rsync 同理。</p>
 <p>当scp 下载到一般 发现代理慢了，那么可以将scp停掉，用rsync 换代理断点续传</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync -z -r --partial --progress --rsh=ssh vps5:download/xxx-319.mp4  ./</span><br></pre></td></tr></table></figure>
-<p>还有，既然能2层，就能 3 层，这是个递归，具体参考 <a href="https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#Recursively_Chaining_Gateways_Using_stdio_Forwarding" target="_blank" rel="external">wiki</a> </p>
-<h1 id="插曲"><a href="#插曲" class="headerlink" title="插曲"></a>插曲</h1><p>之所以会研究下载是因为最近发现，迅雷太恶心了，不但下载速度没以前快，还强制嵌入了一个浏览器。</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rsync -z -r --partial --progress --rsh=ssh vps5:download/xxx-319.mp4  ./</span><br></pre></td></tr></table></figure></p>
+<p>还有，既然能2层，就能 3 层，这是个递归，具体参考 <a href="https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#Recursively_Chaining_Gateways_Using_stdio_Forwarding" target="_blank" rel="external">wiki</a></p>
+<h1>插曲</h1>
+<p>之所以会研究下载是因为最近发现，迅雷太恶心了，不但下载速度没以前快，还强制嵌入了一个浏览器。</p>
 <p>然后发现国外vps 下载bt 速度非常快，一半1，2G 的 大小，10分钟左右就能下完。于是就找到了这个方法。</p>
 <p>ps，如果下载的是 mp4 格式的话，如果前置头 的话，是可以实现scp 边传边播的功能, 毕竟scp 是顺序传输的。。。</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat" target="_blank" rel="external">https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat</a></p>
-<p><a href="http://www.hypexr.org/linux_scp_help.php" target="_blank" rel="external">http://www.hypexr.org/linux_scp_help.php</a></p>
+<h1>reference</h1>
+<p>https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat</p>
+<p>http://www.hypexr.org/linux_scp_help.php</p>
 
   </section>
 </article>

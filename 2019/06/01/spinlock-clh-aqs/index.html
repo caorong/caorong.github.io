@@ -40,27 +40,35 @@
 
   <section class="article-entry">
     <p>这篇主要讲讲， 为啥 会有 CLH，以及为啥会有 AQS，他们主要做了啥。</p>
-<h1 id="CAS"><a href="#CAS" class="headerlink" title="CAS "></a>CAS </h1><p>首先说下 CAS，之后的锁都以此为基础, cpu保证了他的 原子性</p>
-<h1 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h1><p>多个线程忙等待锁释放，由于不牵涉到信号量，不依赖操作系统的调度，在同一个上下文内，所以获取和释放锁的开销很小。</p>
+<h1>CAS </h1>
+<p>首先说下 CAS，之后的锁都以此为基础, cpu保证了他的 原子性</p>
+<h1>自旋锁</h1>
+<p>多个线程忙等待锁释放，由于不牵涉到信号量，不依赖操作系统的调度，在同一个上下文内，所以获取和释放锁的开销很小。</p>
 <p>但是等待锁期间会占用大量cpu。</p>
 <p>简单例子</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpinLock</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> AtomicReference&lt;Thread&gt; cas = <span class="keyword">new</span> AtomicReference&lt;Thread&gt;();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Thread current = Thread.currentThread();</span><br><span class="line">        <span class="comment">// 利用CAS</span></span><br><span class="line">        <span class="keyword">while</span> (!cas.compareAndSet(<span class="keyword">null</span>, current)) &#123;</span><br><span class="line">            <span class="comment">// DO nothing</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Thread current = Thread.currentThread();</span><br><span class="line">        cas.compareAndSet(current, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="公平自旋锁"><a href="#公平自旋锁" class="headerlink" title="公平自旋锁"></a>公平自旋锁</h1><p>但是自旋锁有个问题，当有多个自旋锁存在时，是抢占式的，无法控制优先级，会造成线程饥饿</p>
+<p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpinLock</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> AtomicReference&lt;Thread&gt; cas = <span class="keyword">new</span> AtomicReference&lt;Thread&gt;();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Thread current = Thread.currentThread();</span><br><span class="line">        <span class="comment">// 利用CAS</span></span><br><span class="line">        <span class="keyword">while</span> (!cas.compareAndSet(<span class="keyword">null</span>, current)) &#123;</span><br><span class="line">            <span class="comment">// DO nothing</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Thread current = Thread.currentThread();</span><br><span class="line">        cas.compareAndSet(current, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1>公平自旋锁</h1>
+<p>但是自旋锁有个问题，当有多个自旋锁存在时，是抢占式的，无法控制优先级，会造成线程饥饿</p>
 <p>为了解决公平性问题，于是就想出了维护一个自旋锁链，实现上有几个代表</p>
 <p>TicketLock, CLH， MCS</p>
-<h2 id="TicketLock"><a href="#TicketLock" class="headerlink" title="TicketLock"></a>TicketLock</h2><p>每一个想要获取锁的线程都分配一个 自增的 ticket，各个自旋锁自旋公共的ticket</p>
+<h2>TicketLock</h2>
+<p>每一个想要获取锁的线程都分配一个 自增的 ticket，各个自旋锁自旋公共的ticket</p>
 <p>缺点，多线程并发访问公共字段，为了保证可见性，每次读写操作都必须在多个处理器缓存之间进行缓存同步, 会降低系统整体性能</p>
-<h2 id="CLH"><a href="#CLH" class="headerlink" title="CLH"></a>CLH</h2><p>将锁维护在一个链表上，每个锁自旋本线程的本地变量(该变量为前驱状态)，当自己的前驱unlock后，将会修改后置链表节点的前驱状态，以便后面线程获取到锁。</p>
+<h2>CLH</h2>
+<p>将锁维护在一个链表上，每个锁自旋本线程的本地变量(该变量为前驱状态)，当自己的前驱unlock后，将会修改后置链表节点的前驱状态，以便后面线程获取到锁。</p>
 <p>线程切换仅发生在 unlock 的操作时</p>
-<h2 id="MCS"><a href="#MCS" class="headerlink" title="MCS"></a>MCS</h2><p>同 CLH 锁， 自旋本地变量，本地变量的状态再前置线程unlock时修改。</p>
+<h2>MCS</h2>
+<p>同 CLH 锁， 自旋本地变量，本地变量的状态再前置线程unlock时修改。</p>
 <p>线程切换仅发生在 unlock 的操作时</p>
 <p>总结:</p>
 <p>CLH 的实现比 MCS 更简单。</p>
 <p>CLH 和 MCS 的代码可以参考这里</p>
-<p><a href="https://coderbee.net/index.php/concurrent/20131115/577" target="_blank" rel="external">https://coderbee.net/index.php/concurrent/20131115/577</a></p>
-<h1 id="AQS"><a href="#AQS" class="headerlink" title="AQS"></a>AQS</h1><p>AQS是基于CLH 修改的.</p>
+<p>https://coderbee.net/index.php/concurrent/20131115/577</p>
+<h1>AQS</h1>
+<p>AQS是基于CLH 修改的.</p>
 <p>公平性靠CLH链实现，但是将自旋锁 替换成了 同步阻塞器</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://coderbee.net/index.php/concurrent/20131115/577" target="_blank" rel="external">https://coderbee.net/index.php/concurrent/20131115/577</a></p>
+<h1>reference</h1>
+<p>https://coderbee.net/index.php/concurrent/20131115/577</p>
 
   </section>
 </article>

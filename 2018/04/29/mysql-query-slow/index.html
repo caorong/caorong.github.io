@@ -40,35 +40,48 @@
 
   <section class="article-entry">
     <p>最近新来的 dba 特别勤快， 一直督促我们改进 slow sql， 发现了一些以前不太关注的点</p>
-<h3 id="Cardinality"><a href="#Cardinality" class="headerlink" title="Cardinality"></a>Cardinality</h3><p>发现某一个查询语句 虽然添加了 二级索引，但是 查询的时候依然很慢。</p>
-<p><a href="https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/" target="_blank" rel="external">网上查了</a> 发现了 Cardinality 的概念 </p>
+<h3>Cardinality</h3>
+<p>发现某一个查询语句 虽然添加了 二级索引，但是 查询的时候依然很慢。</p>
+<p><a href="https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/" target="_blank" rel="external">网上查了</a> 发现了 Cardinality 的概念</p>
 <p>官方文档的解释:</p>
 <pre><code>An estimate of the number of `unique` values in the index. This is updated by running ANALYZE TABLE or myisamchk -a. Cardinality is counted based on statistics stored as integers, so the value is not necessarily exact even for small tables. The higher the cardinality, the greater the chance that MySQL uses the index when doing
-</code></pre><p>总结一下：<br>1、它代表的是索引中唯一值的数目的估计值。如果是myisam引擎，这个值是一个准确的值。如果是innodb引擎，这个值是一个估算的值，每次执行show index 时，可能会不一样<br>2、创建Index时（primary key除外），MyISAM的表Cardinality的值为null，InnoDB的表Cardinality的值大概为行数；<br>3、值的大小会影响到索引的选择<br>4、创建Index时，MyISAM的表Cardinality的值为null，InnoDB的表Cardinality的值大概为行数。<br>5、可以通过Analyze table来更新一张表或者mysqlcheck -Aa来进行更新整个数据库<br>6、可以通过 show index 查看其值</p>
+</code></pre>
+<p>总结一下：
+1、它代表的是索引中唯一值的数目的估计值。如果是myisam引擎，这个值是一个准确的值。如果是innodb引擎，这个值是一个估算的值，每次执行show index 时，可能会不一样
+2、创建Index时（primary key除外），MyISAM的表Cardinality的值为null，InnoDB的表Cardinality的值大概为行数；
+3、值的大小会影响到索引的选择
+4、创建Index时，MyISAM的表Cardinality的值为null，InnoDB的表Cardinality的值大概为行数。
+5、可以通过Analyze table来更新一张表或者mysqlcheck -Aa来进行更新整个数据库
+6、可以通过 show index 查看其值</p>
 <p>而我们的 那个 二级索引，即使 analyze 也没发修复， 由于索引重复的比较多，所以权重很低，所以mysql 遇到这种， 会把这个索引 当作没有索引。</p>
 <p>于是就全表查了。</p>
-<h3 id="filesort"><a href="#filesort" class="headerlink" title="filesort"></a>filesort</h3><p>filesort 其实和文件无关。</p>
+<h3>filesort</h3>
+<p>filesort 其实和文件无关。</p>
 <p>事实上，filesort本身命名是有问题的。只要一个排序不能使用索引进行排序，那么它就是filesort。它本身和文件无关。filesort应该被称为sort。而它的实现方式是：快速排序(quicksort)。</p>
 <p>就是说 order by 语句没发根据索引来 order by， 遇到这种情况， 要么没有配置索引， 要么索引无效，比如上面的原因 会导致索引无效</p>
-<h3 id="late-row-lookups"><a href="#late-row-lookups" class="headerlink" title="late row lookups"></a>late row lookups</h3><p>发现 类似的语句，性能差非常多</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select xx from xx where xx order by xx limit 0, 100</span><br></pre></td></tr></table></figure>
-<p>和 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select xx from xx where xx order by xx limit 3000, 100</span><br></pre></td></tr></table></figure>
+<h3>late row lookups</h3>
+<p>发现 类似的语句，性能差非常多</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select xx from xx where xx order by xx limit 0, 100</span><br></pre></td></tr></table></figure></p>
+<p>和</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select xx from xx where xx order by xx limit 3000, 100</span><br></pre></td></tr></table></figure></p>
 <p>查询结果是 前者秒出结果， 后者要500-1000ms</p>
 <p><a href="https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by" target="_blank" rel="external">网上查了下</a></p>
 <p>原因就是 虽然你只需要100条纪录，但是 mysql 默认会 先从文件读出3100条纪录，然后 orderby, limit.</p>
-<p>解决方法就是 加一个子查询， 仅查询 过滤 索引字段， 减少从文件读取纪录条数 </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from (select x from xx order by x limit 3000, 100) o join xx on o.x=xx.x  order by o.x</span><br></pre></td></tr></table></figure>
-<h3 id="order-by-多个"><a href="#order-by-多个" class="headerlink" title="order by 多个"></a>order by 多个</h3><p>order by 多个条件的话， mysql 必须配置 联合索引， 想象一下, 每一个索引 mysql 会给他维护一个 b+ tree, 所以，对于多个条件的 orderby 不存在相应的 b+ tree 的话 则仍旧会 filesort</p>
-<h3 id="数据量过小的话，优先全表扫描"><a href="#数据量过小的话，优先全表扫描" class="headerlink" title="数据量过小的话，优先全表扫描"></a>数据量过小的话，优先全表扫描</h3><p>因为mysql 的索引也是保存到文件的， 所以如果数据量小于 mysql 的文件缓冲区 则会在缓冲区内 用 filesort 排序， 而不是 用索引排序。</p>
+<p>解决方法就是 加一个子查询， 仅查询 过滤 索引字段， 减少从文件读取纪录条数</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from (select x from xx order by x limit 3000, 100) o join xx on o.x=xx.x  order by o.x</span><br></pre></td></tr></table></figure></p>
+<h3>order by 多个</h3>
+<p>order by 多个条件的话， mysql 必须配置 联合索引， 想象一下, 每一个索引 mysql 会给他维护一个 b+ tree, 所以，对于多个条件的 orderby 不存在相应的 b+ tree 的话 则仍旧会 filesort</p>
+<h3>数据量过小的话，优先全表扫描</h3>
+<p>因为mysql 的索引也是保存到文件的， 所以如果数据量小于 mysql 的文件缓冲区 则会在缓冲区内 用 filesort 排序， 而不是 用索引排序。</p>
 <p>原因的话， 因为 使用 innoDB的话, 因为 innoDB 只有一级索引的叶子节点存放的是 row 数据， 二级索引的叶子 存放的是 主键。</p>
 <p>所以， 如果使用二级索引作为排序， 过滤依据， 则至少需要读取2次 索引文件。</p>
 <p>而 如果数据量小，还不如 直接 读表更实在。</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/" target="_blank" rel="external">https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/</a></p>
-<p><a href="https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by" target="_blank" rel="external">https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by</a></p>
-<p><a href="https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/" target="_blank" rel="external">https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/</a></p>
-<p><a href="https://tech.meituan.com/mysql-index.html" target="_blank" rel="external">https://tech.meituan.com/mysql-index.html</a></p>
-<p><a href="http://blog.codinglabs.org/articles/theory-of-mysql-index.html" target="_blank" rel="external">http://blog.codinglabs.org/articles/theory-of-mysql-index.html</a></p>
+<h1>reference</h1>
+<p>https://www.bo56.com/mysql%E7%9A%84cardinality%E5%BC%82%E5%B8%B8%EF%BC%8C%E5%AF%BC%E8%87%B4%E7%B4%A2%E5%BC%95%E4%B8%8D%E5%8F%AF%E7%94%A8/</p>
+<p>https://stackoverflow.com/questions/14368211/mysql-very-slow-order-by</p>
+<p>https://explainextended.com/2009/10/23/mysql-order-by-limit-performance-late-row-lookups/</p>
+<p>https://tech.meituan.com/mysql-index.html</p>
+<p>http://blog.codinglabs.org/articles/theory-of-mysql-index.html</p>
 
   </section>
 </article>

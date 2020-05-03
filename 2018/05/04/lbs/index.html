@@ -43,20 +43,21 @@
 <p>首先, 我们的 lbs 业务上主要需要解决 查询附近的人的问题。</p>
 <p>而附近的概念有很多， 有类似找外卖这种的附近，有类似找附近的共享单车，找附近的陌生人。</p>
 <p>对于这种不同的业务， 查询的需求， 精度，都是不同的, 相应的技术选型也应当不同。</p>
-<h1 id="业界方案"><a href="#业界方案" class="headerlink" title="业界方案"></a>业界方案</h1><p>业界在技术上对这类 经纬度的数据 的存储方案有 </p>
+<h1>业界方案</h1>
+<p>业界在技术上对这类 经纬度的数据 的存储方案有</p>
 <ol>
 <li>用 <code>geohash</code> / <code>google s2</code> 算法将二维数据降维到一维, 用处理一维数据的方式插入以及查找, 实现的代表为 mongodb, redis</li>
 <li>用 R树 直接存储二维数据， 实现代表为 postgres</li>
 </ol>
 <p>关于 geohash 和 s2 原理可以看以下文章</p>
-<p><a href="https://halfrost.com/go_spatial_search/" target="_blank" rel="external">https://halfrost.com/go_spatial_search/</a></p>
-<p><a href="https://www.jianshu.com/p/3dbaf73a09af" target="_blank" rel="external">https://www.jianshu.com/p/3dbaf73a09af</a></p>
+<p>https://halfrost.com/go_spatial_search/</p>
+<p>https://www.jianshu.com/p/3dbaf73a09af</p>
 <p>简单总结下</p>
 <ol>
 <li>geohash 简单, 性能好，但是，边界问题不好处理。</li>
 <li>mongo 实现基于 geohash， api 友好，开发简单， 但是随着查询范围不断扩大， 以及数据量则增大， 性能急剧下降。</li>
 <li>pg 万金油， 写入速度比mongo 慢， 查询效率 不会随着范围扩大急剧下降</li>
-<li>s2 和 geohash 一样，只是个降纬工具， 比起 geohash， 分割的层级比 s2 多得多， 还内置向量计算， 面积计算， 多边形覆盖 距离， 球面计算等功能，  但问题是， 如果仅仅是小范围的分隔的话 还真不需要这么多功能， 所以相对简单的业务用的少， 地图等自定义需求比较多的相关应用, 用的会多一些。 </li>
+<li>s2 和 geohash 一样，只是个降纬工具， 比起 geohash， 分割的层级比 s2 多得多， 还内置向量计算， 面积计算， 多边形覆盖 距离， 球面计算等功能，  但问题是， 如果仅仅是小范围的分隔的话 还真不需要这么多功能， 所以相对简单的业务用的少， 地图等自定义需求比较多的相关应用, 用的会多一些。</li>
 </ol>
 <p>经过网上搜索，找到别的公司的用法</p>
 <p><a href="https://www.cnblogs.com/qcloud1001/p/7595936.html" target="_blank" rel="external">膜拜用 mongo 做他的 搜索附近的车</a></p>
@@ -66,46 +67,56 @@
 <p><a href="https://www.ptt.cc/bbs/PokemonGO/M.1515565927.A.21F.html" target="_blank" rel="external">pokemon go 用s2 的level 定义各个游戏业务</a></p>
 <p>在总结下：</p>
 <ol>
-<li><p>摩拜的业务上， 只需要查询附近的车，如果附近没车，也不需要扩大范围， 所以只需要在地理位置上分库，然后用mongo 就行了</p>
+<li>
+<p>摩拜的业务上， 只需要查询附近的车，如果附近没车，也不需要扩大范围， 所以只需要在地理位置上分库，然后用mongo 就行了</p>
 </li>
-<li><p>美团业务上与膜拜类似， 所以geohash 也能满足需求</p>
+<li>
+<p>美团业务上与膜拜类似， 所以geohash 也能满足需求</p>
 </li>
-<li><p>陌陌由于用户分散， 用geohash 感觉略微牵强， 为了增加查询效率，以及解决边界问题， 采用空间换时间的方案， 每次写入数据， 将写入 中间的格子 以及 周边8格 </p>
+<li>
+<p>陌陌由于用户分散， 用geohash 感觉略微牵强， 为了增加查询效率，以及解决边界问题， 采用空间换时间的方案， 每次写入数据， 将写入 中间的格子 以及 周边8格</p>
 </li>
-<li><p>探探和陌陌相同的业务， 直接用pg。</p>
+<li>
+<p>探探和陌陌相同的业务， 直接用pg。</p>
 </li>
-<li><p>pokemongo 用s2 是因为 ingress 的数据用 s2 编码的， 所以也只能继续用 s2。</p>
+<li>
+<p>pokemongo 用s2 是因为 ingress 的数据用 s2 编码的， 所以也只能继续用 s2。</p>
 </li>
 </ol>
 <p>结论， pg 对于不确定范围的查询无论从开发成本和性能上都更 万金油 一些。</p>
 <p>鉴于， 有现成的轮子就用的思想， 这里调研一下 pg 和 mongo 的性能。</p>
-<h2 id="pg-mongo-kw级别-性能测试"><a href="#pg-mongo-kw级别-性能测试" class="headerlink" title="pg mongo kw级别 性能测试"></a>pg mongo kw级别 性能测试</h2><h3 id="写"><a href="#写" class="headerlink" title="写"></a>写</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PgJMH2.testInsert                                    100   thrpt           3191.577           ops/s</span><br><span class="line">PgJMH2.testInsertNear                                100   thrpt           1600.714           ops/s</span><br><span class="line">MongoJMH2.testInsert                                 100   thrpt           72471.125           ops/s</span><br><span class="line">MongoJMH2.testInsertNear                             100   thrpt           76836.235           ops/s</span><br></pre></td></tr></table></figure>
+<h2>pg mongo kw级别 性能测试</h2>
+<h3>写</h3>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PgJMH2.testInsert                                    100   thrpt           3191.577           ops/s</span><br><span class="line">PgJMH2.testInsertNear                                100   thrpt           1600.714           ops/s</span><br><span class="line">MongoJMH2.testInsert                                 100   thrpt           72471.125           ops/s</span><br><span class="line">MongoJMH2.testInsertNear                             100   thrpt           76836.235           ops/s</span><br></pre></td></tr></table></figure></p>
 <p>pg数据量过千万后性能降低, 而且对于数据密集的地方 速度更慢。</p>
 <p>mongo 写入性能一直都很好</p>
-<h3 id="读"><a href="#读" class="headerlink" title="读"></a>读</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">PgJMH2.testEarth                                     100   thrpt          35753.083           ops/s</span><br><span class="line">PgJMH2.testNearBy                                    100   thrpt          34403.323           ops/s</span><br><span class="line">PgJMH2.testSouthEast                                 100   thrpt          34893.133           ops/s</span><br><span class="line">MongoJMH2.testEarth                                  100   thrpt           33446.089           ops/s</span><br><span class="line">MongoJMH2.testNearBy                                 100   thrpt              17.739           ops/s</span><br><span class="line">MongoJMH2.testSouthEast                              100   thrpt             264.248           ops/s</span><br></pre></td></tr></table></figure>
-<p>mongo 的读，如果扫描的数据量大的话， 性能不堪入目。<br>pg则比较稳定。</p>
+<h3>读</h3>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">PgJMH2.testEarth                                     100   thrpt          35753.083           ops/s</span><br><span class="line">PgJMH2.testNearBy                                    100   thrpt          34403.323           ops/s</span><br><span class="line">PgJMH2.testSouthEast                                 100   thrpt          34893.133           ops/s</span><br><span class="line">MongoJMH2.testEarth                                  100   thrpt           33446.089           ops/s</span><br><span class="line">MongoJMH2.testNearBy                                 100   thrpt              17.739           ops/s</span><br><span class="line">MongoJMH2.testSouthEast                              100   thrpt             264.248           ops/s</span><br></pre></td></tr></table></figure></p>
+<p>mongo 的读，如果扫描的数据量大的话， 性能不堪入目。
+pg则比较稳定。</p>
 <p>分析</p>
 <ol>
 <li>破千万后速度慢因为索引 R树 的深度高了，</li>
 <li>插入附近的更慢，因为  数据密集的地方 深度更高。</li>
 </ol>
-<p>解决方案， </p>
+<p>解决方案，</p>
 <p>sar 分析后发现是 磁盘io 瓶颈, 减少 io 成本为关键</p>
 <ol>
 <li>考虑减少索引个数</li>
 <li>合并多个 insert 批量提交</li>
-<li>硬件上， 硬盘换支持写缓存的 </li>
+<li>硬件上， 硬盘换支持写缓存的</li>
 <li>配置上去掉fsync， 每一次逻辑上的commit 不会真正写磁盘(断电会数据不一致, 不推荐)</li>
 </ol>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://s2.sidewalklabs.com/regioncoverer/" target="_blank" rel="external">https://s2.sidewalklabs.com/regioncoverer/</a></p>
-<p><a href="http://mysql.taobao.org/monthly/2015/07/04/" target="_blank" rel="external">http://mysql.taobao.org/monthly/2015/07/04/</a></p>
-<p><a href="https://www.jianshu.com/p/fd80741bb6fd" target="_blank" rel="external">https://www.jianshu.com/p/fd80741bb6fd</a></p>
-<p><a href="https://www.ptt.cc/bbs/PokemonGO/M.1515565927.A.21F.html" target="_blank" rel="external">https://www.ptt.cc/bbs/PokemonGO/M.1515565927.A.21F.html</a></p>
-<p><a href="https://halfrost.com/go_spatial_search/" target="_blank" rel="external">https://halfrost.com/go_spatial_search/</a></p>
-<p><a href="https://www.jianshu.com/p/3dbaf73a09af" target="_blank" rel="external">https://www.jianshu.com/p/3dbaf73a09af</a></p>
-<p><a href="https://www.slideshare.net/meituan/12lbs" target="_blank" rel="external">https://www.slideshare.net/meituan/12lbs</a></p>
-<p><a href="https://yq.aliyun.com/articles/73995" target="_blank" rel="external">https://yq.aliyun.com/articles/73995</a></p>
-<p><a href="https://momjian.us/main/writings/pgsql/hw_performance/" target="_blank" rel="external">https://momjian.us/main/writings/pgsql/hw_performance/</a></p>
+<h1>reference</h1>
+<p>https://s2.sidewalklabs.com/regioncoverer/</p>
+<p>http://mysql.taobao.org/monthly/2015/07/04/</p>
+<p>https://www.jianshu.com/p/fd80741bb6fd</p>
+<p>https://www.ptt.cc/bbs/PokemonGO/M.1515565927.A.21F.html</p>
+<p>https://halfrost.com/go_spatial_search/</p>
+<p>https://www.jianshu.com/p/3dbaf73a09af</p>
+<p>https://www.slideshare.net/meituan/12lbs</p>
+<p>https://yq.aliyun.com/articles/73995</p>
+<p>https://momjian.us/main/writings/pgsql/hw_performance/</p>
 
   </section>
 </article>

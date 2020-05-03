@@ -39,31 +39,38 @@
   </section>
 
   <section class="article-entry">
-    <h2 id="为什么要监控"><a href="#为什么要监控" class="headerlink" title="为什么要监控"></a>为什么要监控</h2><ol>
+    <h2>为什么要监控</h2>
+<ol>
 <li>当服务越来越多时， 并且不仅满足于服务是否挂可用， 而是服务是否好用时， 就有了监控</li>
 <li>开发肯定不会无时无刻关注自己的服务， 需要一个工具， 在服务出问题时， 及时通知， 并且可以给予一定的线索帮助解决问题。</li>
 </ol>
-<h2 id="业界成熟实现"><a href="#业界成熟实现" class="headerlink" title="业界成熟实现"></a>业界成熟实现</h2><p>业界比较知名的 比如 <a href="https://yq.aliyun.com/articles/91435" target="_blank" rel="external">阿里的鹰眼</a>,  <a href="https://tech.meituan.com/CAT_in_Depth_Java_Application_Monitoring.html" target="_blank" rel="external">点评的 cat</a>, 还有  <a href="https://bigbully.github.io/Dapper-translation/" target="_blank" rel="external">google 的 dapper</a></p>
-<h2 id="共同点"><a href="#共同点" class="headerlink" title="共同点"></a>共同点</h2><ol>
+<h2>业界成熟实现</h2>
+<p>业界比较知名的 比如 <a href="https://yq.aliyun.com/articles/91435" target="_blank" rel="external">阿里的鹰眼</a>,  <a href="https://tech.meituan.com/CAT_in_Depth_Java_Application_Monitoring.html" target="_blank" rel="external">点评的 cat</a>, 还有  <a href="https://bigbully.github.io/Dapper-translation/" target="_blank" rel="external">google 的 dapper</a></p>
+<h2>共同点</h2>
+<ol>
 <li>调用链追踪</li>
 <li>存在一定的延迟</li>
 <li>不占用 <code>应用</code> 的资源</li>
 <li>需耗费大量的机器做运算， 存储</li>
 </ol>
-<h2 id="隐患"><a href="#隐患" class="headerlink" title="隐患"></a>隐患</h2><ol>
+<h2>隐患</h2>
+<ol>
 <li>有时随着服务的规模的扩大， 为了减少io 负荷， 不得不进行采样, 而采样则会耗费 <code>应用的资源</code></li>
 <li>计算资源不足时， 遇到突发大量数据时， 会导致整体计算延迟。</li>
 </ol>
-<h2 id="绝对优势"><a href="#绝对优势" class="headerlink" title="绝对优势"></a>绝对优势</h2><ol>
+<h2>绝对优势</h2>
+<ol>
 <li>即使有一个 <code>订单遇到问题</code>， 可以根据调用链， 追根溯源， 看到该笔订单详细的调用信息 (这在追查某些小概率发生的事件上有非常重要的价值)</li>
 </ol>
-<h2 id="trade-off"><a href="#trade-off" class="headerlink" title="trade off"></a>trade off</h2><p>在监控上， 占用应用的资源的多少， 也决定了监控系统自己耗费资源的多少。</p>
+<h2>trade off</h2>
+<p>在监控上， 占用应用的资源的多少， 也决定了监控系统自己耗费资源的多少。</p>
 <p>举个例子， 如果在 应用内部 不做采样， 不做汇总统计， <code>每一条</code> 数据都 落到 监控系统的存储上， 那资源耗费是很厉害的。</p>
 <p>但是， 如果 应用内部 可以把 <code>最近10秒钟的</code> 状态 汇总成 <code>一条</code> 数据 落给 监控系统, 那监控系统耗费的资源就可以非常非常节省了。</p>
 <p>ps: cat 其实就内部开放过一个接口， 对大流量接口，支持 自定义采样/汇总 减少后端压力。</p>
-<h2 id="低成本解决方案-缘由"><a href="#低成本解决方案-缘由" class="headerlink" title="低成本解决方案 - 缘由"></a>低成本解决方案 - 缘由</h2><p>启发的话来自 <a href="https://github.com/Netflix-Skunkworks/hystrix-dashboar" target="_blank" rel="external">hyxtrix dashboard</a></p>
+<h2>低成本解决方案 - 缘由</h2>
+<p>启发的话来自 <a href="https://github.com/Netflix-Skunkworks/hystrix-dashboar" target="_blank" rel="external">hyxtrix dashboard</a></p>
 <p>他做了什么， 他做了一个实时的后台， 用以实时观察服务当前状态</p>
-<p>他解决了什么, <code>每 10 秒钟</code> 统计， 并且输出一下内容: </p>
+<p>他解决了什么, <code>每 10 秒钟</code> 统计， 并且输出一下内容:</p>
 <ol>
 <li>服务的 <code>每台机器</code> 的 <code>实时的</code> qps (吞吐)</li>
 <li>服务的 <code>每台机器</code> 的 <code>实时的</code> succ, timeout, fail, reject 数 (总和等于吞吐)</li>
@@ -75,17 +82,21 @@
 <ol>
 <li>我作为一个开发不可能实时看服务， 历史数据无罗盘， 没意义。</li>
 </ol>
-<h2 id="低成本解决方案-需求"><a href="#低成本解决方案-需求" class="headerlink" title="低成本解决方案 - 需求"></a>低成本解决方案 - 需求</h2><p>其实上面缺少的就是一个存储。 </p>
+<h2>低成本解决方案 - 需求</h2>
+<p>其实上面缺少的就是一个存储。</p>
 <p>至于为啥， 突然想到 想要把他存储起来， 是因为 线上遇到了一个之前没遇到过的问题。</p>
 <p>为了解决这个问题(收集证据)， 我把 上面的 metric 数据 收集到 influxdb 中，然后用 grafana 展示。</p>
 <p>最终发现了是 机器存在问题。</p>
 <p>进而发现， 其实 这个很低成本的解决方案 对于 小公司来说， 其实是一个性价比很高的方案。</p>
 <p></p>
-<h2 id="低成本解决方案-总结"><a href="#低成本解决方案-总结" class="headerlink" title="低成本解决方案 - 总结"></a>低成本解决方案 - 总结</h2><p>这个 rpc 监控， 有以下几部分组成</p>
+<h2>低成本解决方案 - 总结</h2>
+<p>这个 rpc 监控， 有以下几部分组成</p>
 <ol>
-<li>数据采集<ol>
+<li>数据采集
+<ol>
 <li>rpc 框架收集每一次调用的 状态以及耗时。 交由内部 rxjava 流处理。</li>
-<li>rxjava 流可以提供多个输出, 供内部使用<ol>
+<li>rxjava 流可以提供多个输出, 供内部使用
+<ol>
 <li>每个rpc 接口<code>实例级别</code>的 每秒 的 qps， tp</li>
 <li>每个rpc 接口<code>实例级别</code>的 每10秒 的 qps， tp</li>
 <li>每个rpc 接口<code>服务级别</code>的 每秒 的 qps， tp</li>
@@ -94,12 +105,15 @@
 </li>
 </ol>
 </li>
-<li>数据收集<ol>
+<li>数据收集
+<ol>
 <li>通过一个 consumer 实例， 收集 每一个应用的 metric 写入到 influxdb</li>
 </ol>
 </li>
-<li>数据展示<ol>
-<li>用 grafana 展示<ol>
+<li>数据展示
+<ol>
+<li>用 grafana 展示
+<ol>
 <li>支持展示 <code>每一台机器</code> 的 <code>服务级别</code> 的 qps, tp， 以及与 历史(昨日／上周)的比较</li>
 </ol>
 </li>
@@ -111,10 +125,13 @@
 <li>检测线上个别物理机不稳定的情况</li>
 <li>查 历史的 某一次 服务慢， 是因为哪一个接口慢导致的。</li>
 </ol>
-<h2 id="低成本解决方案-展望"><a href="#低成本解决方案-展望" class="headerlink" title="低成本解决方案 - 展望"></a>低成本解决方案 - 展望</h2><ol>
-<li><p>其实现在随着每一个服务都需要接入 <code>限流</code>， <code>熔断</code> 等保命的模块， 它们都依赖内部的数据采集。 我们不应该 以拿来主义， 而是稍加改造， 全部用自己的 数据采集 作为数据依据， 适配 现有的开源的 <code>限流</code>， <code>熔断</code> 框架,  以便省略不必要的重复统计。</p>
+<h2>低成本解决方案 - 展望</h2>
+<ol>
+<li>
+<p>其实现在随着每一个服务都需要接入 <code>限流</code>， <code>熔断</code> 等保命的模块， 它们都依赖内部的数据采集。 我们不应该 以拿来主义， 而是稍加改造， 全部用自己的 数据采集 作为数据依据， 适配 现有的开源的 <code>限流</code>， <code>熔断</code> 框架,  以便省略不必要的重复统计。</p>
 </li>
-<li><p>业界该出一个 上面说的 <code>通用的</code> <code>内部数据采集规范</code>, 如果大家都适配这么个规范， 中间件产品开发的效率又可以提升不少。</p>
+<li>
+<p>业界该出一个 上面说的 <code>通用的</code> <code>内部数据采集规范</code>, 如果大家都适配这么个规范， 中间件产品开发的效率又可以提升不少。</p>
 </li>
 </ol>
 <p>有时间打算自己撸一个。</p>
@@ -137,7 +154,9 @@
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text= id="为什么要监控"><a href"
+  href="https://twitter.com/intent/tweet?text=>为什么要监控</h2>
+<ol>
+<l"
 >
   Tweet
 </a>

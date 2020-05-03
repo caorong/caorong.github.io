@@ -39,35 +39,41 @@
   </section>
 
   <section class="article-entry">
-    <h2 id="Netty-FixedChannelPool-导致启动慢"><a href="#Netty-FixedChannelPool-导致启动慢" class="headerlink" title="Netty FixedChannelPool 导致启动慢"></a>Netty FixedChannelPool 导致启动慢</h2><p>fixedchannel 就是一个 netty 提供的原生的线程池， 支持异步获取。</p>
+    <h2>Netty FixedChannelPool 导致启动慢</h2>
+<p>fixedchannel 就是一个 netty 提供的原生的线程池， 支持异步获取。</p>
 <p>那么要有异步的话，就要用到 ioThread， 结果，整个channelpool 其实只是由 ioGroup 里面的 一个 ioThread 处理。</p>
 <p>那么，必定会造成， 刚启动的时候， io事件较多， 导致影响了获取链接。</p>
 <p>解决方案</p>
 <p>不用它， 自己造轮子，搞一个不靠 iothread 的连接池。</p>
-<h2 id="Netty-watermark-泄漏"><a href="#Netty-watermark-泄漏" class="headerlink" title="Netty watermark 泄漏"></a>Netty watermark 泄漏</h2><p>这个还要从异步说起，因为要异步，所以肯定需要一个缓存， 于是 netty 里面 每一个 IOThread 其实都有一个 queue。</p>
+<h2>Netty watermark 泄漏</h2>
+<p>这个还要从异步说起，因为要异步，所以肯定需要一个缓存， 于是 netty 里面 每一个 IOThread 其实都有一个 queue。</p>
 <p>那么， netty 的queue 默认多大， Integer.MAX</p>
 <p>看源码的时候，看到这里吓一跳， 直接的反应就是限制一下大小，免得大并发下，直接oom。</p>
 <p>结果，这导致了 <a href="https://github.com/netty/netty/issues/8343" target="_blank" rel="external">watermark 泄漏 = =</a></p>
 <p>解决方案</p>
 <p>不限长度， 纯靠 watermark 限流。 此 issue 估计下下版本会修复</p>
-<h2 id="Log4j-锁"><a href="#Log4j-锁" class="headerlink" title="Log4j 锁"></a>Log4j 锁</h2><p>日常以为线上打印一下日志没啥问题。</p>
+<h2>Log4j 锁</h2>
+<p>日常以为线上打印一下日志没啥问题。</p>
 <p>但是 log4j1 有多坑， 日志量一大的话， 竟然不是操作系统 io 堵，而是 java 自己锁住了 ＝ ＝</p>
 <p>有多严重？</p>
 <p>log4j 内部 有synchronize， 线程越多， 竞争越厉害，越严重。</p>
-<p>业务线程也就算了， 如果 netty 的iothread 内部也打日志， 就崩溃了。 </p>
+<p>业务线程也就算了， 如果 netty 的iothread 内部也打日志， 就崩溃了。</p>
 <p>大流量下， 启动的时候 不锁个5，6秒 回不来。</p>
 <p>解决方案</p>
 <ol>
-<li><p>升级 log4j2 </p>
+<li>
+<p>升级 log4j2</p>
 </li>
-<li><p>对于框架代码没主动权， 只能减少日志量， ioThread 尽量少打日志， 即使要打，也得采样打日志。</p>
+<li>
+<p>对于框架代码没主动权， 只能减少日志量， ioThread 尽量少打日志， 即使要打，也得采样打日志。</p>
 </li>
 </ol>
-<h2 id="java-UUID-导致启动慢"><a href="#java-UUID-导致启动慢" class="headerlink" title="java UUID 导致启动慢"></a>java UUID 导致启动慢</h2><p>uuid 也坑， 自带的实现锁很多。</p>
+<h2>java UUID 导致启动慢</h2>
+<p>uuid 也坑， 自带的实现锁很多。</p>
 <p>高并发下会很慢。</p>
-<p>主要原因 </p>
+<p>主要原因</p>
 <ol>
-<li>有好几个 全局 synchronize </li>
+<li>有好几个 全局 synchronize</li>
 <li>synchronize 默认底层依赖操作系统的 /dev/random (速度不可控)</li>
 <li>java6/7 的<a href="https://bugs.java.com/view_bug.do?bug_id=6611830" target="_blank" rel="external">早期版本</a>实现性能不够好</li>
 <li>我们 iothread 里面 也获取了 uuid， 加剧了 iothread 的慢 - -</li>
@@ -77,7 +83,8 @@
 <li>究极方案: 自己实现伪随机 的uuid</li>
 <li>临时方案: 启动参数添加 <code>-Djava.security=file:/dev/./urandom</code> 使其内部使用 SHA1PRNG 减少锁。</li>
 </ol>
-<h2 id="不同版本-jdk-map-values-顺序不一致"><a href="#不同版本-jdk-map-values-顺序不一致" class="headerlink" title="不同版本 jdk map.values() 顺序不一致"></a>不同版本 jdk map.values() 顺序不一致</h2><p>这个问题很坑， 我们都知道 map 底层就是数组， 也知道 jdk7 的map 和jdk8 的map 改了许多，</p>
+<h2>不同版本 jdk map.values() 顺序不一致</h2>
+<p>这个问题很坑， 我们都知道 map 底层就是数组， 也知道 jdk7 的map 和jdk8 的map 改了许多，</p>
 <p>但怎么就没有联想到， 改了很多的话， 底层 hash 方式 肯定也变了 ＝ ＝</p>
 <p>明知道是坑， 但必须踩一下。</p>
 
@@ -99,7 +106,7 @@
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text= id="Netty-FixedChan"
+  href="https://twitter.com/intent/tweet?text=>Netty FixedChannelP"
 >
   Tweet
 </a>

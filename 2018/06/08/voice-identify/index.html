@@ -42,26 +42,31 @@
     <p>这周需要临时做一个和友商一样的声鉴 功能， 研究了一下， 顺便记录一下。</p>
 <p>我们想要做的就是可以鉴别， 比如说 你的声音 是否够 loli，或者 大叔</p>
 <p>那么， 解决这个问题的思路是啥？</p>
-<h2 id="特征"><a href="#特征" class="headerlink" title="特征"></a>特征</h2><p>首先， 就是想办法 将 声音量化， 但是直接量化wav， 并不行， 声音太复杂了， 没发分类， 最好能只对声音的特征做量化， 便于区分。</p>
-<p>直观来说， 人对声音的高低非常敏感, 也就是音调。 </p>
+<h2>特征</h2>
+<p>首先， 就是想办法 将 声音量化， 但是直接量化wav， 并不行， 声音太复杂了， 没发分类， 最好能只对声音的特征做量化， 便于区分。</p>
+<p>直观来说， 人对声音的高低非常敏感, 也就是音调。</p>
 <pre><code>声音的高低叫做音调，频率决定音调。物体振动的快，发出声音的音调就高。振动的慢，发出声音的音调就低。
-</code></pre><p>简单来说， 普通 男人 和 女人 的声音 一听就能听出来， 至少，我能非常容易的区分男女。</p>
+</code></pre>
+<p>简单来说， 普通 男人 和 女人 的声音 一听就能听出来， 至少，我能非常容易的区分男女。</p>
 <p>详细科普文 可以参考下面的 reference</p>
-<h2 id="量化"><a href="#量化" class="headerlink" title="量化"></a>量化</h2><p>量化的话， 经过以前别的项目的了解， 可以使用 <a href="http://www.fon.hum.uva.nl/praat/" target="_blank" rel="external">praat</a> 可视化 音调数据</p>
+<h2>量化</h2>
+<p>量化的话， 经过以前别的项目的了解， 可以使用 <a href="http://www.fon.hum.uva.nl/praat/" target="_blank" rel="external">praat</a> 可视化 音调数据</p>
 <p><img src="2018-06-11-01-15-10.png" alt=""></p>
 <p>如图， 蓝色的就是 音调， 注意 坐标轴 在右边， 0-500hz， 可以看得出， loli 的音调 比较高， 暖男的音调 比较低。</p>
 <p>最后就是工程化，写脚本抽取, 脚本教程</p>
-<p><a href="http://www.fon.hum.uva.nl/praat/manual/Scripting.html" target="_blank" rel="external">http://www.fon.hum.uva.nl/praat/manual/Scripting.html</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Read from file: &quot;&#123;path&#125;/&#123;name&#125;.wav&quot;</span><br><span class="line">selectObject: &quot;Sound &#123;name&#125;&quot;</span><br><span class="line">min = &#123;pitch_min&#125;</span><br><span class="line">max = &#123;pitch_max&#125;</span><br><span class="line">interval = 0.02</span><br><span class="line">To PointProcess (periodic, cc): min, max</span><br><span class="line">To PitchTier: interval</span><br><span class="line">selectObject: &quot;PitchTier &#123;name&#125;&quot;</span><br><span class="line">numberOfIntervals = Get number of points</span><br><span class="line">resultLine$ = &quot;&quot;</span><br><span class="line">for i to numberOfIntervals</span><br><span class="line">result = Get value at index: i</span><br><span class="line">     result$ = string$ (result)</span><br><span class="line">appendFileLine: &quot;&#123;csv_path&#125;/&#123;name&#125;.csv&quot;, result$</span><br><span class="line">endfor</span><br></pre></td></tr></table></figure>
-<h2 id="计算"><a href="#计算" class="headerlink" title="计算"></a>计算</h2><p>获得音调数据够， 如何统计？</p>
-<p>根据上图可以看得出， 不同的人的 音调 出现的 赫兹 范围 不同, </p>
+<p>http://www.fon.hum.uva.nl/praat/manual/Scripting.html</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Read from file: &quot;&#123;path&#125;/&#123;name&#125;.wav&quot;</span><br><span class="line">selectObject: &quot;Sound &#123;name&#125;&quot;</span><br><span class="line">min = &#123;pitch_min&#125;</span><br><span class="line">max = &#123;pitch_max&#125;</span><br><span class="line">interval = 0.02</span><br><span class="line">To PointProcess (periodic, cc): min, max</span><br><span class="line">To PitchTier: interval</span><br><span class="line">selectObject: &quot;PitchTier &#123;name&#125;&quot;</span><br><span class="line">numberOfIntervals = Get number of points</span><br><span class="line">resultLine$ = &quot;&quot;</span><br><span class="line">for i to numberOfIntervals</span><br><span class="line">result = Get value at index: i</span><br><span class="line">     result$ = string$ (result)</span><br><span class="line">appendFileLine: &quot;&#123;csv_path&#125;/&#123;name&#125;.csv&quot;, result$</span><br><span class="line">endfor</span><br></pre></td></tr></table></figure></p>
+<h2>计算</h2>
+<p>获得音调数据够， 如何统计？</p>
+<p>根据上图可以看得出， 不同的人的 音调 出现的 赫兹 范围 不同,</p>
 <p>所以， 最简单的方式，只需要 判断 他们各自的 各hz 的出现概率就行。</p>
 <p>至于相似度的话， 则对他们的各个维度的 hz 概率百分比 求乘积， 并取sum。</p>
 <p>sum 越大，意味着，他们有个 更相近的 音调， 也就意味着 更相近了。</p>
-<h1 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h1><p><a href="https://baike.baidu.com/item/%E9%9F%B3%E8%B0%83" target="_blank" rel="external">https://baike.baidu.com/item/%E9%9F%B3%E8%B0%83</a></p>
-<p><a href="https://www.bilibili.com/read/cv201316/" target="_blank" rel="external">https://www.bilibili.com/read/cv201316/</a></p>
-<p><a href="https://bideyuanli.com/p/3238" target="_blank" rel="external">https://bideyuanli.com/p/3238</a></p>
-<p><a href="https://www.zhihu.com/question/38064124" target="_blank" rel="external">https://www.zhihu.com/question/38064124</a></p>
+<h1>reference</h1>
+<p>https://baike.baidu.com/item/%E9%9F%B3%E8%B0%83</p>
+<p>https://www.bilibili.com/read/cv201316/</p>
+<p>https://bideyuanli.com/p/3238</p>
+<p>https://www.zhihu.com/question/38064124</p>
 
   </section>
 </article>

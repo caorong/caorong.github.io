@@ -41,7 +41,8 @@
   <section class="article-entry">
     <p>随着权利的游戏的 最后一季的播出，打算追起来了。</p>
 <p>于是想搭一个 nas 家里看。</p>
-<h2 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h2><p>但是有几个关键需求</p>
+<h2>参数</h2>
+<p>但是有几个关键需求</p>
 <ol>
 <li>省电</li>
 <li>静音</li>
@@ -50,24 +51,29 @@
 <p>于是结果就是找到了 raspi 3+</p>
 <p>这里说一下他的数据</p>
 <ol>
-<li>耗电 <code>5v x 2A  =&gt;  10w</code>,  一个月 7.2度点</li>
+<li>耗电 <code>5v x 2A =&gt; 10w</code>,  一个月 7.2度点</li>
 <li>磁盘读性能， 介于SD卡的速度，最多10mb/s，</li>
 <li>网络 千兆网卡, 实测 传输速度 可达27 - 30 mb/s</li>
 </ol>
 <p>磁盘读性能是瓶颈，廉价的提升方案是，用usb 作为 raspi 的硬盘，只需要买一个读性能 &gt; 50mb /s 的就足够用了。</p>
-<h2 id="软件"><a href="#软件" class="headerlink" title="软件"></a>软件</h2><p>raspi  nginx<br>kodi   http web</p>
-<h2 id="其他注意点"><a href="#其他注意点" class="headerlink" title="其他注意点"></a>其他注意点</h2><ol>
-<li>添加 ssh 支持的 ciphers </li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &apos;Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,blowfish-cbc,aes128-cbc,3des-cbc,cast128-cbc,arcfour,aes192-cbc,aes256-cbc` &gt;&gt; /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
+<h2>软件</h2>
+<p>raspi  nginx
+kodi   http web</p>
+<h2>其他注意点</h2>
 <ol>
+<li>添加 ssh 支持的 ciphers</li>
+</ol>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &apos;Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,blowfish-cbc,aes128-cbc,3des-cbc,cast128-cbc,arcfour,aes192-cbc,aes256-cbc` &gt;&gt; /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
 <li>手动挂载usb</li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir /mnt/usb</span><br><span class="line">sudo mount /dev/sda1 /mnt/usb -o umask=000    // 所有人的读写权限</span><br><span class="line">sudo umount /dev/sda1</span><br></pre></td></tr></table></figure>
-<ol>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir /mnt/usb</span><br><span class="line">sudo mount /dev/sda1 /mnt/usb -o umask=000    // 所有人的读写权限</span><br><span class="line">sudo umount /dev/sda1</span><br></pre></td></tr></table></figure></p>
+<ol start="3">
 <li>修改 apt 镜像位置</li>
 </ol>
-<p>sudo vi /etc/apt/sources.list<br><a href="https://raspbian.org/RaspbianMirrors" target="_blank" rel="external">https://raspbian.org/RaspbianMirrors</a><br><a href="http://mirrors.ustc.edu.cn/raspbian/raspbian/" target="_blank" rel="external">http://mirrors.ustc.edu.cn/raspbian/raspbian/</a></p>
+<p>sudo vi /etc/apt/sources.list
+https://raspbian.org/RaspbianMirrors
+http://mirrors.ustc.edu.cn/raspbian/raspbian/</p>
 
   </section>
 </article>

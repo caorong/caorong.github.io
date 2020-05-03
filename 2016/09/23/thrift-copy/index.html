@@ -39,18 +39,20 @@
   </section>
 
   <section class="article-entry">
-    <p>话说, 之前在研究比较新f q 软件 <a href="https://github.com/xtaci/kcptun" target="_blank" rel="external">kcptun</a> 的时候 顺便看了下 <a href="https://github.com/tianshuang/finalspeed.git" target="_blank" rel="external">finalspeed</a> 的源码，然后发现他用了个 <a href="https://github.com/kaitoy/pcap4j" target="_blank" rel="external">pcap4j</a> 的依赖<br>他封装了libpcap，可以像使用 tcpdump 一样得到 raw package，finalspeed 就是用它 监听自己的网卡发的包，实现了借发重包减少丢包的功能。</p>
+    <p>话说, 之前在研究比较新f q 软件 <a href="https://github.com/xtaci/kcptun" target="_blank" rel="external">kcptun</a> 的时候 顺便看了下 <a href="https://github.com/tianshuang/finalspeed.git" target="_blank" rel="external">finalspeed</a> 的源码，然后发现他用了个 <a href="https://github.com/kaitoy/pcap4j" target="_blank" rel="external">pcap4j</a> 的依赖
+他封装了libpcap，可以像使用 tcpdump 一样得到 raw package，finalspeed 就是用它 监听自己的网卡发的包，实现了借发重包减少丢包的功能。</p>
 <p>然后联合以前做thrift压测工具时(ps, 最终决定用gevent + 自定义数据做)，看到的<a href="http://tech.meituan.com/loading_test.html" target="_blank" rel="external">美团的压测工具</a> 我就想，既然他可以这么做，那我加一个filter，不就可以 filter 自己要的请求包，然后可以无侵入的获取数据了吗？</p>
 <p>于是三下五除二 写了个<a href="https://github.com/caorong/ThriftCopy" target="_blank" rel="external">工具</a>， 可以嗅探指定网卡的thrift协议，将并thrift 协议转发到指定的机器。</p>
 <p>但是，写完后，想到个问题，一般这种rpc协议，设计都是差不多的，出于安全的原因(避免oom)/内存友好, 默认都用frame的protocol，以及用 magic 来校验是不是自己，那么是不是可以有一个更通用的方式可以弄, 或者已经有了 ?</p>
-<p>为了确认下于是看了下最近比较火的 <a href="https://github.com/grpc/grpc" target="_blank" rel="external">grpc</a>，以及之前看过的<a href="https://github.com/uber/tchannel" target="_blank" rel="external">tchannel</a> </p>
+<p>为了确认下于是看了下最近比较火的 <a href="https://github.com/grpc/grpc" target="_blank" rel="external">grpc</a>，以及之前看过的<a href="https://github.com/uber/tchannel" target="_blank" rel="external">tchannel</a></p>
 <p>由于grpc 的最外面的协议是http2， 所以我直接看http2 了。</p>
-<p>http2 的 frame 设计： <a href="http://httpwg.org/specs/rfc7540.html#FrameHeader" target="_blank" rel="external">http://httpwg.org/specs/rfc7540.html#FrameHeader</a></p>
-<p>tchannel 的 frame 设计：<a href="https://github.com/uber/tchannel/blob/master/docs/protocol.md#framing" target="_blank" rel="external">https://github.com/uber/tchannel/blob/master/docs/protocol.md#framing</a></p>
-<p>看下来感觉都是差不多的，然后找类似 net package copy 的工具的时候发现了 很早以前网易开源的 <a href="https://github.com/session-replay-tools/tcpcopy" target="_blank" rel="external">tcpcopy</a>，<br>由于他也是基于 <code>libpcap</code> 的，并且 <code>libpcap</code> 支持 <a href="http://www.workrobot.com/sysadmin/security/tcpdump_expressions.html" target="_blank" rel="external">BPF expression</a>, 所以其实我只要写一个 n个 <code>&amp;&amp;</code> 的BPF filter 配合 tcpcopy 就行了, orz。</p>
+<p>http2 的 frame 设计： http://httpwg.org/specs/rfc7540.html#FrameHeader</p>
+<p>tchannel 的 frame 设计：https://github.com/uber/tchannel/blob/master/docs/protocol.md#framing</p>
+<p>看下来感觉都是差不多的，然后找类似 net package copy 的工具的时候发现了 很早以前网易开源的 <a href="https://github.com/session-replay-tools/tcpcopy" target="_blank" rel="external">tcpcopy</a>，
+由于他也是基于 <code>libpcap</code> 的，并且 <code>libpcap</code> 支持 <a href="http://www.workrobot.com/sysadmin/security/tcpdump_expressions.html" target="_blank" rel="external">BPF expression</a>, 所以其实我只要写一个 n个 <code>&amp;&amp;</code> 的BPF filter 配合 tcpcopy 就行了, orz。</p>
 <p>可能是因为网上相关资料较少，貌似很少有人这么用，网上搜到的淘宝的搜索团队在用，不过搜索的业务基本都是 <code>只读</code> 的所以最多只要配置一个 ip port 的filter就行了。</p>
 <p>不过由于现在我们自己业务由于环境原因, 以及历史原因，即使拿了线上的数据也不太好用。所以就不深入弄了。</p>
-<p>以后应该可以弄一个 <code>BPF generater</code> 配合 <code>tcpcopy</code> 导指定的协议包的工具。 </p>
+<p>以后应该可以弄一个 <code>BPF generater</code> 配合 <code>tcpcopy</code> 导指定的协议包的工具。</p>
 
   </section>
 </article>

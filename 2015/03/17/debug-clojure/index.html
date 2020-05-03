@@ -39,27 +39,34 @@
   </section>
 
   <section class="article-entry">
-    <h2 id="调试clojure程序的几个方法"><a href="#调试clojure程序的几个方法" class="headerlink" title="调试clojure程序的几个方法"></a>调试clojure程序的几个方法</h2><ol>
-<li><p>打 print</p>
+    <h2>调试clojure程序的几个方法</h2>
+<ol>
+<li>
+<p>打 print</p>
 </li>
-<li><p>用ide 的debug功能 比如 idea</p>
+<li>
+<p>用ide 的debug功能 比如 idea</p>
 </li>
-<li><p>用工具 <a href="https://github.com/clojure/tools.trace" target="_blank" rel="external">tools.trace</a> 打印堆栈信息</p>
+<li>
+<p>用工具 <a href="https://github.com/clojure/tools.trace" target="_blank" rel="external">tools.trace</a> 打印堆栈信息</p>
 </li>
-<li><p>配合上面的远程调试repl</p>
+<li>
+<p>配合上面的远程调试repl</p>
 </li>
 </ol>
 <p>下面主要讲4</p>
 <p>因为我的idea经常死机，所以我自己是先用 lein 启动一个 repl，然后用 idea 连接到 remote repl。<a href="https://cursiveclojure.com/userguide/repl.html" target="_blank" rel="external">参考 cursive 的 RemoteREPL</a></p>
 <p>因为 lein 会在启动的时候先读取自定义参数</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Support $JAVA_OPTS for backwards-compatibility.</span></span><br><span class="line">JVM_OPTS=<span class="variable">$&#123;JVM_OPTS:-"$JAVA_OPTS"&#125;</span></span><br><span class="line">JAVA_CMD=<span class="variable">$&#123;JAVA_CMD:-"java"&#125;</span></span><br></pre></td></tr></table></figure>
+<p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Support $JAVA_OPTS for backwards-compatibility.</span></span><br><span class="line">JVM_OPTS=<span class="variable">$&#123;JVM_OPTS:-"$JAVA_OPTS"&#125;</span></span><br><span class="line">JAVA_CMD=<span class="variable">$&#123;JAVA_CMD:-"java"&#125;</span></span><br></pre></td></tr></table></figure></p>
 <p>所以可以启动之前先加入远程调试参数</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> <span class="string">"JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=9092,server=y,suspend=n -Dclojure.compiler.disable-locals-clearing=true"</span></span><br><span class="line"></span><br><span class="line">$ lein repl</span><br></pre></td></tr></table></figure>
+<p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">export</span> <span class="string">"JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=9092,server=y,suspend=n -Dclojure.compiler.disable-locals-clearing=true"</span></span><br><span class="line"></span><br><span class="line">$ lein repl</span><br></pre></td></tr></table></figure></p>
 <p>最后, ide 远程连repl，和远程debug，就可以调试repl了。</p>
-<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><p>现在的 tools.trace 如需打印堆栈信息需要自己再函数前面加上 <code>^:dynamic</code></p>
-<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">defn</span></span> ^<span class="symbol">:dynamic</span> fib [n] (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">&lt;</span></span> n <span class="number">2</span>) n (<span class="name"><span class="builtin-name">+</span></span> (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">1</span>)) (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">2</span>)))))</span><br><span class="line">(<span class="name">dotrace</span> [fib] (<span class="name">fib</span> <span class="number">3</span>))</span><br></pre></td></tr></table></figure>
-<h4 id="refrence"><a href="#refrence" class="headerlink" title="refrence"></a>refrence</h4><p><a href="http://stackoverflow.com/questions/2352020/debugging-in-clojure" target="_blank" rel="external">http://stackoverflow.com/questions/2352020/debugging-in-clojure</a></p>
-<p><a href="https://github.com/acug/drinkup/issues/1" target="_blank" rel="external">https://github.com/acug/drinkup/issues/1</a></p>
+<h4>注意</h4>
+<p>现在的 tools.trace 如需打印堆栈信息需要自己再函数前面加上 <code>^:dynamic</code></p>
+<p><figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">defn</span></span> ^<span class="symbol">:dynamic</span> fib [n] (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">&lt;</span></span> n <span class="number">2</span>) n (<span class="name"><span class="builtin-name">+</span></span> (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">1</span>)) (<span class="name">fib</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">2</span>)))))</span><br><span class="line">(<span class="name">dotrace</span> [fib] (<span class="name">fib</span> <span class="number">3</span>))</span><br></pre></td></tr></table></figure></p>
+<h4>refrence</h4>
+<p>http://stackoverflow.com/questions/2352020/debugging-in-clojure</p>
+<p>https://github.com/acug/drinkup/issues/1</p>
 
   </section>
 </article>
@@ -79,7 +86,7 @@
   class="twitter-share-button"
   data-size="large"
   data-via="DrakeLeung"
-  href="https://twitter.com/intent/tweet?text= id="调试clojure程序的几个方"
+  href="https://twitter.com/intent/tweet?text=>调试clojure程序的几个方法</h"
 >
   Tweet
 </a>

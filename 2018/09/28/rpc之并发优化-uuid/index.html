@@ -40,17 +40,19 @@
 
   <section class="article-entry">
     <p>java 的 uuid 一直就有点问题</p>
-<p>首先， 他的源码底层依赖 <code>java.security.SecureRandom.nextBytes</code> </p>
+<p>首先， 他的源码底层依赖 <code>java.security.SecureRandom.nextBytes</code></p>
 <p>而这个是一个 被 synchronized 修饰的代码，如果存在 内部慢的时候， 这里会有竞争。</p>
 <p>从而导致的结果是， 如果java 进程启动时， 就有非常高的并发申请 uuid 的话， 则大量线程会被锁住， 引发的问题就是 <code>启动比较慢</code></p>
 <p>然而， 这并不表示运行期 就很稳定了。</p>
-<p>首先， uuid 依赖操作系统的 /dev/random 提供的 随机数。 </p>
-<p>如果操作系统 随机数 不够的情况，也会造成卡顿。 </p>
+<p>首先， uuid 依赖操作系统的 /dev/random 提供的 随机数。</p>
+<p>如果操作系统 随机数 不够的情况，也会造成卡顿。</p>
 <p>卡顿的严重程度的话虽然不高， 举一个例子， 公司有一个 单机qps 6k+ 的服务，每一个请求都会获取 uuid， 获取 uuid 超过100ms 的个数大概在 20个左右(仅供参考)</p>
 <p>那么， 如何改进， 最简单的就是使用江湖偏方 启动参数添加  <code>-Djava.security=file:/dev/./urandom</code></p>
 <p>强制jvm使用 /dev/urandom 来作为随机依据。</p>
 <p>ps, 使用此参数的话， 顺便可以 将 jdk 默认使用的 NativePRNG 替换成 SHA1PRNG</p>
-<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://calvin1978.blogcn.com/articles/securerandom.html" target="_blank" rel="external">http://calvin1978.blogcn.com/articles/securerandom.html</a><br><a href="https://zhaoyanblog.com/archives/784.html" target="_blank" rel="external">https://zhaoyanblog.com/archives/784.html</a></p>
+<h3>参考</h3>
+<p>http://calvin1978.blogcn.com/articles/securerandom.html
+https://zhaoyanblog.com/archives/784.html</p>
 
   </section>
 </article>
