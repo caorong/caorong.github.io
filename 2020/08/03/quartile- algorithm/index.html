@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>分位数算法总结 | lelouchcr&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/app.css">
+  <!-- <link rel='stylesheet' href='http://fonts.useso.com/css?family=Source+Code+Pro'> -->
+</head>
+
+<body>
+  <nav class="app-nav">
+  
+    
+      <a href="/.">home</a>
+    
+  
+    
+      <a href="/archives">archive</a>
+    
+  
+    
+      <a href="/atom.xml">rss</a>
+    
+  
+</nav>
+
+  <main class="post">
+  <article>
+  <h1 class="article-title">
+    <a href="/2020/08/03/quartile- algorithm/">分位数算法总结</a>
+  </h1>
+
+  <section class="article-meta">
+    <p class="article-date">August 03 2020</p>
+  </section>
+
+  <section class="article-entry">
+    <h1>背景</h1>
+<p>首先说下，分位数(quantile)的概念，也就是我们监控中常见的p99， 这里举一个例子</p>
+<p>排序为rank=⌊ϕN⌋的元素，其中N为序列中元素的个数。考虑以下例子数据：</p>
+<p>11 , 21 , 24 , 61 , 81 , 39 , 89 , 56 , 12 , 51</p>
+<p>查询ϕ−quantile分位点所在数据前，需要对无序数据进行排序：</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">input:  11   21   24   61   81   39   89   56   12   51</span><br><span class="line">sort:   11   12   21   24   39   51   56   61   81   89</span><br><span class="line">rank:   1    2    3    4    5    6    7    8    9    10</span><br></pre></td></tr></table></figure></p>
+<p>排序后，我想查这批数据的中位数 也就是：0.5−quantile 对应 rank=5，值为39</p>
+<p>现时场景下，我们一般用这个来统计比如一段时间的调用延迟的p99，而上述操作无论在时间还是空间上成本比较高，实际场景中肯定不是这么实现的。</p>
+<p>后文将阐述近年来实际工业中使用的各种分位数算法.</p>
+<h1>随机算法</h1>
+<p><a href="http://www.cs.umd.edu/~samir/498/vitter.pdf" target="_blank" rel="external">论文</a></p>
+<p>实现案例:</p>
+<p><a href="https://github.com/dropwizard/metrics/blob/release/4.1.x/metrics-core/src/main/java/com/codahale/metrics/UniformReservoir.java" target="_blank" rel="external">dropwizard 的 metrics 库提供的随机算法</a></p>
+<p>原理解释:</p>
+<p>维护一个固定长度的sample buffer数组，写sample时，随机确定是否插入到当前sample buffer 数组。</p>
+<p><img src="/post_images/2020-08-03/dbd716f9faf745869bf7f73c4462fa1d.png" alt="65d61ec2f71173d1b075f72d42019020.png"></p>
+<p>当需要查询quantile时，则进行传统的排序，计算quantile</p>
+<p>时间复杂度</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(nlogn)</td>
+</tr>
+</tbody>
+</table>
+<p>空间占用</p>
+<p>固定大小，gc影响为0</p>
+<p>缺点： 数据失真严重</p>
+<h1>确定性算法</h1>
+<h2>静态分桶</h2>
+<p>实现案例<br>
+<a href="https://github.com/HdrHistogram/HdrHistogram" target="_blank" rel="external">HdrHistogram</a></p>
+<p>思路还是分桶，只不过不是一个数字一个桶，而是一个区间一个桶。</p>
+<p>该区间的范围可以是线性增长，可指数增长。</p>
+<p>通过牺牲一小部分精度，从而达到减小空间占用，并且数据大致准确的结果。</p>
+<p>下图中，采样范围在 [1-15]的有991个，在 [16-31]的有2个...</p>
+<p><img src="/post_images/2020-08-03/3b302243655e4a328d77f73d1b7d7859.png" alt="cf27e5d45bd6340104f0ce89eff93225.png"></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>时间复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(n)</td>
+</tr>
+</tbody>
+</table>
+<p>空间占用<br>
+根据采样点的范围以及精度分桶，大小固定。gc影响为0</p>
+<p>缺点</p>
+<ol>
+<li>统计范围有限，需要预先确定</li>
+</ol>
+<h3>q-digest</h3>
+<p><a href="https://graphics.stanford.edu/courses/cs468-05-winter/Papers/Information_Aggregation/Suri_sensys04.pdf" target="_blank" rel="external">论文</a></p>
+<p>代码实现:</p>
+<p><a href="https://github.com/addthis/stream-lib/blob/master/src/main/java/com/clearspring/analytics/stream/quantile/QDigest.java" target="_blank" rel="external">addthis stream-lib的Qdigest实现</a></p>
+<p>本质上还是静态分桶，只是用完全二叉树存储数据。</p>
+<p>他的使用场景为为大数据分块计算 histogram 后，可对多个histogram 快速归并</p>
+<p>数据格式如下图所示</p>
+<p><img src="/post_images/2020-08-03/b3e0edb8d5774c76ba5981225c7c987d.png" alt="17222857e4caf351634916d183186cbd.png"></p>
+<p>上图中，这颗树总共能统计 1-8，8个数字。其中，有4个3，6个4，2个5-6, 2个 7-8 , 1个 1-8</p>
+<p>它将数据压缩的的目标就是将 σ 个采样点 变成 k 组数据输出。下面是将简述压缩树的过程</p>
+<p>是否可以进行压缩，以2个约束条件作为宗旨</p>
+<ol>
+<li>count(v) &lt;= n/k</li>
+<li>count(v) + count(vp1) + count(vp2) &gt; n/k</li>
+</ol>
+<p>vp1 vp2 就是下图框起来的3个点</p>
+<p><img src="/post_images/2020-08-03/114a15a1ea6f4cf4a6b5c7a83b4709ed.png" alt="69864a4f9f52a7ca4710315432f1937e.png"></p>
+<p>如何计算Quantile?</p>
+<p>用图1做例子</p>
+<p><img src="/post_images/2020-08-03/557a0813e24f4add97e4617e2aba8549.png" alt="567edd2d71a366b59d500890a827f073.png"></p>
+<p>首先，我们把树上每个节点根据其数进行bfs，并进行编号，并根据其编号的值的个数做成一个二维组 <code>（编号，count）</code></p>
+<p>可得到</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;〈1,1〉,〈6,2〉,〈7,2〉,〈10,4〉,〈11,6〉&#125;</span><br></pre></td></tr></table></figure></p>
+<p>每个节点可表达的数据不同，比如 c可表达[5, 6], g 可表达[1,8]</p>
+<p>然后再根据每个二维组，可表达的最大范围进行正序排序</p>
+<p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;〈10,4〉 [3],〈11,6〉 [4],〈6,2〉 [5-6],〈7,2〉 [7-8], 〈1,1〉 [1-8]&#125;</span><br></pre></td></tr></table></figure></p>
+<p>最后就是 count x 请求的分位数，确定index的套路。</p>
+<p>对于 p50 = 0.5*15 = 7.5</p>
+<p>4 + 6 &gt; 7.5</p>
+<p>所以p50 是 &lt;11.6&gt; 也就是4</p>
+<p>时间复杂度</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(nlogn)</td>
+</tr>
+</tbody>
+</table>
+<p>优点：树的特点决定了，对相同规格的树，merge操作成本很低，适合大数据map reduce 场景下的多颗树的合并作业</p>
+<p>缺点：</p>
+<ol>
+<li>需要预分桶</li>
+<li>空间占用较多</li>
+</ol>
+<h2>动态分桶</h2>
+<h3>GK 算法</h3>
+<p><a href="https://www.cis.upenn.edu/~sanjeev/papers/sigmod01_quantiles.pdf" target="_blank" rel="external">论文</a></p>
+<p>思路，还是分桶，只不过这个桶的大小是变化的，论文的话是根据一个区间段来划分的，这里简化下，本质还是根据现存的相邻sample之间的距离确定下个sample是不是放在一个新的独立的桶，具体如下图</p>
+<p><img src="/post_images/2020-08-03/b1adf5e93ae6412099889b2b85ab4fad.png" alt="228c5e892001b378e38922ae300ff07a.png"></p>
+<p>优点：</p>
+<ol>
+<li>不需要预设定统计范围</li>
+<li>根据sample的量的范围，大部分情况下较静态分桶节省空间</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>写成本比静态分桶高，比起静态分桶是一个确定的空间，他的空间会不定期扩大。</li>
+<li>精度不可控。
+<ol>
+<li>假设 sample数据很均匀的平铺在总的数据范围内，则会导致采样的节点数过多，甚至不如静态分桶。</li>
+<li>假设 部分节点的距离较大，则会导致精度降低。</li>
+</ol>
+</li>
+</ol>
+<p>时间复杂度</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(nlogn)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(n)</td>
+</tr>
+</tbody>
+</table>
+<p>注： 实现时，需要维护一个buffer，当buffer满时需要做排序，所以写的成本按照最慢的来算，就是nlogn</p>
+<p>空间占用</p>
+<p>空间太可控，由于有merge成本，会有一定的gc成本</p>
+<h3>CKMS算法</h3>
+<p><a href="http://dimacs.rutgers.edu/~graham/pubs/papers/bquant-icde.pdf" target="_blank" rel="external">论文</a></p>
+<p>GK算法的升级版本，<a href="https://github.com/prometheus/client_java/blob/master/simpleclient/src/main/java/io/prometheus/client/CKMSQuantiles.java" target="_blank" rel="external">prometheus 的summary</a> 就用的该算法</p>
+<p>它引入了一个可配置的错误率的概念，从而解决了GK 精度不可控问题。</p>
+<p>GK 的桶的大小是根据 sample之间的距离delta 决定的，而 CKMS 在抉择是否开辟新桶，则是根据用户设置的<strong>错误率。</strong></p>
+<p>delta = 错误率 x 总体sample个数，并以此决定分桶的大小。</p>
+<p>下图是一个数据合并的例子</p>
+<p><img src="/post_images/2020-08-03/33d036bdcfb44ed8a620fe2c742e09f1.png" alt="667e99ae5f13a0a59fb967b13e30ae54.png"></p>
+<p>可见，当错误率为0.1时，当size &gt; 10 时，会对range &lt;=1 的进行合并</p>
+<p>优点：</p>
+<ol>
+<li>不需要预设定统计范围</li>
+<li>根据sample的量的范围，大部分情况下较静态分桶节省空间</li>
+<li>空间上 完全靠用户参数 <strong>错误率</strong> 决定，更可控。</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>写成本比静态分桶高</li>
+</ol>
+<p>时间复杂度</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(nlogn)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(n)</td>
+</tr>
+</tbody>
+</table>
+<p>注： 同上，需要维护一个buffer，写时，大部分情况下都是O(1), 触发merge 时由于需要做排序，所以O(nlogn)</p>
+<p>空间占用</p>
+<p>空间太可控，由于有merge，并且空间不可控，所以会有一定的gc成本</p>
+<h2>素描法 (sketch)</h2>
+<h3>t-digest</h3>
+<p>作者源码: <a href="https://github.com/tdunning/t-digest" target="_blank" rel="external">https://github.com/tdunning/t-digest</a></p>
+<p>t-digest算法，比动态分桶算法更准，但是资源又可控</p>
+<p>作者对他的简介</p>
+<p><a href="https://mapr.com/blog/some-important-streaming-algorithms-you-should-know-about/" target="_blank" rel="external">https://mapr.com/blog/some-important-streaming-algorithms-you-should-know-about/</a></p>
+<p><a href="https://arxiv.org/pdf/1902.04023" target="_blank" rel="external">论文</a></p>
+<p>简单描述:</p>
+<ol>
+<li>本质上，还是动态分桶，但有以下几个特点
+<ol>
+<li>
+<p>桶的大小在一开始就固定，ckms 并不固定，这样实现可以直接用数组，这对gc友好</p>
+</li>
+<li>
+<p>桶划分函数也更适合于计算分位数场景，众所周知我们更关心 p9999, p999 的精度，对p90, p50 的精度并不太在意。</p>
+<p>所以在划分桶的函数上对2边分桶分的更细，对中间划分的更粗</p>
+<p><img src="/post_images/2020-08-03/ad09ec908a3347e9a6a687216beffaf9.png" alt="51195aebc7022a4004a0e6931077b229.png"></p>
+</li>
+<li>
+<p>桶的大小随着采样个数的增加而增加。（不这样也就没法保证空间固定了）
+桶大小 = f(n) x 当前采样个数</p>
+</li>
+</ol>
+</li>
+</ol>
+<p>时间复杂度:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>写</td>
+<td>O(nlogn)</td>
+</tr>
+<tr>
+<td>读</td>
+<td>O(n)</td>
+</tr>
+</tbody>
+</table>
+<p>注： 写时，大部分情况下都是O(1), 触发merge 时排序，导致 O(nlogn)</p>
+<p>空间复杂度:</p>
+<p>总空间占用较为固定，对gc影响较小。</p>
+<h1>压测</h1>
+<p>最终我们基于以下3种较为可靠的算法做压测，做一个横向比较。</p>
+<p>我们的场景，一般用于统计接口的 p99 的耗时。允许几十ms的误差。一般统计的范围为 <code>0 - 6000</code></p>
+<p>由于 CKMS 和 t-digest 的实现并非线程安全，所以对其读写操作时都加了把锁。<a href="http://gitlab.ximalaya.com/mainstay/quantile-benchmark/blob/master/src/main/java/com/cr/MyBenchmark.java" target="_blank" rel="external">测试代码在此</a></p>
+<p>这里直接给结果:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>w (ops/ms)</th>
+<th>r (ops/ms)</th>
+<th>gc影响</th>
+<th>空间(byte)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ckms</td>
+<td>0.182</td>
+<td>3670790</td>
+<td>4次</td>
+<td>32440</td>
+</tr>
+<tr>
+<td>hdrhistogram</td>
+<td>6.546</td>
+<td>43</td>
+<td>0</td>
+<td>3352</td>
+</tr>
+<tr>
+<td>tdigest</td>
+<td>8.733</td>
+<td>177045</td>
+<td>0</td>
+<td>13600</td>
+</tr>
+</tbody>
+</table>
+<p>从上述结果可见，tdigest 的读写性能相对来说是最好的，但是他的空间占用却很厉害。hdrhistogram 反倒是出乎意料的写性能比tdigest略逊一筹。</p>
+<p>仔细看源码会发现tdigest 为了减少gc影响，内部使用了多个固定长度的double数组来实现，</p>
+<p>也就是说，假如采样的范围足够大时，tdigest 才能凸显出优势，不然，内存占用有点多。</p>
+<p>所以，最终，在我们的场景下，还是选择 hdrhistogram</p>
+<h1>reference</h1>
+<p>qdigest<br>
+<a href="http://www.mathcs.emory.edu/~cheung/Courses/584/Syllabus/08-Quantile/Greenwald2.html" target="_blank" rel="external">http://www.mathcs.emory.edu/~cheung/Courses/584/Syllabus/08-Quantile/Greenwald2.html</a></p>
+<p>GK<br>
+<a href="https://blog.csdn.net/matrix_zzl/article/details/78641264" target="_blank" rel="external">https://blog.csdn.net/matrix_zzl/article/details/78641264</a></p>
+<p>t-digest<br>
+<a href="https://blog.bcmeng.com/post/tdigest.html" target="_blank" rel="external">https://blog.bcmeng.com/post/tdigest.html</a></p>
+
+  </section>
+</article>
+
+  <div class="sharing grid">
+  <section class="profile grid-item grid">
+    <img class="avatar" src="https://gravatar.cat.net/avatar/f6adb1529491a56dbe31c57d519585f5?s=400&r=g" alt="avatar" />
+    <div class="grid-item">
+      <p class="title"> lelouchcr's blog </p>
+      <p class="subtitle">  </p>
+    <div>
+  </section>
+
+  <section class="share-btns">
+    <!-- <p> share it if you like it~ </p> -->
+    <a
+  class="twitter-share-button"
+  data-size="large"
+  data-via="DrakeLeung"
+  href="https://twitter.com/intent/tweet?text=>背景</h1>
+<p>首先说下，分位数"
+>
+  Tweet
+</a>
+
+<script>
+  window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  js.async = true;
+  fjs.parentNode.insertBefore(js, fjs);
+
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+
+  return t;
+}(document, "script", "twitter-wjs"));
+</script>
+
+  </section>
+</div>
+
+
+  
+    
+<section class="article-comment">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+
+<script>
+  var disqus_shortname = 'caorong';
+  
+  var disqus_url = 'http://caorong.github.io/2020/08/03/quartile- algorithm/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+  
+  
+
+<script>
+    setTimeout(function() {
+            var hjs = document.createElement('script');
+            hjs.setAttribute('src', 'https://acgart.download/rand?ratio=0.625&range=0.2&source=pixiv&encode=jsc&func=lgallery');
+            document.body.appendChild(hjs);
+        }, 0);
+
+    function lgallery(option) {
+            console.log(option);
+            var bgimg = document.createElement('img');
+            bgimg.setAttribute('src', option.p_ori);
+            bgimg.setAttribute('id', 'bkImg');
+            bgimg.setAttribute('onmousedown', 'return false');
+            bgimg.setAttribute('referrerpolicy', 'no-referrer');
+            document.body.appendChild(bgimg);
+        }
+
+</script>
+
+</main>
+
+</body>
+</html>
